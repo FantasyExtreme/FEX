@@ -1,0 +1,108 @@
+.accordion {
+  border: none;
+  box-shadow: none;
+  .accordion-item {
+    margin-bottom: 15px;
+    border: none !important;
+    .accordion-header {
+      border: none !important;
+      button {
+        background: $gradient;
+        padding: 0;
+        border-radius: 0;
+        padding: 12px 20px;
+        border-radius: 10px 10px 0 0;
+        p {
+          margin: 0;
+          display: flex;
+          width: 100%;
+          justify-content: end;
+          span {
+            color: $white;
+            width: 20%;
+          }
+        }
+        &:after {
+          display: none;
+        }
+        &.collapsed {
+          border-radius: 10px;
+        }
+      }
+    }
+    .accordion-body {
+      box-shadow: 0px 0px 2.59px 1.73px #00000014;
+      padding: 10px;
+      border-radius: 10px;
+      @media (max-width: 1200px) {
+        padding: 10px 0;
+      }
+      table {
+        margin: 0;
+        td {
+          border: none;
+          padding: 10px 5px;
+          margin: 0;
+          font-size: 14px;
+          color: $blue;
+          h6 {
+            font-size: 16px;
+            margin: 0;
+            font-weight: 600;
+            color: $blue;
+            @media (max-width: 1200px) {
+              font-size: 14px;
+            }
+            @media (max-width: 991px) {
+              font-size: 16px;
+            }
+          }
+          p {
+            margin: 0;
+            font-size: 14px;
+            color: $blue;
+            @media (max-width: 1200px) {
+              font-size: 12px;
+            }
+            @media (max-width: 991px) {
+              font-size: 14px;
+            }
+          }
+          span {
+            display: inline-block;
+            color: $white;
+            font-size: 14px;
+            border-radius: 10px;
+            background-color: $blue;
+            padding: 5px;
+            margin: 0;
+            @media (max-width: 1200px) {
+              font-size: 10px;
+              padding: 2px;
+            }
+            @media (max-width: 991px) {
+              font-size: 14px;
+              padding: 5px;
+            }
+          }
+          a {
+            color: $blue;
+            font-size: 16px;
+            @media (max-width: 1200px) {
+              font-size: 14px;
+            }
+            @media (max-width: 991px) {
+              font-size: 16px;
+            }
+          }
+        }
+        tr.selected-player {
+          td > span {
+            color: $blue;
+            background-color: $green;
+          }
+        }
+      }
+    }
+  }
+}

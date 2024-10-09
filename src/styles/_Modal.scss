@@ -1,0 +1,29 @@
+.fade {
+  background-color: rgb(24, 24, 24, 0.5);
+  backdrop-filter: blur(5px);
+}
+.modal-content {
+  background-color: transparent;
+  border-radius: 35px;
+}
+.modal-body {
+  padding: 40px 30px 30px;
+  border-radius: 35px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  color: $white;
+  backdrop-filter: blur(5px);
+  h5 {
+    font-weight: 700;
+  }
+  p {
+    color: rgba(255, 255, 255, 0.6);
+  }
+}
+.btn-close {
+  background-color: transparent !important;
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  z-index: 5;
+}

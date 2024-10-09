@@ -1,0 +1,162 @@
+.simple-link {
+  font-size: 18px;
+  color: $white;
+  background-color: transparent;
+  font-weight: 700;
+  i {
+    color: $white;
+  }
+  &:hover {
+    color: $color;
+    text-shadow: $text-shadow;
+    i {
+      color: $color;
+    }
+  }
+}
+.reg-btn {
+  background-color: $white;
+  font-size: 18px;
+  font-weight: 400;
+  text-align: center;
+  color: $black;
+  border: none;
+  padding: 5px 15px;
+  border-radius: 12px;
+  border: 2px solid $white;
+  text-transform: uppercase;
+  font-family: $Nasalization;
+  min-width: 180px;
+  @include trans;
+  i {
+    color: $white;
+    @include trans;
+    position: relative;
+  }
+  &:hover {
+    background-color: $black;
+    color: $white;
+    box-shadow: $box-shadow;
+    border-color: $color;
+    i {
+      right: -5px;
+    }
+  }
+  &:disabled {
+    background-color: $color;
+    box-shadow: $box-shadow;
+    border-color: $color;
+    i {
+      right: -5px;
+    }
+  }
+  &.w-loader {
+    justify-content: center;
+    display: flex;
+  }
+  @media (max-width: 575px) {
+    font-size: 14px;
+    padding: 6px 15px;
+  }
+  &.mid {
+    padding: 7px 10px;
+    min-width: 180px;
+  }
+  &.trans {
+    background-color: transparent;
+    color: $color;
+    border-color: $color;
+    border: 2px solid;
+  }
+  &.trans-white {
+    background-color: transparent;
+    color: $white;
+    border-color: $white;
+    border: 2px solid;
+    &:hover {
+      color: $color;
+      border-color: $color;
+      background-color: $black;
+    }
+  }
+  &.empty {
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    &:hover {
+      box-shadow: none;
+    }
+  }
+}
+
+.dropdown {
+  &.trans {
+    button {
+      background-color: transparent;
+    }
+  }
+  &.red {
+    button {
+      border-color: $color;
+      color: $color;
+      font-weight: 500;
+      i {
+        color: $color;
+      }
+      &::after {
+        display: none;
+      }
+      &:hover {
+        background-color: $color;
+        color: $white;
+        box-shadow: $box-shadow;
+        i {
+          color: $white;
+        }
+      }
+    }
+  }
+  .dropdown-menu {
+    padding: 0;
+    border: 1px solid $color;
+    a {
+      color: $color;
+      padding: 7px 10px;
+      font-size: 14px;
+      &:hover {
+        background-color: $color;
+        color: $white;
+      }
+    }
+  }
+}
+.gradient-btn {
+  background: $gradient;
+  padding: 11.5px;
+  border-radius: 10px;
+  color: $white;
+  width: 100%;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+}
+button.transparent {
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
+  border: none;
+  box-shadow: none;
+  outline: none;
+  color: $white;
+  font-size: 18px;
+  i {
+    color: $white;
+  }
+  &:hover {
+    color: $color;
+    background-color: transparent;
+    i {
+      color: $color;
+    }
+  }
+}

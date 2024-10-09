@@ -1,0 +1,102 @@
+.footer {
+  background-color: $lightblack;
+  padding-top: 60px;
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+  .bg-layer {
+    background-image: url(../assets/images/bg/footer-bg.png);
+    background-repeat: no-repeat;
+    background-position: center right;
+    opacity: 0.4;
+    z-index: -1;
+    width: 550px;
+    left: unset;
+    right: 0;
+    background-size: 100% 100%;
+  }
+  &:before {
+    position: absolute;
+    content: '';
+    z-index: -1;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 300px;
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.87) 13%,
+      rgba(29, 29, 29, 0.14) 86%,
+      rgba(29, 29, 29, 0) 100%
+    );
+  }
+  &:after {
+    position: absolute;
+    content: '';
+    z-index: -1;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 300px;
+    transform: rotate(180deg);
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.87) 13%,
+      rgba(29, 29, 29, 0.14) 86%,
+      rgba(29, 29, 29, 0) 100%
+    );
+  }
+  @media (max-width: 767px) {
+    padding-top: 30px;
+  }
+  p {
+    color: $white;
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+  .footer-list {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin-bottom: 50px;
+    li {
+      flex: 0 0 calc(33.3333% - 10px);
+      margin-right: 10px;
+      margin-bottom: 20px;
+      a {
+        font-size: 18px;
+        color: $white;
+        margin-bottom: 10px;
+        font-family: $Nasalization;
+        text-transform: uppercase;
+        &:hover {
+          color: $color;
+          text-shadow: $text-shadow;
+        }
+      }
+    }
+  }
+  .footer-bottom {
+    padding-bottom: 10px;
+    p {
+      margin: 0;
+      text-transform: uppercase;
+    }
+  }
+  &.animate {
+    p,
+    ul li,
+    form,
+    .footer-bottom {
+      @include trans;
+      @include animation-anime(transdown, 1s, linear);
+    }
+    h6 {
+      @include trans;
+      @include animation-anime(transup, 1s, linear);
+    }
+  }
+}

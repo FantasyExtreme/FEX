@@ -1,0 +1,46 @@
+type _anon_class_17_1 = 
+ service {
+   addUser: (IUser) -> (Result);
+   getAdmins: () -> (Users) query;
+   getUser: (opt text) -> (opt User) query;
+   makeAdmin: (principal) -> (bool);
+ };
+type Users = 
+ vec record {
+       Key;
+       User__1;
+     };
+type User__1 = 
+ record {
+   email: text;
+   joiningDate: int;
+   name: text;
+   role: Role;
+ };
+type User = 
+ record {
+   email: text;
+   joiningDate: int;
+   name: text;
+   role: Role;
+ };
+type Role = 
+ variant {
+   admin;
+   user;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: record {
+         text;
+         opt User;
+       };
+ };
+type Key = text;
+type IUser = 
+ record {
+   email: text;
+   name: text;
+ };
+service : () -> _anon_class_17_1

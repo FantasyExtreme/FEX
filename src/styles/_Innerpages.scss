@@ -1,0 +1,81 @@
+.inner-page {
+  min-height: calc(100vh - 375px);
+  padding-top: 150px;
+  padding-bottom: 100px;
+}
+.gray-panel {
+  background-color: $lightblack;
+  padding: 30px;
+  border-radius: 30px;
+  @include animation-anime(transdown, 1s, linear);
+}
+.Calender-chart {
+  position: absolute;
+  right: 0;
+  top: -10px;
+}
+
+.contest-post {
+  background-color: #3a3a3a;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 30px 30px 120px 120px;
+  padding: 30px 30px 20px;
+  margin-bottom: 30px;
+  @include trans;
+  &:hover {
+    border-color: $color;
+    background-color: #181818;
+  }
+  .prize-total-list {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    li {
+      list-style: none;
+      margin-right: 50px;
+      flex-direction: column;
+      align-items: center;
+      span {
+        color: $lightgrey;
+        font-size: 18px;
+        font-weight: 400;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        display: inline-block;
+        width: 100%;
+      }
+      h4 {
+        color: $white;
+        font-weight: 700;
+      }
+      h6 {
+        color: $white;
+        font-weight: 700;
+        font-size: 22px;
+      }
+    }
+  }
+
+  .prize-list {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 600px;
+    margin: 0 auto;
+    li {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      color: $white;
+      font-weight: 700;
+      text-transform: uppercase;
+      a {
+        font-size: 18px;
+        color: $white;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+    }
+  }
+}

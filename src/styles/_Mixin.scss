@@ -1,0 +1,40 @@
+$Roboto: 'Roboto', sans-serif;
+$barlow: 'Barlow', sans-serif;
+$Nasalization: 'Nasalization Rg';
+/* Mixins */
+@mixin trans {
+  -webkit-transition: all 0.5s ease-in-out;
+  -moz-transition: all 0.5s ease-in-out;
+  -ms-transition: all 0.5s ease-in-out;
+  -o-transition: all 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
+}
+@mixin trans1 {
+  -webkit-transition: all 1s ease-in-out;
+  -moz-transition: all 1s ease-in-out;
+  -ms-transition: all 1s ease-in-out;
+  -o-transition: all 1s ease-in-out;
+  transition: all 1s ease-in-out;
+}
+
+$box-shadow:
+  inset 0 0 6px 2px rgba(0, 246, 84, 0.4),
+  0 0 32px 4px rgba(0, 246, 84, 0.61);
+$text-shadow: 0 0 15px rgba(0, 246, 84, 0.5);
+$gradient: linear-gradient(180deg, #ee1d36 0%, #940718 100%);
+/* Animation */
+// @include animation-anime(Navanime, 1.2s, linear);
+@mixin animation-anime($animname, $animetime, $flow) {
+  -webkit-animation: $animname $animetime $flow;
+  -moz-animation: $animname $animetime $flow;
+  animation: $animname $animetime $flow;
+}
+
+@mixin animationanime($animname, $animetime, $flow, $stay, $altr) {
+  -webkit-animation: $animname $animetime $flow $stay $altr;
+  -moz-animation: $animname $animetime $flow $stay $altr;
+  animation: $animname $animetime $flow $stay $altr;
+}
+
+/* Animation */
+/* Mixins */

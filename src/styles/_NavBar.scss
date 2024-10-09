@@ -1,0 +1,151 @@
+.navbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  padding: 15px 30px;
+  background-color: transparent !important;
+  @include trans;
+  @include animation-anime(transup, 1s, linear);
+  @media (min-width: 992px) {
+    .navbar-collapse {
+      background-color: rgba(255, 255, 255, 0.13);
+      border-radius: 20px;
+      padding: 0px 3px;
+      flex-grow: unset;
+      border: 2px solid rgba(0, 246, 84, 0.1);
+    }
+  }
+  .navbar-brand {
+    max-width: 160px;
+  }
+  .user-button {
+    display: flex;
+    align-items: center;
+    text-align: right;
+    h6 {
+      font-size: 16px;
+      margin: 0;
+      color: $white;
+      font-family: $Nasalization;
+    }
+    p {
+      font-size: 14px;
+      color: $white;
+      margin: 0;
+      font-family: $Roboto;
+    }
+    img {
+      border-radius: 5px;
+      margin-left: 8px;
+    }
+  }
+  .nav-link {
+    color: $white;
+    font-size: 16px;
+    font-weight: 500;
+    @include trans;
+    margin-left: 15px;
+    margin-right: 15px;
+    text-transform: uppercase;
+    font-family: $Nasalization;
+    @media (max-width: 1200px) {
+      margin-left: 10px;
+    }
+    @media (max-width: 991px) {
+      margin-left: 0;
+    }
+    &:hover {
+      color: $color;
+      text-shadow: $text-shadow;
+    }
+    &.reg-btn {
+      padding: 0 19px;
+      height: 35px;
+      line-height: 35px;
+      font-size: 14px;
+      margin-top: 2px;
+      border: none;
+      &:hover {
+        color: $white;
+        box-shadow: $box-shadow;
+      }
+      @media (max-width: 991px) {
+        text-align: center;
+        width: 150px;
+        display: inline-block;
+      }
+    }
+    &.custom {
+      text-transform: none;
+    }
+  }
+  .dropdown-toggle::after {
+    display: none;
+  }
+  .navbar-nav .nav-link.active,
+  .navbar-nav .nav-link.show {
+    color: $color;
+  }
+  .dropdown-menu[data-bs-popper] {
+    right: 0;
+    left: unset;
+  }
+  .dropdown {
+    .nav-link {
+      margin-right: 0;
+    }
+    .dropdown-menu {
+      background-color: $black;
+      box-shadow: $box-shadow;
+      a {
+        color: $white;
+        font-family: $Nasalization;
+      }
+    }
+  }
+  @media (max-width: 991px) {
+    .nav-item.dropdown {
+      display: inline-block;
+    }
+  }
+  @media (max-width: 767px) {
+    .navbar-brand {
+      max-width: 200px;
+    }
+  }
+}
+
+.navbar-toggler {
+  position: relative;
+  padding: 0;
+  width: 20px;
+  display: inline-flex;
+  height: 20px;
+  justify-content: center;
+  align-items: center;
+  .navbar-toggler-icon {
+    background-image: none;
+    display: inline-block;
+    width: 20px;
+    height: 3px;
+    border-radius: 20px;
+    background-color: $white;
+  }
+  &:before,
+  &:after {
+    position: absolute;
+    content: '';
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 20px;
+    background-color: $white;
+  }
+  &:before {
+    top: 0;
+  }
+  &:after {
+    bottom: 1px;
+  }
+}
