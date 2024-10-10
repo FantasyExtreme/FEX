@@ -1,0 +1,113 @@
+.table {
+  thead {
+    position: relative;
+    z-index: 3;
+    &:before {
+      position: absolute;
+      content: '';
+      left: 0;
+      right: 0;
+      bottom: 0;
+      top: 0;
+      z-index: -1;
+      border: 2px solid $bordercolor;
+      border-radius: 50px;
+    }
+  }
+  th {
+    font-size: 18px;
+    color: $white;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: none;
+    padding: 15px 15px;
+    &:first-child {
+      padding-left: 30px;
+    }
+  }
+  td {
+    font-size: 14px;
+    color: $white;
+    border-bottom: 2px solid $bordercolor;
+    padding: 30px 15px 15px;
+    h5 {
+      font-family: $Nasalization;
+      font-size: 18px;
+      margin: 0;
+    }
+    &:first-child {
+      padding-left: 30px;
+    }
+    &[colspan] {
+      border: none !important;
+      padding-left: 0;
+      padding-bottom: 0;
+    }
+  }
+  tr:hover td {
+    border-color: $color;
+    background-color: #181818 !important;
+    &:first-child {
+      border-radius: 20px 0 0 0;
+    }
+    &:last-child {
+      border-radius: 0 20px 0 0px;
+    }
+  }
+}
+.table > :not(caption) > * > * {
+  background-color: transparent !important;
+}
+.table {
+  &.team-table {
+    border-spacing: 10px;
+    margin-bottom: 0;
+    tr {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-spacing: 10px;
+      position: relative;
+      td {
+        margin-bottom: 10px;
+        border: none;
+        border-spacing: 10px;
+        position: relative;
+        z-index: 3;
+        padding: 25px 15px;
+
+        &:before {
+          position: absolute;
+          content: '';
+          left: 0;
+          right: 0;
+          bottom: 10px;
+          top: 10px;
+          z-index: -1;
+          background-color: $dark-grey !important;
+          border-top: 2px solid;
+          border-bottom: 2px solid;
+          border-color: $dark-grey;
+          @include trans;
+        }
+        &:first-child {
+          &:before {
+            border-radius: 15px 0 0 15px;
+            border-left: 2px solid;
+            border-color: $dark-grey;
+          }
+        }
+        &:last-child {
+          &:before {
+            border-radius: 0px 15px 15px 0px;
+            border-right: 2px solid;
+            border-color: $dark-grey;
+          }
+        }
+      }
+      &:hover td:before {
+        border-color: $color;
+        background-color: #181818 !important;
+      }
+    }
+  }
+}

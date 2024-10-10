@@ -1,0 +1,17 @@
+label {
+  color: $white;
+  font-weight: 500;
+}
+.form-control,
+input.form-control {
+  background-color: $dark-grey;
+  border-color: $dark-grey;
+  height: 50px;
+  border-radius: 10px;
+}
+input[type='search'] {
+  background-image: url(../assets/images/icons/icon-search.png);
+  background-repeat: no-repeat;
+  background-position: 10px center;
+  padding-left: 40px;
+}

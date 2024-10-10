@@ -1,0 +1,58 @@
+h1 {
+  font-size: 35px;
+  font-weight: 700;
+  font-family: $Nasalization;
+  @media (max-width: 767px) {
+    font-size: 24px;
+  }
+}
+
+h2 {
+  font-size: 40px;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: $white;
+  font-family: $Nasalization;
+  span {
+    color: $color;
+  }
+}
+
+h3 {
+  font-size: 24px;
+  font-weight: 500;
+
+  @media (max-width: 575px) {
+    font-size: 20px;
+  }
+}
+
+h4 {
+  font-size: 30px;
+  font-weight: 600;
+  font-family: $barlow;
+  span {
+    color: $color;
+  }
+  @media (max-width: 767px) {
+    font-size: 25px;
+  }
+  @media (max-width: 575px) {
+    font-size: 18px;
+  }
+}
+h5 {
+  font-size: 25px;
+  font-weight: 400;
+  span {
+    color: $color;
+  }
+}
+h6 {
+  font-size: 16px;
+  font-weight: 400;
+}
+p {
+  font-size: 16px;
+  font-weight: 400;
+}
