@@ -19,8 +19,14 @@ import { requireAuth } from '../utils/fantasy';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
 import UpcomingMatches from './UpcomingMatches';
-
-export default function Header({ match }: any) {
+import icontwitter from '@/assets/images/icons/icon-twitter.png';
+import icondiscord from '@/assets/images/icons/icon-discord.png';
+import icontelegram from '@/assets/images/icons/icon-telegram.png';
+import iconfb from '@/assets/images/icons/icon-facebook.png';
+import iconinstagram from '@/assets/images/icons/icon-instagram.png';
+import icontiktok from '@/assets/images/icons/icon-tiktok.png';
+import iconlinkedin from '@/assets/images/icons/icon-linkedin.png';
+export default function Header({ match }: { match?: any }) {
   const navigation = useRouter();
 
   const { auth } = useAuthStore((state) => ({
@@ -28,97 +34,23 @@ export default function Header({ match }: any) {
   }));
   return (
     <>
+      {/* Header */}
       <Container fluid className='header'>
+        {/* Carousle */}
         <Carousel fade>
           <Carousel.Item>
             <div className='bg-layer' />
-            <div className='text-panel'>
-              <div className='text-inner'>
-                <p>
-                  Lorem ipsum dolor sit amet consectetur. Nisl non tortor
-                  viverra suspendisse feugiat magna fames.
-                </p>
-                <Button className='reg-btn mid'>Play Now</Button>
-              </div>
-            </div>
           </Carousel.Item>
           <Carousel.Item>
             <div className='bg-layer' />
-            <div className='text-panel'>
-              <div className='text-inner'>
-                <p>
-                  Lorem ipsum dolor sit amet consectetur. Nisl non tortor
-                  viverra suspendisse feugiat magna fames.
-                </p>
-                <Link href='#' className='reg-btn mid'>
-                  Play Now
-                </Link>
-              </div>
-            </div>
           </Carousel.Item>
           <Carousel.Item>
             <div className='bg-layer' />
-            <div className='text-panel'>
-              <div className='text-inner'>
-                <p>
-                  Lorem ipsum dolor sit amet consectetur. Nisl non tortor
-                  viverra suspendisse feugiat magna fames.
-                </p>
-                <Button className='reg-btn mid'>Play Now</Button>
-              </div>
-            </div>
-          </Carousel.Item>
-          <Carousel.Item>
-            <div className='bg-layer' />
-            <div className='text-panel'>
-              <div className='text-inner'>
-                <p>
-                  Lorem ipsum dolor sit amet consectetur. Nisl non tortor
-                  viverra suspendisse feugiat magna fames.
-                </p>
-                <Button className='reg-btn mid'>Play Now</Button>
-              </div>
-            </div>
-          </Carousel.Item>
-          <Carousel.Item>
-            <div className='bg-layer' />
-            <div className='text-panel'>
-              <div className='text-inner'>
-                <p>
-                  Lorem ipsum dolor sit amet consectetur. Nisl non tortor
-                  viverra suspendisse feugiat magna fames.
-                </p>
-                <Button className='reg-btn mid'>Play Now</Button>
-              </div>
-            </div>
-          </Carousel.Item>
-          <Carousel.Item>
-            <div className='bg-layer' />
-            <div className='text-panel'>
-              <div className='text-inner'>
-                <p>
-                  Lorem ipsum dolor sit amet consectetur. Nisl non tortor
-                  viverra suspendisse feugiat magna fames.
-                </p>
-                <Button className='reg-btn mid'>Play Now</Button>
-              </div>
-            </div>
-          </Carousel.Item>
-          <Carousel.Item>
-            <div className='bg-layer' />
-            <div className='text-panel'>
-              <div className='text-inner'>
-                <p>
-                  Lorem ipsum dolor sit amet consectetur. Nisl non tortor
-                  viverra suspendisse feugiat magna fames.
-                </p>
-                <Button className='reg-btn mid'>Play Now</Button>
-              </div>
-            </div>
           </Carousel.Item>
         </Carousel>
+        <UpcomingMatches />
       </Container>
-      <UpcomingMatches />
+      {/* Header */}
     </>
   );
 }

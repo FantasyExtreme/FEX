@@ -11,6 +11,7 @@
       "frontend": {
         "entrypoint": "out/index.html"
       },
+      "build": ["npm run build:prod"],
       "source": ["out"],
       "type": "assets",
       "declarations": {
@@ -33,5 +34,11 @@
     }
   },
 
-  "networks": {}
+  "networks": {
+    "ic": {
+      "providers": ["https://mainnet.dfinity.network"],
+      "subnet": "4zbus-z2bmt-ilreg-xakz4-6tyre-hsqj4-slb4g-zjwqo-snjcc-iqphi-3qe" 
+    }
+
+  }
 }

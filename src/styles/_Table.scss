@@ -1,3 +1,65 @@
+.table-container {
+  width: 100%;
+  overflow: 'hidden';
+  &.web-view-table {
+    @media (max-width: 991px) {
+      display: none;
+    }
+  }
+  @media (max-width: 1200px) {
+    margin-bottom: 30px;
+  }
+  .table-inner-container {
+    width: 100%;
+    overflow-x: auto;
+    table:not(.mobiletable) {
+      @media (max-width: 767px) {
+        // min-width: 800px;
+        .text-center:not(.nofound) {
+          text-align: left !important;
+        }
+        // &.dashboard-table {
+        //   min-width: 1200px;
+        // }
+        &.table-90 {
+          width: 90%;
+          margin-left: 5%;
+          @media (max-width: 767px) {
+            width: 100%;
+            margin-left: 0;
+          }
+        }
+      }
+    }
+  }
+  .isPostpond {
+    background-color: rgba(255, 0, 0, 0.2);
+
+    &:hover td {
+      border-color: #ff0000 !important;
+      background-color: rgba(255, 0, 0, 0.2) !important;
+    }
+    .isPostpondStatus {
+      position: relative;
+
+ 
+      span:first-child {
+        position: absolute;
+        top: -25px;
+        right: -5px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #ff0000;
+        font-family: 'Roboto';
+        text-transform: uppercase;
+      }
+    }
+  }
+  &.maxheight {
+    max-height: 250px;
+    overflow-y: scroll;
+  }
+}
 .table {
   thead {
     position: relative;
@@ -15,14 +77,24 @@
     }
   }
   th {
-    font-size: 18px;
+    font-size: 16px;
     color: $white;
     font-weight: 700;
     text-transform: uppercase;
     border: none;
     padding: 15px 15px;
-    &:first-child {
-      padding-left: 30px;
+    vertical-align: middle;
+    // &:first-child {
+    //   padding-left: 30px;
+    // }
+    @media (max-width: 1500px) {
+      font-size: 14px;
+    }
+    @media (max-width: 1200px) {
+      font-size: 12px;
+    }
+    @media (max-width: 575px) {
+      font-size: 10px;
     }
   }
   td {
@@ -30,19 +102,41 @@
     color: $white;
     border-bottom: 2px solid $bordercolor;
     padding: 30px 15px 15px;
+    @media (max-width: 1500px) {
+      font-size: 12px;
+    }
+    @media (max-width: 1400px) {
+      font-size: 12px;
+      a {
+        font-size: 12px;
+      }
+    }
+    @media (max-width: 575px) {
+      font-size: 10px;
+    }
     h5 {
       font-family: $Nasalization;
-      font-size: 18px;
+      font-size: 16px;
       margin: 0;
     }
-    &:first-child {
-      padding-left: 30px;
-    }
+    // &:first-child {
+    //   padding-left: 30px;
+    // }
     &[colspan] {
       border: none !important;
       padding-left: 0;
       padding-bottom: 0;
+      background-color: transparent !important;
+      &:hover {
+        background-color: transparent !important;
+      }
+      &::before {
+        display: none;
+      }
     }
+  }
+  tr:hover td[colspan] {
+    background-color: transparent !important;
   }
   tr:hover td {
     border-color: $color;
@@ -52,6 +146,12 @@
     }
     &:last-child {
       border-radius: 0 20px 0 0px;
+    }
+  }
+  &.br-rad-0 {
+    td:first-child,
+    td:last-child {
+      border-radius: 0 !important;
     }
   }
 }
@@ -104,10 +204,31 @@
           }
         }
       }
+      &[colspan] {
+        border: none !important;
+        padding-left: 0;
+        padding-bottom: 0;
+        display: none !important;
+        background-color: transparent !important;
+      }
       &:hover td:before {
         border-color: $color;
         background-color: #181818 !important;
       }
     }
   }
+}
+
+.selected {
+  .circle-span {
+    background-color: $color;
+  }
+}
+.circle-span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 15px;
+  background: #a5a5a5;
 }

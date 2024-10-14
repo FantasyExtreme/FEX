@@ -1,3 +1,18 @@
+.winner-mp.winner-mvpscls {
+  background-image: url(../assets/images/mask.png);
+  @media (max-width: 767px) {
+    background-size: cover;
+  }
+  .winner-post a,
+  .latest-post {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+  }
+  @media (min-width: 1200px) {
+    padding-bottom: 50px;
+  }
+}
+.winner-mp,
 .matches-result-panel {
   padding-top: 40px;
   padding-bottom: 20px;
@@ -5,6 +20,10 @@
   background-color: $lightblack;
   position: relative;
   z-index: 2;
+
+  @media (max-width: 767px) {
+    text-align: center;
+  }
   &:before {
     position: absolute;
     content: '';
@@ -20,6 +39,9 @@
       rgba(29, 29, 29, 0.14) 86%,
       rgba(29, 29, 29, 0) 100%
     );
+    @media (max-width: 767px) {
+      display: none;
+    }
   }
   &:after {
     position: absolute;
@@ -37,6 +59,10 @@
       rgba(29, 29, 29, 0.14) 86%,
       rgba(29, 29, 29, 0) 100%
     );
+
+    @media (max-width: 767px) {
+      display: none;
+    }
   }
   &.animate {
     h2 {
@@ -54,13 +80,22 @@
     width: 100%;
     display: flex;
     justify-content: space-between;
+    @media (max-width: 1200px) {
+      flex-direction: column;
+      align-items: center;
+    }
     li {
       text-align: center;
       padding: 0px 10px;
       list-style: none;
-      width: 33.3333%;
+      width: 100%;
+      display: flex;
+      @media (max-width: 1200px) {
+        width: 100%;
+        margin-bottom: 30px;
+      }
       a {
-        display: inline-block;
+        display: flex;
         width: 100%;
       }
     }
@@ -73,13 +108,26 @@
   background-color: $grey;
   border: 2px solid rgba(255, 255, 255, 0.3);
   padding: 20px 15px 5px;
+  img {
+    max-width: 50px;
+    max-height: 50px;
+  }
   p {
     color: $white;
     font-size: 16px;
-    opacity: 0.7;
+    // opacity: 0.7;
     @include trans;
+    @media (max-width: 1500px) {
+      font-size: 12px;
+    }
+    @media (max-width: 1200px) {
+      font-size: 12px;
+    }
+    @media (max-width: 991px) {
+      font-size: 16px;
+    }
   }
-  span {
+  span:not(.matchTitle) {
     display: inline-flex;
     width: 42px;
     height: 42px;
@@ -87,18 +135,49 @@
     @include trans;
     justify-content: center;
     align-items: center;
-    font-weight: 500;
+    font-weight: 700;
     color: $white;
     background-color: rgba(255, 255, 255, 0.21);
     font-size: 16px;
     box-shadow: 0 1px 4.8px rgba(24, 24, 24, 0.5);
+    @media (max-width: 1500px) {
+      font-size: 14px;
+    }
+    @media (max-width: 1200px) {
+      font-size: 14px;
+    }
+    @media (max-width: 991px) {
+      font-size: 16px;
+    }
+  }
+  .matchTitle {
+    font-size: 16px;
+    font-family: 'Nasalization Rg';
+    font-weight: 400;
+    color: white;
+    max-width: 190px;
+    @media (max-width: 1500px) {
+      font-size: 15px;
+    }
+    @media (max-width: 1200px) {
+      font-size: 14px;
+    }
+    @media (max-width: 991px) {
+      font-size: 16px;
+    }
+    &.maxw {
+      max-width: 250px;
+    }
   }
   h6 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 400;
     color: $white;
     font-family: $Nasalization;
     margin-bottom: 15px;
+    @media (max-width: 1500px) {
+      font-size: 16px;
+    }
     @media (max-width: 1200px) {
       font-size: 14px;
     }
@@ -119,9 +198,133 @@
   }
 }
 
+// How To Playe Panel
+.how-to-play-pnl {
+  padding-top: 80px;
+  padding-bottom: 80px;
+  &.animate {
+    h2,
+    .how-it-work-list {
+      @include trans;
+      @include animation-anime(transup, 1s, linear);
+    }
+  }
+}
+.HowtoPlaySlider {
+  text-align: center;
+  margin-top: 30px;
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+.how-it-work-list {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 60px;
+  margin-bottom: 0;
+  @media (max-width: 991px) {
+    flex-wrap: wrap;
+  }
+  @media (max-width: 767px) {
+    display: none;
+  }
+  li {
+    display: flex;
+    width: 25%;
+    padding: 0 10px;
+    margin-bottom: 20px;
+    @media (max-width: 991px) {
+      width: 50%;
+    }
+    @media (max-width: 575px) {
+      width: 100%;
+      .how-it-work-post {
+        width: 100%;
+      }
+    }
+  }
+}
+.how-it-work-post {
+  display: inline-block;
+  border-radius: 40px;
+  background: rgba(58, 58, 58, 1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 30px 15px 20px;
+  text-align: center;
+  @media (max-width: 1500px) {
+    border-radius: 25px;
+  }
+  @media (max-width: 767px) {
+    max-width: 300px;
+    min-height: 280px;
+    justify-content: center;
+    display: inline-flex;
+    flex-direction: column;
+  }
+  @media (max-width: 575px) {
+    padding-bottom: 30px;
+    max-width: 280px;
+    min-height: 260px;
+  }
+  .img-pnl {
+    height: 80px;
+    img {
+      max-height: 80px;
+      @media (max-width: 767px) {
+        margin: 0 auto;
+      }
+    }
+  }
+  h5 {
+    color: $white;
+    font-family: $Nasalization;
+    margin: 12px 0;
+    @media (max-width: 1500px) {
+      font-size: 20px;
+    }
+    @media (max-width: 1200px) {
+      font-size: 18px;
+    }
+    @media (max-width: 991px) {
+      font-size: 24px;
+    }
+    @media (max-width: 767px) {
+      font-size: 20px;
+    }
+  }
+  p {
+    color: rgba(219, 219, 219, 1);
+    margin: 0;
+    line-height: 21px;
+    font-size: 16px;
+    text-align: justify;
+    @media (max-width: 1500px) {
+      font-size: 15px;
+    }
+    @media (max-width: 1200px) {
+      font-size: 14px;
+    }
+    @media (max-width: 991px) {
+      font-size: 16px;
+    }
+  }
+  &:hover {
+    background-color: $black;
+    border-color: $color;
+    box-shadow: $box-shadow;
+  }
+}
+// How To Playe Panel
+
 // History Panel
 .history-panel {
   padding-top: 80px;
+  padding-bottom: 150px;
+  @media (max-width: 991px) {
+    padding-bottom: 80px;
+    padding-top: 0;
+  }
+
   .text-panel {
     overflow: hidden;
     position: relative;
@@ -131,20 +334,47 @@
     justify-content: flex-end;
     background-color: $grey;
     border-radius: 50px;
-    padding: 50px 50px;
+    padding: 40px 40px;
     z-index: 2;
     @media (max-width: 991px) {
       background-size: cover;
       padding-top: 60px;
       text-align: left;
+      padding: 30px;
+    }
+    @media (max-width: 767px) {
+      text-align: left;
+      align-items: flex-start;
+      padding: 30px 30px 400px;
+      border-radius: 20px;
+    }
+    @media (max-width: 575px) {
+      padding: 30px 15px 300px;
     }
     .bg-layer {
-      background-image: url(../assets/images/bg/football.png);
+      background-image: url('https://fantasy-extreme-assets.s3.us-east-005.backblazeb2.com/Compressed/bg/football.png');
       background-size: contain;
       filter: grayscale(0.8);
       z-index: -1;
       background-repeat: no-repeat;
       background-position: left 50px;
+      @media (max-width: 1200px) {
+        background-size: 340px;
+        background-position: left bottom;
+      }
+      @media (max-width: 991px) {
+        background-position: left bottom;
+        background-size: 300px;
+      }
+      @media (max-width: 767px) {
+        background-image: url('../assets/images/bg/football-mobile.png');
+        background-size: contain;
+        background-position: center bottom;
+      }
+      @media (max-width: 767px) {
+        background-size: 100% auto;
+        background-position: center bottom;
+      }
     }
     h3 {
       font-size: 22px;
@@ -163,6 +393,10 @@
       @media (max-width: 991px) {
         color: $white;
       }
+      @media (max-width: 767px) {
+        max-width: 100%;
+        text-align: left;
+      }
     }
   }
   &.animate {
@@ -177,153 +411,156 @@
 }
 // History Panel
 
-// Top Fantacy Panel
-.top-fantasy-panel {
-  padding-top: 80px;
-  padding-bottom: 50px;
-  overflow: hidden;
+// Winner MVP
+.mvpsMain {
+  text-align: center;
+}
+.winners-mvps {
+  max-width: 80%;
+  margin: 0 auto;
+  @media (max-width: 1200px) {
+    max-width: 100%;
+  }
+}
+.winner-mvp-list {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 20px 0 0 0;
+  @media (max-width: 1200px) {
+    flex-wrap: wrap;
+  }
+  @media (max-width: 767px) {
+    justify-content: center;
+    margin-bottom: 0;
+  }
+  li {
+    display: flex;
+    width: 50%;
+    padding: 0 15px;
+    text-align: center;
+    &:first-child {
+      padding-left: 0;
+    }
+    &:last-child {
+      padding-right: 0;
+    }
+    @media (max-width: 1200px) {
+      width: 50%;
+      margin-bottom: 30px;
+    }
+    @media (max-width: 767px) {
+      width: calc(100%);
+      padding: 0;
+    }
+  }
+  .user-info-post {
+    .img-pnl {
+      img {
+        max-width: unset;
+      }
+    }
+  }
+}
+.winner-post {
+  display: flex;
+  width: 100%;
   position: relative;
   z-index: 2;
-  @media (max-width: 991px) {
-    background-size: cover;
-    padding-top: 60px;
-    text-align: center;
-  }
-  .bg-layer {
-    opacity: 0.5;
-    background-image: url(../assets/images/bg/bg-5.png);
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center center;
-    z-index: -1;
-  }
-  .slide-padding {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-  .slick-prev,
-  .slick-next,
-  .slick-dots {
-    display: none !important;
-  }
-  &.animate {
-    h2 {
-      @include trans;
-      @include animation-anime(transleft, 1s, linear);
-    }
-    .simple-link {
-      @include trans;
-      @include animation-anime(transright, 1s, linear);
-    }
-    .slick-slider {
-      @include trans;
-      @include animation-anime(transdown, 1s, linear);
-    }
-  }
-}
-.player-post {
-  width: 100%;
-  height: 480px;
-  .player-post-inner {
-    position: relative;
+  a {
     width: 100%;
-    z-index: 3;
-    .img-pnl {
-      width: 100%;
-      border-radius: 50%;
-      position: relative;
-      img {
-        width: 230px;
-        height: 230px;
-        border-radius: 50%;
-        @include trans1;
-      }
+    display: inline-block;
+    border-radius: 16px;
+    background-color: #323232;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 20px 35px 35px;
+    text-align: center;
+    @media (max-width: 1200px) {
+      padding-bottom: 20px;
     }
-    .txt-pnl {
-      position: absolute;
-      top: 95px;
-      width: 100%;
-      z-index: -1;
-      @include trans1;
-      left: 10px;
-      overflow: hidden;
-      .txt-pnl-inner {
-        padding: 15px;
-        max-width: 210px;
-        background-color: $grey;
-        border-radius: 0 0 14px 14px;
-        height: 145px;
-        overflow: hidden;
-        @include trans1;
-        text-align: left;
-      }
-      h6 {
-        color: $color;
-        opacity: 0;
-        @include trans1;
-        height: 19.19px;
-        overflow: hidden;
-      }
-      h5 {
-        color: $white;
-        margin-bottom: 5px;
-        font-family: $Nasalization;
-        opacity: 0;
-        @include trans1;
-        height: 30px;
-        overflow: hidden;
-      }
-      p {
-        color: $lightgrey;
-        margin-bottom: 10px;
-        text-align: left;
-        font-size: 16px;
-        opacity: 0;
-        @include trans1;
-        height: 72px;
-        overflow: hidden;
-      }
-      span {
-        background-color: $white;
-        display: inline-block;
-        width: 100%;
-        border-radius: 25px;
-        color: $black;
-        font-family: $Nasalization;
-        text-align: center;
-        padding: 3px 10px;
-        opacity: 0;
-        @include trans1;
-      }
+    @media (max-width: 575px) {
+      padding: 20px 15px 20px;
+    }
+    .user-info-post {
+      margin-top: 20px;
     }
     &:hover {
-      .img-pnl {
-        img {
-          width: 280px;
-          height: 280px;
-        }
+      border-color: $color;
+      box-shadow: $box-shadow;
+    }
+  }
+  h5 {
+    color: $white;
+    font-family: $Nasalization;
+    @media (max-width: 575px) {
+      font-size: 18px;
+    }
+  }
+}
+.user-info-post {
+  display: flex;
+  justify-content: center;
+  .img-pnl {
+    display: flex;
+    align-items: center;
+    // align-items: flex-start;
+    .trophy {
+      height: 50px;
+      width: 50px;
+    }
+  }
+  .txt-pnl {
+    text-align: left;
+    padding-left: 10px;
+    h6 {
+      color: $white;
+      font-family: $Nasalization;
+      font-size: 22px;
+      margin: 0;
+      @media (max-width: 575px) {
+        font-size: 18px;
       }
-      .txt-pnl {
-        bottom: unset;
-        top: 180px;
-        .txt-pnl-inner {
-          max-width: 260px;
-          border-radius: 0 0 18px 18px;
-          height: 289.89px;
-          padding-top: 100px;
-        }
-        span,
-        p,
-        h5,
-        h6 {
-          opacity: 1;
-        }
+    }
+    p {
+      color: $white;
+      margin: 0;
+      font-size: 16px;
+      margin: 0;
+      @media (max-width: 575px) {
+        font-size: 14px;
       }
     }
   }
 }
+.MVPS_PLAYER_IMG {
+  height: 76px;
+  width: 76px;
+  border-radius: 5px;
+  @media (max-width: 575px) {
+    height: 56px;
+    width: 56px;
+  }
+}
+.userImg {
+  height: 70px;
+  width: 70px;
+  position: relative;
+  background: gray;
+  border-radius: 0.5rem;
+  margin-left: 8px;
+  @media (max-width: 575px) {
+    height: 50px;
+    width: 50px;
+  }
+}
+// Winner MVP
 
 // Top Fantacy Panel
+.slick-prev,
+.slick-next,
+.slick-dots {
+  display: none !important;
+}
 .top-fantasy-panel {
   padding-top: 80px;
   padding-bottom: 50px;
@@ -371,24 +608,6 @@
     width: auto;
     display: inline-block;
   }
-  @media (max-width: 1500px) {
-  .player-post-inner:hover .txt-pnl .txt-pnl-inner {
-        height: 230.89px;
-        max-width: 225px;
-        padding-top: 66px;
-    }
-  }
- .player-post-inner .txt-pnl .txt-pnl-inner {
-    padding: 15px;
-    max-width: 210px;
-    background-color: #323232;
-    border-radius: 0 0 14px 14px;
-    height: 145px;
-    overflow: hidden;
-    transition: all 1s ease-in-out;
-    text-align: left;
-}
-
   .player-post-inner {
     position: relative;
     width: 100%;
@@ -573,28 +792,444 @@
     }
   }
 }
-.userInfo {
-  padding-left: 25px;
-  padding-top: 6px;
-  h5 {
-    color: $white;
-    margin-bottom: 5px;
-    font-family: $Nasalization;
-    @include trans1;
-    height: 30px;
-    overflow: hidden;
+// demo video section
+.demo {
+  padding-top: 80px;
+  &.animate {
+    h2,
+    p {
+      animation: transleft 1s linear;
+    }
+    .video-demo-pnl {
+      @include trans;
+      @include animation-anime(transright, 1s, linear);
+    }
   }
-  p {
-    color: $lightgrey;
-    margin-bottom: 10px;
-    text-align: left;
-    font-size: 16px;
-    @include trans1;
-    overflow: hidden;
+}
+.video-demo-pnl {
+  display: inline-block;
+  width: 100%;
+  max-width: 1000px;
+  height: 700px;
+  position: relative;
+  text-align: center;
+  .play-span {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    color: $white;
+    font-size: 20px;
+    // opacity: 0;
+    // backdrop-filter: blur(5px);
+    @media (max-width: 991px) {
+      bottom: 80px;
+    }
+    @media (max-width: 767px) {
+      bottom: 50px;
+    }
+    @media (max-width: 575px) {
+      bottom: 20px;
+    }
+    cursor: pointer;
+    span {
+      position: relative;
+      display: inline-block;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 50px;
+      color: $white;
+      @media (max-width: 1200px) {
+        width: 120px;
+        height: 120px;
+        font-size: 40px;
+      }
+      @media (max-width: 991px) {
+        width: 100px;
+        height: 100px;
+        font-size: 35px;
+      }
+      @media (max-width: 767px) {
+        width: 60px;
+        height: 60px;
+        font-size: 28px;
+      }
+      @media (max-width: 575px) {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+      }
+    }
+  }
+  @media (max-width: 1500px) {
+    max-width: 970px;
+  }
+  @media (max-width: 1200px) {
+    max-width: 800px;
+    height: 550px;
+  }
+  @media (max-width: 991px) {
+    max-width: 650px;
+    height: 450px;
+  }
+  @media (max-width: 767px) {
+    max-width: 520px;
+    height: 350px;
+  }
+  @media (max-width: 575px) {
+    max-width: 280px;
+    height: 180px;
+  }
+  .bg-layer {
+    background-size: 100% 100%;
+  }
+  .video-pnl {
+    position: relative;
+    width: 743px;
+    height: 489px;
+    background-color: transparent;
+    margin: 68px auto 0;
+    border-radius: 20px 20px 0 0;
+    margin-left: 133px;
+    background-color: transparent;
+    @media (max-width: 1500px) {
+      width: 720px;
+      height: 505px;
+      margin: 52px auto 0;
+      margin-left: 130px;
+    }
+    @media (max-width: 1200px) {
+      width: 595px;
+      height: 373px;
+      margin: 64px auto 0;
+      border-radius: 18px 18px 0 0;
+      margin-left: 106px;
+    }
+    @media (max-width: 991px) {
+      width: 483px;
+      height: 305px;
+      margin: 53px auto 0;
+      margin-left: auto;
+      border-radius: 14px 14px 0 0;
+      margin-left: 86px;
+    }
+    @media (max-width: 767px) {
+      width: 383px;
+      height: 237px;
+      margin: 41px auto 0;
+      margin-left: auto;
+      margin-left: auto;
+      border-radius: 10px 10px 0 0;
+      margin-left: 69px;
+    }
+    @media (max-width: 575px) {
+      width: 208px;
+      height: 123px;
+      margin: 21px auto 0;
+      margin-left: auto;
+      margin-left: auto;
+      margin-left: auto;
+      border-radius: 5px 5px 0 0;
+      margin-left: 37px;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+    }
   }
 }
 
-.userInfo {
-  padding-left: 25px;
-  padding-top: 6px;
+#demo {
+  .bg-layer {
+    opacity: 1;
+    background-size: cover;
+    background-position: center center;
+  }
+
+  .bg-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .bg-layer,
+  iframe,
+  video,
+  source {
+    height: 100%;
+    width: 100%;
+  }
 }
+
+// Market Value
+.market-value {
+  &.animate {
+    h2,
+    p {
+      animation: transup 1s linear;
+    }
+    .text-right {
+      h2 {
+        @include animation-anime(transright, 1s, linear);
+      }
+    }
+    .marketing-size-pnl {
+      @include animation-anime(transleft, 1s, linear);
+    }
+    .billion-count-pnl {
+      @include animation-anime(transright, 1s, linear);
+    }
+    .Billion-participants {
+      @include animation-anime(transdown, 1s, linear);
+    }
+  }
+}
+
+// Billion Panel
+.Billion-pnl {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  @media (max-width: 767px) {
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    flex-direction: column;
+  }
+  .marketing-size-pnl {
+    background-color: rgba(255, 255, 255, 0.07);
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 20px 10px 10px;
+    width: 350px;
+    text-align: center;
+    margin-bottom: 30px;
+    @media (max-width: 991px) {
+      width: 280px;
+    }
+    @media (max-width: 767px) {
+      width: 100%;
+    }
+    img {
+      max-width: 220px;
+      @media (max-width: 991px) {
+        max-width: 185px;
+      }
+    }
+    h6,
+    h4 {
+      color: $white;
+      font-size: 22px;
+      font-family: $Nasalization;
+      margin: 0;
+      font-weight: 300;
+      margin-bottom: 10px;
+      text-align: left;
+      @media (max-width: 575px) {
+        font-size: 18px;
+      }
+    }
+    h6 {
+      text-align: right;
+    }
+    h5 {
+      color: $white;
+      margin-top: 10px;
+      text-align: center;
+      font-size: 30px;
+      line-height: 20px;
+      span {
+        display: inline-block;
+        width: 100%;
+        text-transform: uppercase;
+        color: $white;
+        font-size: 24px;
+      }
+    }
+  }
+  .billion-count-pnl {
+    background-color: rgba(255, 255, 255, 0.07);
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 20px 20px 20px;
+    width: calc(100% - 380px);
+    margin-bottom: 30px;
+
+    @media (max-width: 991px) {
+      width: calc(100% - 300px);
+    }
+    @media (max-width: 767px) {
+      width: 100%;
+    }
+    h6 {
+      font-size: 20px;
+      font-family: $Nasalization;
+      color: $white;
+      @media (max-width: 991px) {
+        font-size: 16px;
+      }
+      @media (max-width: 575px) {
+        font-size: 15px;
+      }
+    }
+    .billion-bar {
+      display: inline-block;
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 30px;
+      position: relative;
+      height: 20px;
+      margin-bottom: 15px;
+      @media (max-width: 991px) {
+        height: 18px;
+      }
+
+      &:last-child {
+        margin: 0;
+      }
+      span {
+        position: absolute;
+        display: inline-block;
+        left: 0;
+        bottom: 0;
+        top: 0;
+        border-radius: 30px;
+        z-index: 1;
+        background-color: #0cff00;
+        box-shadow: $box-shadow;
+      }
+    }
+  }
+}
+// Billion Panel
+
+// Billion Participants
+.Billion-participants {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.07);
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 20px 30px;
+  margin-bottom: 250px;
+  @media (max-width: 991px) {
+    padding: 20px;
+    margin-bottom: 100px;
+  }
+  @media (max-width: 767px) {
+    margin-bottom: 100px;
+    padding: 20px 15px;
+  }
+  @media (max-width: 575px) {
+    flex-direction: column;
+  }
+  .txt-pnl {
+    display: inline-block;
+    @media (max-width: 575px) {
+      width: 100%;
+    }
+  }
+  h4 {
+    color: $color;
+    font-family: $Nasalization;
+    font-weight: 400;
+    font-size: 35px;
+    margin: 0;
+    @media (max-width: 1200px) {
+      font-size: 28px;
+    }
+    @media (max-width: 991px) {
+      font-size: 24px;
+    }
+    @media (max-width: 767px) {
+      font-size: 20px;
+    }
+  }
+  h5 {
+    color: $white;
+    font-family: $Nasalization;
+    font-weight: 400;
+    font-size: 70px;
+    line-height: 60px;
+    margin: 0;
+    @media (max-width: 1200px) {
+      font-size: 55px;
+    }
+    @media (max-width: 991px) {
+      font-size: 45px;
+    }
+    @media (max-width: 767px) {
+      font-size: 38px;
+    }
+    @media (max-width: 575px) {
+      text-align: center;
+    }
+  }
+  h6 {
+    color: $color;
+    font-family: $Nasalization;
+    font-weight: 400;
+    font-size: 35px;
+    margin: 0;
+    text-align: right;
+    @media (max-width: 1200px) {
+      font-size: 28px;
+    }
+    @media (max-width: 991px) {
+      font-size: 24px;
+    }
+    @media (max-width: 767px) {
+      font-size: 20px;
+    }
+  }
+  ul {
+    display: flex;
+    margin: 0;
+    width: calc(100% - 400px);
+    justify-content: flex-end;
+    @media (max-width: 575px) {
+      width: 100%;
+      margin: 20px auto 10px;
+      justify-content: center;
+    }
+    li {
+      list-style: none;
+      margin-left: 30px;
+      @media (max-width: 991px) {
+        margin-left: 15px;
+      }
+      @media (max-width: 575px) {
+        margin-left: 7.5px;
+        margin-right: 7.5px;
+      }
+      img {
+        max-width: 150px;
+        @media (max-width: 1400px) {
+          max-width: 120px;
+        }
+        @media (max-width: 1200px) {
+          max-width: 90px;
+        }
+        @media (max-width: 991px) {
+          max-width: 75px;
+        }
+        @media (max-width: 767px) {
+          max-width: 50px;
+        }
+      }
+    }
+  }
+}
+// Billion Participants
+
+// Market Value

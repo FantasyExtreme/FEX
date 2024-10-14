@@ -8,6 +8,7 @@ interface Auth {
   isLoading: boolean;
   connectedWithWeb2: boolean;
   identity: Identity;
+  agent: HttpAgent | null;
 }
 export interface UserPermissions {
   admin: boolean;
@@ -18,7 +19,6 @@ interface UserAuth {
   role: string;
   email: string;
   userPerms: null | UserPermissions;
-  rewardPercentage: number;
 }
 export interface Wallet {
   balance: number;

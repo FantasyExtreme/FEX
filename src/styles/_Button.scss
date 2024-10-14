@@ -1,10 +1,16 @@
 .simple-link {
-  font-size: 18px;
+  font-size: 16px;
   color: $white;
   background-color: transparent;
   font-weight: 700;
   i {
     color: $white;
+  }
+  &.green {
+    color: $color;
+  }
+  &.underline {
+    text-decoration: underline !important;
   }
   &:hover {
     color: $color;
@@ -16,7 +22,7 @@
 }
 .reg-btn {
   background-color: $white;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 400;
   text-align: center;
   color: $black;
@@ -27,6 +33,10 @@
   text-transform: uppercase;
   font-family: $Nasalization;
   min-width: 180px;
+  @media (max-width: 1200px) {
+    min-width: 160px;
+    font-size: 16px;
+  }
   @include trans;
   i {
     color: $white;
@@ -35,7 +45,7 @@
   }
   &:hover {
     background-color: $black;
-    color: $white;
+    color: $color !important;
     box-shadow: $box-shadow;
     border-color: $color;
     i {
@@ -43,9 +53,12 @@
     }
   }
   &:disabled {
-    background-color: $color;
-    box-shadow: $box-shadow;
-    border-color: $color;
+    background-color: $white;
+    box-shadow: none;
+    border-color: $black !important;
+    opacity: 0.5;
+    color: $black;
+    cursor: not-allowed;
     i {
       right: -5px;
     }
@@ -53,14 +66,68 @@
   &.w-loader {
     justify-content: center;
     display: flex;
+    overflow: hidden;
+    // padding-left: 70px;
+    position: relative;
+    font-size: 14px;
+    min-width: 160px;
+    border: 2px solid transparent !important;
+    @media (max-width: 1200px) {
+      font-size: 12px;
+      min-width: 140px;
+    }
+    @media (max-width: 991px) {
+      font-size: 14px;
+      min-width: 160px;
+    }
+    span {
+      color: $white;
+      @include trans;
+    }
+    &:hover {
+      border: 2px solid $color !important;
+      span {
+        color: $color;
+      }
+    }
+    // &:before {
+    //   position: absolute;
+    //   content: 'Alpha';
+    //   font-family: $Nasalization;
+    //   color: $white;
+    //   background-color: $color;
+    //   right: -12px;
+    //   top: 6px;
+    //   width: 60px;
+    //   display: flex;
+    //   justify-content: center;
+    //   align-items: center;
+    //   font-size: 10px;
+    //   transform: rotate(45deg);
+    //   padding-top: 1px;
+    //   padding-bottom: 0px;
+    // }
+    .ribben2 {
+      right: 0px;
+      top: -4px;
+      width: 45px;
+      transform-origin: top;
+      transform: rotate(-6deg);
+    }
   }
+
   @media (max-width: 575px) {
     font-size: 14px;
     padding: 6px 15px;
+    // padding-left: 70px !important;
   }
   &.mid {
     padding: 7px 10px;
-    min-width: 180px;
+    min-width: 160px;
+    @media (max-width: 991px) {
+      min-width: 140px;
+      font-size: 14px;
+    }
   }
   &.trans {
     background-color: transparent;
@@ -86,6 +153,19 @@
     &:hover {
       box-shadow: none;
     }
+  }
+  &.contestbtn {
+    font-family: sans-serif;
+    font-size: 16px;
+  }
+  &.claimrewardbtn{
+   margin-right: 10px;
+   @media (max-width: 991px) and (min-width: 768px){
+    margin-bottom: 0 !important;
+  }
+  @media (max-width: 768px){
+    margin-bottom: 15px ;
+  }
   }
 }
 
@@ -117,17 +197,32 @@
     }
   }
   .dropdown-menu {
-    padding: 0;
+    padding: 20px;
+    background-color: #3a3a3a !important;
+    width: 260px;
     border: 1px solid $color;
+    border-radius: 10px;
     a {
       color: $color;
-      padding: 7px 10px;
+      padding: 7px 8px;
       font-size: 14px;
       &:hover {
         background-color: $color;
         color: $white;
       }
     }
+  }
+}
+.dropdown-menu a:hover .svg-icon path {
+  fill: white !important;
+}
+.reg-custom-btn {
+  background-color: unset !important;
+  // color: white !important;
+  text-decoration: underline !important;
+  font-size: 14px;
+  @media (max-width: 1500px) {
+    font-size: 12px;
   }
 }
 .gradient-btn {
@@ -140,7 +235,8 @@
   font-size: 14px;
   border: none;
 }
-button.transparent {
+button.transparent,
+a.transparent {
   background-color: transparent;
   padding: 0;
   margin: 0;
@@ -148,7 +244,7 @@ button.transparent {
   box-shadow: none;
   outline: none;
   color: $white;
-  font-size: 18px;
+  font-size: 16px;
   i {
     color: $white;
   }
@@ -158,5 +254,120 @@ button.transparent {
     i {
       color: $color;
     }
+  }
+}
+button.trans {
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  &:hover {
+    background-color: transparent;
+  }
+}
+.connect-btn {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+  padding: 12px 18px;
+  border-radius: 14px;
+  .rgb {
+    font-size: 22px;
+    font-family: $Roboto;
+    font-style: normal;
+    font-weight: 800;
+    line-height: normal;
+    text-transform: uppercase;
+
+    &.II {
+      background: linear-gradient(
+        90deg,
+        #fbb03b 0%,
+        #f15a24 33%,
+        #ed1e79 70%,
+        #5a2784 100%
+      );
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    &.NFID {
+      background: linear-gradient(
+        90deg,
+        #cb5cdc 0%,
+        #407df5 33%,
+        #09d6f9 70%,
+        #3dedd7 100%
+      );
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  &:hover {
+    background-color: $white;
+  }
+}
+.matchesBtns {
+  a {
+    min-width: 118px !important;
+    @media (max-width: 1500px) {
+      min-width: unset !important;
+    }
+  }
+}
+
+@media (max-width: 377px) {
+  .cencelbtn {
+    margin-top: 10px;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+  }
+}
+.discord_btn {
+  background-color: transparent !important;
+  color: white !important;
+  font-size: 16px !important;
+}
+
+.custome-close-btn {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  color: #ffffff;
+  z-index: 5;
+  font-size: 22px;
+  background-color: transparent;
+  border: none;
+  &:hover,
+  &:focus,
+  &:active,
+  &:disabled {
+    background-color: transparent;
+    border: none;
+    i {
+      color: $color;
+    }
+  }
+}
+.balanceInput {
+  position: relative;
+  input {
+    &:active,
+    &:focus {
+      ~ .maxValueBtn {
+        color: #3a3a3a;
+      }
+    }
+  }
+  .maxValueBtn {
+    position: absolute;
+    right: 34px;
+    top: 45px;
+    text-decoration: underline;
+    cursor: pointer;
   }
 }
