@@ -3,6 +3,7 @@ const path = require('path');
 const network =
   process.env.DFX_NETWORK ||
   (process.env.NODE_ENV === 'production' ? 'ic' : 'local');
+
 function initCanisterEnv() {
   let localCanisters, prodCanisters;
   try {
@@ -35,7 +36,6 @@ const internetIdentityUrl =
   network === 'local'
     ? `http://${canisterEnvVariables['INTERNET_IDENTITY_CANISTER_ID']}.localhost:4943/`
     : `https://identity.ic0.app`;
-console.log(network, 'prodd', isDevelopment);
 
 const frontendDirectory = __dirname;
 

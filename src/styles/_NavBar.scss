@@ -2,22 +2,92 @@
   position: absolute;
   left: 0;
   right: 0;
-  z-index: 999;
-  padding: 15px 30px;
+  top: 0;
+  z-index: 99999;
+  padding: 0px 30px 15px;
   background-color: transparent !important;
   @include trans;
   @include animation-anime(transup, 1s, linear);
+
+  h1 {
+    margin: 0;
+    color: $color;
+    font-size: 20px;
+    font-weight: 400;
+    text-transform: uppercase;
+
+    @media (max-width: 767px) {
+      font-size: 16px;
+    }
+    @media (max-width: 575px) {
+      font-size: 14px;
+    }
+    span {
+      color: $white;
+      &:empty {
+        display: none;
+      }
+    }
+    &:empty {
+      display: none;
+    }
+  }
+  @media (min-width: 992px) {
+    h1 {
+      display: none;
+    }
+  }
+  @media (max-width: 991px) {
+    .nav-flex {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      align-items: center;
+    }
+  }
+  @media (max-width: 991px) {
+    background: rgba(0, 0, 0, 1) !important;
+    border-bottom: 2px solid rgba(0, 246, 84, 0.1);
+  }
+  @media (max-width: 1400px) {
+    padding: 0 5px 15px;
+  }
+  @media (max-width: 1200px) {
+    padding: 0 15px 0 0;
+  }
+  @media (max-width: 991px) {
+    padding: 0px 0;
+  }
+  @media (max-width: 575px) {
+    padding: 10px 0;
+  }
   @media (min-width: 992px) {
     .navbar-collapse {
-      background-color: rgba(255, 255, 255, 0.13);
-      border-radius: 20px;
+      background-color: #1d1d1d;
+      border-radius: 15px;
       padding: 0px 3px;
       flex-grow: unset;
       border: 2px solid rgba(0, 246, 84, 0.1);
     }
   }
+
   .navbar-brand {
-    max-width: 160px;
+    max-width: 120px;
+
+    @media (max-width: 1200px) {
+      padding: 0;
+      max-width: 100px;
+    }
+    @media (max-width: 991px) {
+      padding: 0;
+      max-width: 80px;
+    }
+    @media (max-width: 767px) {
+      max-width: 80px;
+    }
+    @media (max-width: 575px) {
+      max-width: 40px;
+    }
   }
   .user-button {
     display: flex;
@@ -28,6 +98,13 @@
       margin: 0;
       color: $white;
       font-family: $Nasalization;
+
+      @media (max-width: 1600px) {
+        font-size: 14px;
+      }
+      @media (max-width: 1200px) {
+        font-size: 12px;
+      }
     }
     p {
       font-size: 14px;
@@ -42,19 +119,36 @@
   }
   .nav-link {
     color: $white;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     @include trans;
     margin-left: 15px;
     margin-right: 15px;
     text-transform: uppercase;
     font-family: $Nasalization;
+    @media (max-width: 1600px) {
+      font-size: 12px;
+    }
+    @media (max-width: 1500px) {
+      margin-left: 5px;
+      margin-right: 5px;
+      font-size: 11px;
+    }
+
     @media (max-width: 1200px) {
-      margin-left: 10px;
+      margin-left: 0px;
+      margin-right: 0px;
+      font-size: 9px;
+      padding-left: 0.3rem !important;
+      padding-right: 0.3rem !important;
     }
     @media (max-width: 991px) {
       margin-left: 0;
+      font-size: 16px;
+      padding-left: 0.5rem !important;
+      padding-right: 0.5rem !important;
     }
+
     &:hover {
       color: $color;
       text-shadow: $text-shadow;
@@ -69,6 +163,56 @@
       &:hover {
         color: $white;
         box-shadow: $box-shadow;
+      }
+      &.discord-btn {
+        border: 2px solid $white;
+        background-color: transparent;
+        min-width: 150px;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 14px;
+        padding: 0 12px;
+        color: $white !important;
+        line-height: 32px;
+        height: 35px;
+        margin-left: 0;
+        @media (max-width: 1600px) {
+          font-size: 12px;
+          min-width: 120px;
+        }
+        @media (max-width: 1500px) {
+          font-size: 11px;
+          min-width: unset;
+        }
+        @media (max-width: 1200px) {
+          margin-left: 10px;
+          margin-right: 10px;
+          font-size: 10px;
+          min-width: unset;
+        }
+
+        @media (max-width: 991px) {
+          font-size: 14px;
+          min-width: unset;
+          width: auto;
+        }
+        img {
+          max-width: 23px;
+          margin-right: 7px;
+          @media (max-width: 1200px) {
+            max-width: 18px;
+            margin-right: 5px;
+          }
+          @media (max-width: 991px) {
+            max-width: 23px;
+            margin-right: 7px;
+          }
+        }
+        &:hover {
+          border-color: $color;
+          color: $color !important;
+        }
       }
       @media (max-width: 991px) {
         text-align: center;
@@ -109,25 +253,28 @@
       display: inline-block;
     }
   }
-  @media (max-width: 767px) {
-    .navbar-brand {
-      max-width: 200px;
-    }
-  }
 }
 
 .navbar-toggler {
   position: relative;
   padding: 0;
-  width: 20px;
+  width: 40px;
   display: inline-flex;
-  height: 20px;
+  height: 40px;
   justify-content: center;
   align-items: center;
+  border: none;
+  &:hover {
+    background-color: transparent;
+    border: none;
+  }
+  img {
+    border-radius: 10px;
+  }
   .navbar-toggler-icon {
     background-image: none;
     display: inline-block;
-    width: 20px;
+    width: 30px;
     height: 3px;
     border-radius: 20px;
     background-color: $white;
@@ -141,11 +288,483 @@
     height: 3px;
     border-radius: 20px;
     background-color: $white;
+    display: none;
   }
   &:before {
     top: 0;
   }
   &:after {
     bottom: 1px;
+    @media (max-width: 767px) {
+      bottom: -1px;
+    }
   }
 }
+.email_text {
+  text-transform: none !important;
+}
+.leaguesDropDown {
+  @media (max-width: 991px) {
+    text-align: center;
+  }
+  .dropdown-menu {
+    z-index: 111111;
+  }
+  > button {
+    background-color: transparent;
+    border: none;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.5s ease-in-out;
+    text-transform: uppercase;
+    font-family: 'Nasalization Rg';
+    width: 115px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    @media (max-width: 1600px) {
+      font-size: 12px;
+    }
+    @media (max-width: 1200px) {
+      font-size: 10px;
+    }
+    @media (max-width: 991px) {
+      font-size: 16px;
+    }
+    &:hover,
+    &:focus {
+      background-color: transparent;
+      color: $color;
+    }
+  }
+}
+
+.leaguesDropDown:hover .dropdown-menu {
+  display: block;
+  margin-top: 0;
+}
+.mobileview-connect-btn {
+  // margin-right: 10px;
+  @media (min-width: 992px) {
+    display: none;
+  }
+  @media (max-width: 767px) {
+    button {
+      &.reg-btn.w-loader {
+        min-width: 120px;
+        font-size: 11px;
+      }
+    }
+  }
+  @media (max-width: 575px) {
+    button {
+      &.reg-btn.w-loader {
+        min-width: unset;
+        font-size: 11px;
+        padding: 3px 22px 3px 10px;
+        border-radius: 10px;
+        &:before {
+          font-size: 9px;
+          top: 2px;
+          width: 50px;
+        }
+      }
+    }
+  }
+}
+.webview-connect-btn {
+  @media (max-width: 991px) {
+    display: none;
+  }
+}
+.connectRibben {
+  height: 30px;
+}
+.footer-social-list {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  li {
+    margin: 0 15px;
+    list-style: none;
+    @media (max-width: 767px) {
+      margin: 0 10px;
+    }
+    @media (max-width: 575px) {
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    a {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      color: #1d1d1d;
+      box-shadow: 0px 0px 7px 0px rgba(0, 246, 84, 0.5);
+      font-size: 18px;
+      &.rol {
+        background-color: $white;
+      }
+      &:hover {
+        box-shadow: 0px 0px 10px 0px rgba(0, 246, 84, 0.8);
+        font-size: 20px;
+        transform: scale(1.1);
+      }
+    }
+  }
+}
+
+.nav-social-list {
+  display: flex;
+  position: absolute;
+  right: 45px;
+  top: 90px;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  @media (max-width: 1500px) {
+    right: 45px;
+  }
+  @media (max-width: 1400px) {
+    right: 20px;
+  }
+  @media (max-width: 1200px) {
+    top: 70px;
+  }
+  @media (max-width: 991px) {
+    position: initial;
+    right: unset;
+    top: unset;
+    margin-top: 25px;
+  }
+  li {
+    margin-left: 15px;
+    list-style: none;
+    @media (max-width: 991px) {
+      margin: 0 10px;
+    }
+    @media (max-width: 575px) {
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    a {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      color: #1d1d1d;
+      background-color: #1d1d1d;
+      box-shadow: 0px 0px 7px 0px rgba(0, 246, 84, 0.5);
+      font-size: 18px;
+      &.rol {
+        background-color: $white;
+      }
+      &:hover {
+        box-shadow: 0px 0px 10px 0px rgba(0, 246, 84, 0.8);
+        font-size: 20px;
+        transform: scale(1.1);
+      }
+    }
+  }
+  &.contactusicons {
+    position: relative;
+    top: 15px;
+  }
+}
+
+// Bottom Nav
+.Bottom-nav {
+  display: none;
+  position: fixed;
+  left: 10px;
+  bottom: 10px;
+  right: 10px;
+  z-index: 999;
+  margin: 0;
+  background-color: black;
+  border: 1px solid #333333;
+  padding: 12px 0;
+  justify-content: space-around;
+  border-radius: 24px;
+  list-style: none;
+  align-items: center;
+  li {
+    a {
+      list-style: none;
+      img {
+        opacity: 0.65;
+        @include trans;
+      }
+      &.active,
+      &:hover {
+        img {
+          opacity: 1;
+          filter: drop-shadow(0 0 3px #00f654) drop-shadow(0 0 5px #00f654) drop-shadow(0 0 60px #00f654);
+        }
+        span{
+          color: $color;
+        }
+      }
+    }
+    &.active {
+      a {
+        img {
+          opacity: 1;
+          filter: drop-shadow(0 0 3px #00f654) drop-shadow(0 0 5px #00f654) drop-shadow(0 0 60px #00f654);
+        }
+        span{
+          color: $color;
+        }
+      }
+    }
+  }
+  .Icon-User {
+    height: 28px;
+    width: 28px;
+    margin-bottom: 1px;
+  }
+
+  .Icon-Ball {
+    height: 29px;
+    width: 29px;
+  }
+
+  .Icon-Home {
+    height: 30px;
+    width: 30px;
+  }
+
+  .Cal-Icon {
+    height: 30px;
+    width: 34px;
+  }
+
+  .Rank-Icon {
+    height: 30px;
+    width: 30px;
+  }
+
+  @media (max-width: 991px) {
+    display: flex;
+  }
+  .nav-link {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    color: white;
+    span {
+      font-family: $Nasalization;
+      font-size: 12px;
+      margin-top: 8px;
+      @media (max-width: 700px) {
+        font-size: 11px;
+      }
+      @media (max-width: 500px) {
+        font-size: 10px;
+      }
+      @media (max-width: 390px) {
+        font-size: 9px;
+      }
+    }
+  }
+  // @media (max-width: 575px) {
+  //   img {
+  //     max-width: 30px;
+  //     max-height: 25px;
+  //   }
+  // }
+}
+// Bottom Nav
+
+// Off Canvas
+.offcanvas {
+  z-index: 99999;
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(13.4px);
+  width: 350px !important;
+  max-width: 87%;
+  padding-top: 30px;
+  border-radius: 0 10px 10px 0;
+  border-right: 1px solid rgba(0, 246, 84, 0.5) !important;
+  button {
+    width: 100%;
+    border-radius: 10px;
+  }
+  .custome-close-btn {
+    background-color: rgba(172, 172, 172, 0.5);
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    top: 10px;
+    right: 10px;
+  }
+  .dropdown-toggle::after {
+    display: none;
+  }
+  .dropdown .dropdown-menu {
+    width: 100%;
+    border: 0;
+
+    border-radius: 0 0 15px 15px;
+    padding: 0px 0;
+    a {
+      padding: 10px 20px;
+      text-align: left;
+      display: flex;
+      @media (max-width: 991px) {
+        color: $white;
+        font-family: $Nasalization;
+      }
+      &:last-child {
+        border-radius: 0 0 15px 15px;
+      }
+    }
+  }
+  .dropdown-toggle {
+    &.show {
+      .user-button {
+        border-radius: 15px 15px 0 0;
+      }
+    }
+  }
+  .reg-btn {
+    padding: 8px 15px;
+  }
+  .leaguesDropDown button,
+  .nav-link {
+    background-color: #363636;
+    color: $white;
+    font-size: 15px;
+    text-align: left;
+    padding: 10px 20px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    font-family: $Nasalization;
+  }
+  .dropdown-toggle.nav-link {
+    padding: 0;
+    background-color: transparent;
+  }
+  .user-button {
+    display: flex;
+    align-items: flex-start;
+    background-color: #5a5a5a;
+    width: 100%;
+    border-radius: 15px;
+    padding: 12px;
+    position: relative;
+    top: 5px;
+    @media (max-width: 451px) {
+      padding: 8px 10px;
+      border-radius: 10px;
+    }
+    img {
+      border-radius: 5px;
+    }
+    .txt-pnl {
+      padding-left: 10px;
+      width: calc(100% - 40px);
+      position: relative;
+      padding-right: 30px;
+      h6 {
+        margin: 0;
+        font-size: 16px;
+        font-family: $Nasalization;
+        color: $white;
+        font-weight: 600;
+      }
+      p {
+        margin: 0;
+        font-size: 14px;
+        font-family: $Nasalization;
+        color: $white;
+        font-weight: 400;
+      }
+      span {
+        position: absolute;
+        right: 0;
+        background-color: #757575;
+        width: 28px;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        height: 28px;
+        border-radius: 5px;
+        color: $white;
+        top: 5px;
+      }
+    }
+  }
+  .nav-social-list {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    margin-top: 0;
+    li {
+      margin-bottom: 0;
+      &:last-child {
+        width: 100%;
+        .discord-btn {
+          width: 100%;
+          border-radius: 5px;
+          margin-top: 7px;
+          border-width: 2px;
+          color: $white;
+          margin-bottom: 0;
+          font-size: 16px;
+          background-color: transparent;
+          padding: 5px 15px;
+          height: auto;
+          img {
+            max-width: 20px;
+            margin-right: 8px;
+          }
+          &:hover {
+            transform: unset;
+          }
+        }
+      }
+    }
+  }
+}
+// Off Canvas
+
+.dropdown-item.active,
+.dropdown-item:active {
+  background-color: $color;
+}
+.offcanvas-body,
+.navbar-nav {
+  .dropdown .dropdown-menu a {
+    &.big {
+      font-size: 18px;
+      padding: 12px 12px;
+    }
+    padding: 10px 20px 10px 30px;
+  }
+}  
+.offcanvas-body{
+  .dropdown .dropdown-menu a {
+      svg{margin-right: 5px;position: relative;
+      }
+      &:not(.big){
+        svg{top: -3px;}
+      }
+  }
+}
+
+

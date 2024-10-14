@@ -30,7 +30,13 @@ export default function RootLayout({
       </head>
       {/* </Head> */}
       <body>
-        <ToastContainer theme='light' autoClose={3000} />
+      <ToastContainer
+            style={{ marginBottom: '90px' }}
+            theme='light'
+            autoClose={3000}
+            position='bottom-center'
+            bodyClassName='Toastify__toast-body'
+          />
         <NavBar />
         {children}
         <Footer />

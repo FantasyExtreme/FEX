@@ -1,0 +1,79 @@
+// Version: 1.0.0
+type AdminSetting =
+  {
+    creation_date : Int;
+    last_modified_by : Key;
+    modification_date : Int;
+    settingName : Text;
+    settingType : Text;
+    settingValue : Text
+  };
+type Key = Text;
+type MatchStatus = Text;
+type Match__1 =
+  {
+    awayScore : Nat;
+    awayTeam : Key;
+    homeScore : Nat;
+    homeTeam : Key;
+    location : Text;
+    providerId : MonkeyId;
+    seasonId : Key;
+    status : MatchStatus;
+    time : Int
+  };
+type MonkeyId = Text;
+type Player =
+  {
+    active : Bool;
+    country : Text;
+    fantasyPrice : Nat;
+    isPlaying : Bool;
+    isSub : Bool;
+    name : Text;
+    number : Nat;
+    photo : Text;
+    points : ?RPoints;
+    position : Position;
+    providerId : MonkeyId;
+    teamId : Key
+  };
+type Position = {#defender; #forward; #goalKeeper; #midfielder};
+type RPoints = Int;
+type Role = {#admin; #user};
+type Season =
+  {
+    endDate : Int;
+    providerId : MonkeyId;
+    seasonName : Text;
+    startDate : Int;
+    tournamentId : Key
+  };
+type Team =
+  {
+    logo : Text;
+    name : Text;
+    providerId : MonkeyId;
+    seasonId : Key;
+    shortName : Text
+  };
+type Tournament =
+  {
+    country : Text;
+    description : Text;
+    endDate : Int;
+    name : Text;
+    providerId : MonkeyId;
+    startDate : Int
+  };
+type User = {email : Text; joiningDate : Int; name : Text; role : Role};
+actor {
+  stable var stableUserNameCount : Nat;
+  stable var stable_adminSettings : [(Key, AdminSetting)];
+  stable var stable_matches : [(Key, Match__1)];
+  stable var stable_players : [(Key, Player)];
+  stable var stable_seasons : [(Key, Season)];
+  stable var stable_teams : [(Key, Team)];
+  stable var stable_tournaments : [(Key, Tournament)];
+  stable var stable_users : [(Key, User)]
+};

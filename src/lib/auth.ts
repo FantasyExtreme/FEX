@@ -1,227 +1,303 @@
 import { makeFantasyFootballActor } from '@/dfx/service/actor-locator';
 import logger from '@/lib/logger';
-import { Actor } from '@dfinity/agent';
+import { Actor, Identity } from '@dfinity/agent';
 import { AuthClient } from '@dfinity/auth-client';
-import { JsonnableDelegationChain } from '@dfinity/identity';
-import React from 'react';
-import { create } from 'zustand';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Principal } from '@dfinity/principal';
 import { ConnectPlugWalletSlice } from '@/types/store';
-import { fromNullable } from '@dfinity/utils';
+import { createAgent, fromNullable } from '@dfinity/utils';
 import { toast } from 'react-toastify';
+import { generateRandomName } from '@/components/utils/fantasy';
+import { DASHBOARD_ROUTE } from '@/constant/routes';
+import { NFID } from '@nfid/embed';
+import { LoginEnum, appData } from '@/constant/fantasticonst';
+import { useAuthStore } from '@/store/useStore';
+import { useRouter } from 'next/navigation';
 
-interface AuthState {
-  state: string;
-  actor: Actor | null;
-  client: AuthClient | null;
-}
-interface methodsProps {
-  setIsLoading?: React.Dispatch<React.SetStateAction<boolean>>;
-  useAuthStore: ReturnType<typeof create>;
-  client?: AuthClient;
-  handleClose?: () => void;
-}
-
-const authMethods = ({
-  setIsLoading,
-  useAuthStore,
-  handleClose,
-  client,
-}: methodsProps) => {
-  const { auth, setAuth, setUserAuth } = useAuthStore((state) => ({
+const useAuth = () => {
+  const { auth, setAuth, userAuth, setUserAuth } = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
     setAuth: (state as ConnectPlugWalletSlice).setAuth,
+    userAuth: (state as ConnectPlugWalletSlice).userAuth,
     setUserAuth: (state as ConnectPlugWalletSlice).setUserAuth,
   }));
+  const router = useRouter();
 
-  const initAuth = async () => {
+  const initAuth = useCallback(async () => {
     logger('INIIITINNNNG');
     setAuth({ ...auth, isLoading: true });
-    const client = await AuthClient.create({
+    const nfid = await NFID.init({
+      application: {
+        name: appData.name,
+        logo: appData.logo,
+      },
       idleOptions: {
-        // idleTimeout: 1000 * 3, // set to 30 minutes
-        idleTimeout: 1000 * 60 * 60 * 2, // set to 2 hours
+        // idleTimeout: 45 * 60 * 1000,
+        // captureScroll: true,
+        disableIdle: true,
+        disableDefaultIdleCallback: true,
       },
     });
-    if (setIsLoading) {
-      setIsLoading(true);
-      if (await client.isAuthenticated()) {
-        const tempAuth = await authenticate(client);
-        setIsLoading(false);
-        return { success: false, actor: tempAuth };
-      } else {
-        setIsLoading(false);
-        const tempActor = makeFantasyFootballActor();
-        setAuth({
-          ...auth,
-          state: 'anonymous',
-          actor: tempActor,
-          client,
-          isLoading: false,
-        });
-        return { success: false, actor: tempActor };
-      }
-    }
-    return { success: false, actor: null };
-  };
-  const login = async () => {
-    let ran = false;
-    if (
-      auth &&
-      auth.state === 'anonymous' &&
-      auth.client &&
-      handleClose &&
-      setIsLoading
-    ) {
-      setIsLoading(true);
-      await auth.client.login({
-        // maxTimeToLive: BigInt(1800) * BigInt(1_000_000_000),
-        // identityProvider: 'https://identity.ic0.app/#authorize',
-        identityProvider:
-          process.env.NEXT_PUBLIC_DFX_NETWORK === 'ic'
-            ? 'https://identity.ic0.app/#authorize'
-            : `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943/#authorize`,
-        // `http://localhost:4943?canisterId=${process.env.INTERNET_IDENTITY_CANISTER_ID}#authorize`,
-        onSuccess: () => {
-          authenticate(auth.client as AuthClient);
-        },
-        onError: () => {
-          handleClose();
-        },
+    const client = await AuthClient.create({
+      idleOptions: {
+        // idleTimeout: 1000 * 60 * 60 * 2, // set to 2 hours
+        disableIdle: true,
+        disableDefaultIdleCallback: true,
+      },
+    });
+
+    if (await client.isAuthenticated()) {
+      const tempAuth = await authenticate(client);
+      return { success: false, actor: tempAuth };
+    } else if (nfid.isAuthenticated) {
+      const tempAuth = await authenticate(undefined, nfid.getIdentity());
+      return { success: false, actor: tempAuth };
+    } else {
+      const tempActor = makeFantasyFootballActor();
+
+      setAuth({
+        ...auth,
+        state: 'anonymous',
+        actor: tempActor,
+        client,
+        isLoading: false,
       });
-      const refreshLogin = () => {
-        // prompt the user then refresh their authentication
-        logger(
-          'WE CAUGHT EM LACKINNNNN>>>::>>>::>>>::  >>>:: >>>:: >>>:: >>>:: v v >>>:: >>>::>>>::',
-        );
-        if (auth.client) {
-          auth.client.login({
-            onSuccess: async () => {
+      setUserAuth({
+        ...userAuth,
+       
+      });
+      return { success: false, actor: tempActor };
+    }
+  }, [setAuth]);
+
+  const login = useCallback(
+    async (type: LoginEnum, navigation: any, callBackfn: () => void) => {
+      if (auth.state === 'anonymous') {
+        setAuth({ ...auth, isLoading: true });
+        if (type === LoginEnum.InternetIdentity) {
+          if (!auth.client) {
+            initAuth();
+            console.error('AuthClient not initialized');
+            return;
+          }
+          console.log("loging network",{net:process.env.DFX_NETWORK});
+          
+          await auth.client.login({
+            maxTimeToLive: BigInt(30 * 24 * 60 * 60 * 1000 * 1000 * 1000),
+         
+
+            identityProvider:
+            (process.env.NEXT_PUBLIC_DFX_NETWORK ) === 'ic'
+                ? 'https://identity.ic0.app/#authorize'
+                : `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943/#authorize`,
+            onSuccess: () => {
               authenticate(auth.client as AuthClient).then(() => {
-                handleClose();
+                const path = window?.location;
+                if (path?.pathname == '/') router.push(DASHBOARD_ROUTE);
+                if (callBackfn) {
+                  callBackfn();
+                }
               });
             },
+            onError: () => {
+              setAuth({ ...auth, isLoading: false });
+            },
           });
+          const refreshLogin = () => {
+            // prompt the user then refresh their authentication
+            if (auth.client) {
+              auth.client.login({
+                onSuccess: async () => {
+                  authenticate(auth.client as AuthClient);
+                },
+              });
+            }
+          };
+
+          auth.client.idleManager?.registerCallback?.(refreshLogin);
+        } else if (type === LoginEnum.NFID) {
+          try {
+            const nfid = await NFID.init({
+              application: {
+                name: appData.name,
+                logo: appData.logo,
+              },
+              idleOptions: {
+                // idleTimeout: 45 * 60 * 1000,
+                // captureScroll: true,
+                disableIdle: true,
+                disableDefaultIdleCallback: true,
+              },
+            });
+            const delegationIdentity: Identity = await nfid.getDelegation({
+              maxTimeToLive: BigInt(30 * 24 * 60 * 60 * 1000 * 1000 * 1000),
+            
+            });
+            authenticate(undefined, delegationIdentity).then(() => {
+              const path = window?.location;
+              if (path?.pathname == '/') router.push(DASHBOARD_ROUTE);
+            });
+          } catch (error) {
+            setAuth({
+              ...auth,
+              isLoading: false,
+            });
+          }
         }
-      };
+      }
+    },
+    [auth.state, auth.client, setAuth],
+  );
 
-      auth.client.idleManager?.registerCallback?.(refreshLogin);
-    } else if (auth && !ran && auth.state === 'anonymous') {
-      initAuth();
-      ran = true;
-    } else {
-      logger('Login did not start');
-    }
-  };
-  const logout = async () => {
-    setAuth({ ...auth, isLoading: true });
+  const logout = useCallback(async () => {
+    setAuth({
+      ...auth,
+      isLoading: true,
+    });
 
-    if (auth.state === 'initialized' && auth.client) {
+    if (auth.state === 'initialized') {
       logger('LOGGIN OUT');
-      await auth.client.logout();
-      const client = await AuthClient.create({
-        idleOptions: {
-          idleTimeout: (1000 * 60 * 60) / 2, // set to half an hour
-        },
-      });
+      if (auth.client instanceof AuthClient) {
+        await auth.client.logout();
+      } else if (NFID._authClient.isAuthenticated) {
+        await NFID._authClient.logout();
+      }
+
       const tempActor = makeFantasyFootballActor();
       setUserAuth({
         name: '',
         role: '',
         userPerms: null,
-        rewardPercentage: 0,
+ 
         email: '',
       });
       setAuth({
         ...auth,
         state: 'anonymous',
         actor: tempActor,
-        client: client,
         isLoading: false,
       });
-
-      // router.push('/');
     } else {
       logger(auth.client, 'cant logout');
     }
-  };
-  const getPerms = (role: any) => {
-    let userPerms = {
-      admin: false,
-    };
-    if (role.hasOwnProperty('user')) {
-      userPerms = {
-        admin: false,
-      };
-    } else if (role.hasOwnProperty('admin')) {
-      userPerms = {
-        admin: true,
-      };
-    }
-    return userPerms;
-  };
-  const authenticate = async (client: AuthClient) => {
-    try {
-      setAuth({
-        ...auth,
-        isLoading: true,
-      });
-      const myIdentity = client?.getIdentity();
-      const actor = makeFantasyFootballActor({
-        agentOptions: {
-          identity: myIdentity,
-        },
-      });
+  }, [auth.state, auth.client, setAuth, setUserAuth]);
 
-      const resp = await actor.getUser([]);
-      const user: any = fromNullable(resp);
-      logger(user, 'userss');
-      if (user) {
-        let userPerms = getPerms(user?.role);
-        setUserAuth({
-          name: user?.name,
-          role: user?.role,
-          email: user?.email,
-          userPerms,
-          rewardPercentage:  0,
-        });
-        if (handleClose) handleClose();
-      }
-      setAuth({
-        ...auth,
-        state: 'initialized',
-        actor,
-        client,
-        isLoading: false,
-        identity: myIdentity,
-      });
-      if (handleClose) handleClose();
-      return actor;
-    } catch (e) {
-      setAuth({
-        ...auth,
-        state: 'error',
-      });
-      if (handleClose) handleClose();
-      setUserAuth({
-        name: '',
-        role: '',
-        userPerms: null,
-        rewardPercentage: 0,
-        email: '',
-      });
-      logger(e, 'Error while authenticating');
+  const getPerms = useCallback((role: any) => {
+    if (role.hasOwnProperty('admin')) {
+      return { admin: true };
     }
-  };
+    return { admin: false };
+  }, []);
+
+  const authenticate = useCallback(
+    async (client?: AuthClient, identity?: Identity) => {
+      try {
+        if (!client && !identity) {
+          return logger('Unexpected error while authenticating');
+        }
+        const development = process.env.NEXT_PUBLIC_DFX_NETWORK !== 'ic';
+        // setAuth({ ...auth, isLoading: true });
+
+        let myIdentity = client ? client.getIdentity() : identity;
+        const agent = await createAgent({
+          identity: myIdentity as Identity,
+          host: development ? 'http://localhost:4943' : 'https:icp0.io',
+        });
+        if (development) {
+          try {
+            await agent.fetchRootKey();
+          } catch (error) {
+            logger(error, 'unable to fetch root key');
+          }
+        }
+        // setAgent(agent);
+        if (!myIdentity) return logger('Unexpected error while authenticating');
+
+        const actor = makeFantasyFootballActor({
+          agentOptions: {
+            identity: myIdentity,
+          },
+        });
+
+        const resp = await actor.getUser([]);
+        const user: any = fromNullable(resp);
+
+        if (user) {
+          let userPerms = getPerms(user?.role);
+          setUserAuth({
+            name: user?.name,
+            role: user?.role,
+            email: user?.email,
+            userPerms,
+          
+          });
+        } else {
+          let newUser = {
+            name: generateRandomName(),
+            email: '',
+          };
+        
+
+          const resp = await actor.addUser(
+            newUser
+          
+          );
+
+          if (resp?.ok) {
+            resp.ok[1] = fromNullable(resp?.ok?.[1]);
+            let userPerms = getPerms(resp?.ok?.[1]?.role);
+
+            setUserAuth({
+              name: resp?.ok?.[1]?.name,
+              role: resp?.ok?.[1]?.role,
+              email: resp?.ok?.[1]?.email,
+              userPerms,
+   
+              
+            });
+          }
+        }
+
+        setAuth({
+          ...auth,
+          state: 'initialized',
+          actor,
+          client: client ?? auth.client,
+          isLoading: false,
+          identity: myIdentity,
+          agent,
+        });
+
+        return actor;
+      } catch (e) {
+        setAuth({ ...auth, state: 'error' });
+        setUserAuth({
+          name: '',
+          role: '',
+          userPerms: null,
+          email: '',
+        
+        });
+        logger(e, 'Error while authenticating');
+        throw new Error('encountered an error while authenticating');
+      }
+    },
+    [getPerms, setAuth, setUserAuth, auth],
+  );
+
+  // useEffect(() => {
+  //   initAuth();
+  // }, [initAuth]);
 
   return {
+    auth,
+    userAuth,
     initAuth,
     login,
     logout,
-    authenticate,
+    authenticate
+   
   };
 };
-export default authMethods;
-// export default { initAuth, login, logout, authenticate };
 
-// export default { initAuth, login, logout, authenticate };
+export default useAuth;

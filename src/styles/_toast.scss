@@ -1,0 +1,97 @@
+.Toastify__toast-container{
+  z-index: 999999;
+}
+.Toastify__toast-container,
+.Toastify__toast {
+  min-width: 200px !important;
+  min-height: 18px !important;
+  
+}
+.Toastify__toast-body > div:last-child {
+  color: white !important;
+  font-weight: 600;
+  font-size: 16px;
+}
+.Toastify__toast-icon {
+  display: none !important;
+}
+.Toastify__toast--error {
+  position: absolute;
+  border-radius: 10px !important;
+  margin: 0 !important;
+  background: black !important;
+  color: white !important;
+  border: 1px solid #ee1d36;
+  border-radius: 10px !important;
+  display: flex;
+  align-items: center;
+}
+.Toastify__toast--error::before {
+  content: ''; // Your svg Path
+  position: relative;
+  background-image: url('../assets/images/Group.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 100000;
+  left: 7px;
+  top: 5px;
+  display: block;
+  width: 40px;
+  height: 40px;
+}
+.Toastify__toast--success {
+  position: absolute;
+  border-radius: 10px !important;
+  margin: 0 !important;
+  background: black !important;
+  color: white !important;
+  border: 1px solid #00f654;
+  border-radius: 10px !important;
+  display: flex;
+  align-items: center;
+}
+.Toastify__toast--success::before {
+  content: ''; // Your svg Path
+  position: relative;
+  background-image: url('../assets/images/Group\ 312.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 100000;
+  left: 7px;
+  top: 5px;
+  display: block;
+  width: 40px;
+  height: 40px;
+}
+
+.Toastify__toast--warning {
+  position: absolute;
+  border-radius: 10px !important;
+  margin: 0 !important;
+  background: black !important;
+  color: white !important;
+  border: 1px solid #ffd55d;
+  border-radius: 10px !important;
+  display: flex;
+  align-items: center;
+}
+.Toastify__toast--warning::before {
+  content: ''; // Your svg Path
+  position: relative;
+  background-image: url('../assets/images/Group\ 316.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 100000;
+  left: 7px;
+  top: 5px;
+  display: block;
+  width: 40px;
+  height: 40px;
+}
+
+.Toastify__toast-body {
+  padding-left: 20px;
+  line-height: 20px;
+  width: 100%;
+  margin-left: 25px !important;
+}
