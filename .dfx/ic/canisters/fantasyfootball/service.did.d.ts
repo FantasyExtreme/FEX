@@ -37,8 +37,31 @@ export interface ITeamWithPlayers {
   'providerId' : MonkeyId,
 }
 export interface IUser { 'name' : string, 'email' : string }
+export interface InputMatch {
+  'id' : string,
+  'status' : MatchStatus,
+  'awayTeamName' : string,
+  'time' : bigint,
+  'seasonId' : Key,
+  'homeTeamName' : string,
+  'homeScore' : bigint,
+  'awayScore' : bigint,
+  'providerId' : MonkeyId,
+  'location' : string,
+}
 export type Key = string;
 export type Key__1 = string;
+export interface Match {
+  'status' : MatchStatus,
+  'homeTeam' : Key,
+  'time' : bigint,
+  'seasonId' : Key,
+  'homeScore' : bigint,
+  'awayTeam' : Key,
+  'awayScore' : bigint,
+  'providerId' : MonkeyId,
+  'location' : string,
+}
 export type MatchStatus = string;
 export type MonkeyId = string;
 export interface Player {
@@ -191,6 +214,14 @@ export interface _anon_class_19_1 {
     [Tournament__1, Season__1, Array<ITeamWithPlayers>],
     undefined
   >,
+  'addMatches' : ActorMethod<
+    [Array<InputMatch>],
+    { 'err' : Array<[boolean, string]>, 'succ' : Array<[boolean, Match]> }
+  >,
+  'addNewMatches' : ActorMethod<
+    [Array<InputMatch>, Key__1],
+    { 'err' : Array<[boolean, string]>, 'succ' : Array<[boolean, Match]> }
+  >,
   'addPlayer' : ActorMethod<[Player__1], undefined>,
   'addUser' : ActorMethod<[IUser], Result>,
   'getAdmins' : ActorMethod<[], Users>,
@@ -207,6 +238,7 @@ export interface _anon_class_19_1 {
   'getSeasonByProvider' : ActorMethod<[MonkeyId, MonkeyId], [] | [ISeason]>,
   'getSeasons' : ActorMethod<[Key__1], Seasons>,
   'getTeamById' : ActorMethod<[Key__1], [] | [Team]>,
+  'getTeamByName' : ActorMethod<[string], [] | [[Key__1, Team]]>,
   'getTournaments' : ActorMethod<[], Tournaments>,
   'getTournamentsN' : ActorMethod<[GetProps], ReturnTournaments>,
   'getUser' : ActorMethod<[[] | [string]], [] | [User]>,

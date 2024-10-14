@@ -31,6 +31,8 @@ shared ({ caller = initializer }) actor class () {
     type ITeamWithPlayers = Types.ITeamWithPlayers;
   type ISeason = Types.ISeason;
   type ITournament = Types.ITournament;
+  type InputMatch = Types.InputMatch;
+
 
   type Match = Types.Match;
   type RMatch = Types.RMatch;
@@ -89,6 +91,17 @@ shared ({ caller = initializer }) actor class () {
   };
     private func checkMatchCompleted(status : Text) : Bool {
     if (status == "Match Finished") return true else return false;
+  };
+   private func resetPlayerSquadByTeamIds(ids : [Key]) {
+    for (id in ids.vals()) {
+      for ((key, player) in playerStorage.entries()) {
+        if (player.teamId == id) {
+          let _ = playerStorage.replace(key, { player with isPlaying = false; isSub = false; points = ?0 });
+        };
+
+      };
+
+    };
   };
    private func getCurrentSeason(tournamentId : Key) : ?(Key, Season) {
     let tournament = tournamentStorage.get(tournamentId);
@@ -490,7 +503,7 @@ shared ({ caller = initializer }) actor class () {
     return rSeason;
   };
     public shared ({ caller }) func addLeague(tournament : Tournament, season : Season, teamsWithPlayers : [ITeamWithPlayers]) {
-    // onlyAdmin(caller);
+    onlyAdmin(caller);
 
     let tournamentId = Types.generateNewRemoteObjectId();
     tournamentStorage.put(tournamentId, tournament);
@@ -538,6 +551,130 @@ shared ({ caller = initializer }) actor class () {
    public query func getTeamById(teamId : Key) : async ?Team {
     return teamStorage.get(teamId);
   };
+  public query func getTeamByName(teamName : Text) : async ?(Key, Team) {
+    let teams = teamStorage.entries();
+    var team : ?(Key, Team) = null;
+    for ((key, _team) in teams) {
+      if (_team.name == teamName) {
+        team := ?(key, _team);
+      };
+    };
+    return team;
+  };
+  public shared ({ caller }) func addMatches(matches : [InputMatch]) : async {
+    succ : [(Bool, Match)];
+    err : [(Bool, Text)];
+  } {
+    onlyAdmin(caller);
+    let succ = Buffer.Buffer<(Bool, Match)>(matches.size());
+    let err = Buffer.Buffer<(Bool, Text)>(matches.size());
+    for (match in matches.vals()) {
+      let maybeHomeTeam = await getTeamByName(match.homeTeamName);
+      let maybeAwayTeam = await getTeamByName(match.awayTeamName);
+      switch (maybeHomeTeam) {
+        case (?(homeKey, homeTeam)) {
+          switch (maybeAwayTeam) {
+            case (?(awayKey, awayTeam)) {
+              let newMatch = {
+                match with
+                homeTeam = homeKey;
+                awayTeam = awayKey;
+                // time = match.time;
+                // location = match.location;
+                // providerId = match.providerId;
+                // seasonId = match.seasonId;
+                // status = match.status;
+              };
+              let id = Int.toText(Time.now()) # match.id;
+
+              matchStorage.put(id, newMatch);
+        
+              succ.add((true, newMatch))
+              // return #ok("Match added Successfully", newMatch);
+            };
+            case (null) {
+              err.add((false, "Away"))
+              // return #err("AwayTeam not found", false);
+            };
+          };
+        };
+        case (null) {
+          err.add((false, "Home"))
+          // return #err("HomeTeam not found", false);
+
+        };
+      };
+    };
+    let succArray = Buffer.toArray(succ);
+    let errArray = Buffer.toArray(err);
+    return { succ = succArray; err = errArray };
+  };
+ 
+  public shared ({ caller }) func addNewMatches(matches : [InputMatch], seasonId : Key) : async {
+    succ : [(Bool, Match)];
+    err : [(Bool, Text)];
+  } {
+    onlyAdmin(caller);
+    let succ = Buffer.Buffer<(Bool, Match)>(matches.size());
+    let err = Buffer.Buffer<(Bool, Text)>(matches.size());
+    var filteredMatches = Buffer.fromArray<InputMatch>(matches);
+    for ((_key, _match) in matchStorage.entries()) {
+      if (_match.seasonId == seasonId) {
+        filteredMatches := Buffer.mapFilter<InputMatch, InputMatch>(
+          filteredMatches,
+          func(m) {
+            if (m.providerId == _match.providerId) {
+              return null;
+            } else {
+              return ?m;
+            };
+          },
+        );
+      };
+    };
+
+    for (match in filteredMatches.vals()) {
+      let maybeHomeTeam = await getTeamByName(match.homeTeamName);
+      let maybeAwayTeam = await getTeamByName(match.awayTeamName);
+      switch (maybeHomeTeam) {
+        case (?(homeKey, homeTeam)) {
+          switch (maybeAwayTeam) {
+            case (?(awayKey, awayTeam)) {
+              let newMatch = {
+                match with
+                homeTeam = homeKey;
+                awayTeam = awayKey;
+                // time = match.time;
+                // location = match.location;
+                // providerId = match.providerId;
+                // seasonId = match.seasonId;
+                // status = match.status;
+              };
+              resetPlayerSquadByTeamIds([homeKey, awayKey]);
+              let id = Int.toText(Time.now()) # match.id;
+              matchStorage.put(id, newMatch);
+            
+              succ.add((true, newMatch))
+              // return #ok("Match added Successfully", newMatch);
+            };
+            case (null) {
+              err.add((false, "Away"))
+              // return #err("AwayTeam not found", false);
+            };
+          };
+        };
+        case (null) {
+          err.add((false, "Home"))
+          // return #err("HomeTeam not found", false);
+
+        };
+      };
+    };
+    let succArray = Buffer.toArray(succ);
+    let errArray = Buffer.toArray(err);
+    return { succ = succArray; err = errArray };
+  };
+
   private func pGetMatches(props : GetProps, time : ?Int, tournamentId : ?Key) : RMatches {
     let currentTime = getTime();
     var isUpcoming : Bool = true;

@@ -42,6 +42,31 @@ export const idlFactory = ({ IDL }) => {
     'shortName' : IDL.Text,
     'providerId' : MonkeyId,
   });
+  const MatchStatus = IDL.Text;
+  const InputMatch = IDL.Record({
+    'id' : IDL.Text,
+    'status' : MatchStatus,
+    'awayTeamName' : IDL.Text,
+    'time' : IDL.Int,
+    'seasonId' : Key,
+    'homeTeamName' : IDL.Text,
+    'homeScore' : IDL.Nat,
+    'awayScore' : IDL.Nat,
+    'providerId' : MonkeyId,
+    'location' : IDL.Text,
+  });
+  const Match = IDL.Record({
+    'status' : MatchStatus,
+    'homeTeam' : Key,
+    'time' : IDL.Int,
+    'seasonId' : Key,
+    'homeScore' : IDL.Nat,
+    'awayTeam' : Key,
+    'awayScore' : IDL.Nat,
+    'providerId' : MonkeyId,
+    'location' : IDL.Text,
+  });
+  const Key__1 = IDL.Text;
   const RPoints = IDL.Int;
   const Player__1 = IDL.Record({
     'active' : IDL.Bool,
@@ -76,8 +101,6 @@ export const idlFactory = ({ IDL }) => {
     'email' : IDL.Text,
   });
   const Users = IDL.Vec(IDL.Tuple(Key, User__1));
-  const Key__1 = IDL.Text;
-  const MatchStatus = IDL.Text;
   const Team__1 = IDL.Record({
     'logo' : IDL.Text,
     'name' : IDL.Text,
@@ -195,6 +218,26 @@ export const idlFactory = ({ IDL }) => {
         [],
         ['oneway'],
       ),
+    'addMatches' : IDL.Func(
+        [IDL.Vec(InputMatch)],
+        [
+          IDL.Record({
+            'err' : IDL.Vec(IDL.Tuple(IDL.Bool, IDL.Text)),
+            'succ' : IDL.Vec(IDL.Tuple(IDL.Bool, Match)),
+          }),
+        ],
+        [],
+      ),
+    'addNewMatches' : IDL.Func(
+        [IDL.Vec(InputMatch), Key__1],
+        [
+          IDL.Record({
+            'err' : IDL.Vec(IDL.Tuple(IDL.Bool, IDL.Text)),
+            'succ' : IDL.Vec(IDL.Tuple(IDL.Bool, Match)),
+          }),
+        ],
+        [],
+      ),
     'addPlayer' : IDL.Func([Player__1], [], ['oneway']),
     'addUser' : IDL.Func([IUser], [Result], []),
     'getAdmins' : IDL.Func([], [Users], ['query']),
@@ -216,6 +259,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getSeasons' : IDL.Func([Key__1], [Seasons], ['query']),
     'getTeamById' : IDL.Func([Key__1], [IDL.Opt(Team)], ['query']),
+    'getTeamByName' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(IDL.Tuple(Key__1, Team))],
+        ['query'],
+      ),
     'getTournaments' : IDL.Func([], [Tournaments], ['query']),
     'getTournamentsN' : IDL.Func([GetProps], [ReturnTournaments], ['query']),
     'getUser' : IDL.Func([IDL.Opt(IDL.Text)], [IDL.Opt(User)], ['query']),

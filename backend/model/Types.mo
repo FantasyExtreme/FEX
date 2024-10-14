@@ -187,7 +187,18 @@ module Types {
     tournamentId : Key;
     providerId : MonkeyId;
   };
-
+public type InputMatch = {
+    providerId : MonkeyId;
+    homeTeamName : Text;
+    awayTeamName : Text;
+    time : Int;
+    location : Text;
+    id : Text;
+    seasonId : Key;
+    status : MatchStatus;
+    homeScore : Nat;
+    awayScore : Nat;
+  };
   public type ITournament = {
     id : Key;
     providerId : MonkeyId;
