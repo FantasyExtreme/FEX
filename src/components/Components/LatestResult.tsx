@@ -124,7 +124,7 @@ export default function LatestResult() {
             <ul key={index} className='latest-result-list'>
               <li>
                 <Link
-                  href={`${MATCHES_ROUTE + MATCHES_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
+                  href={`#`}
                 >
                   <div className='latest-post'>
                     <h6>{match.date}</h6>

@@ -93,7 +93,7 @@ export default function UpcomingMatches() {
                 {matches.upcoming?.map((match: any) => (
                   <li key={match.id}>
                     <Link
-                      href={`${MATCHES_ROUTE + MATCHES_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
+                      href={"#"}
                       className='upcoming-match-post'
                     >
                       <div>
