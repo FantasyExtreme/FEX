@@ -93,6 +93,7 @@ export default function PlayerSelection() {
   const [saving, setSaving] = useState(false);
   const [budget, setBudget] = useState<number | null>(200);
   const [selectedformation, setSelectedformation] = useState<string>('0');
+  const [teamNameSize, setTeamNameSize] = useState<number>(0);
 
   const [showConnect, setShowConnect] = useState(false);
   const [isSubstituteSelection, setIsSubstituteSelection] =
@@ -136,7 +137,7 @@ export default function PlayerSelection() {
   const sqSchema = object().shape({
     name: string()
       .required('Name is required')
-      .min(MIN_NAME_CHARACTERS, 'Name can not be less than 3 characters'),
+      .min(MIN_NAME_CHARACTERS, 'Name can not be less than 3 characters').max(MAX_NAME_CHARACTERS, 'Name can not be more than 30 characters'),
   });
 
   const handleShowModal = () => {
@@ -526,6 +527,7 @@ export default function PlayerSelection() {
    *  @param {FormikValuesf} values Formik values object with name as the value
    */
   async function saveTeam(values: FormikValues) {
+
     setSaving(true);
     setTimeout(() => {
     setSaving(false);
@@ -1285,7 +1287,7 @@ export default function PlayerSelection() {
       <Modal show={showModal} onHide={handleCloseModal} centered>
         <Modal.Body>
           <h5 className='text-center'> {saveButtonText}</h5>
-          <p>Team Name</p>
+          <p>Team Name <small>Max({teamNameSize ?? 0}/30)</small></p>
           <Formik
             initialValues={sqValues}
             validationSchema={sqSchema}
@@ -1304,7 +1306,8 @@ export default function PlayerSelection() {
                           type='text'
                           placeholder='Team Name'
                           value={field.value}
-                          onChange={handleChange}
+                          onChange={(e)=>{handleChange(e);setTeamNameSize(e.target.value.length);
+                          }}
                           onInput={handleBlur}
                           name='name'
                         />
