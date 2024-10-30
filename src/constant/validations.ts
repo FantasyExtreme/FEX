@@ -1,5 +1,5 @@
 export const ONLY_ALPHABET = /^[a-zA-Z\s]+$/;
-export const MAX_NAME_CHARACTERS = 40;
+export const MAX_NAME_CHARACTERS = 30;
 export const MIN_NAME_CHARACTERS = 3;
 export const EMAIL_VALIDATION =
   /^[-a-zA-Z0-9._]+@([a-zA-Z0-9-]+?\.)+[A-Za-z]+$/;
