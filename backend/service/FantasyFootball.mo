@@ -503,7 +503,7 @@ shared ({ caller = initializer }) actor class () {
     return rSeason;
   };
     public shared ({ caller }) func addLeague(tournament : Tournament, season : Season, teamsWithPlayers : [ITeamWithPlayers]) {
-    // onlyAdmin(caller);
+    onlyAdmin(caller);
 
     let tournamentId = Types.generateNewRemoteObjectId();
     tournamentStorage.put(tournamentId, tournament);
@@ -541,7 +541,7 @@ shared ({ caller = initializer }) actor class () {
     return #ok(positionPlayers);
   };
     public shared ({ caller }) func addPlayer(player : Player) {
-    // onlyAdmin(caller);
+    onlyAdmin(caller);
     let playerId = Types.generateNewRemoteObjectId();
     return playerStorage.put(playerId, player);
   };
@@ -565,7 +565,7 @@ shared ({ caller = initializer }) actor class () {
     succ : [(Bool, Match)];
     err : [(Bool, Text)];
   } {
-    // onlyAdmin(caller);
+    onlyAdmin(caller);
     let succ = Buffer.Buffer<(Bool, Match)>(matches.size());
     let err = Buffer.Buffer<(Bool, Text)>(matches.size());
     for (match in matches.vals()) {
@@ -614,7 +614,7 @@ shared ({ caller = initializer }) actor class () {
     succ : [(Bool, Match)];
     err : [(Bool, Text)];
   } {
-    // onlyAdmin(caller);
+    onlyAdmin(caller);
     let succ = Buffer.Buffer<(Bool, Match)>(matches.size());
     let err = Buffer.Buffer<(Bool, Text)>(matches.size());
     var filteredMatches = Buffer.fromArray<InputMatch>(matches);
