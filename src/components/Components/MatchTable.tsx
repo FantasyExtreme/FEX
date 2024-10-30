@@ -1,6 +1,8 @@
 import { MATCHES_ICON_SIZES } from '@/constant/fantasticonst';
 import {
   
+  ADMIN_CONTESTS_ROUTE,
+  MATCHES_CONTESTS_ROUTE,
   MATCHES_ROUTE,
   TEAM_CREATION_ROUTE,
 } from '@/constant/routes';
@@ -187,7 +189,20 @@ export default function MatchTable({
                                 Create Team
                               </Link>
                             )}
-                       
+                        {admin && (
+                              <Link
+                                href={`${ADMIN_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
+                                className=' reg-btn text-white reg-custom-btn empty text-capitalize  '
+                              >
+                                Create Contest
+                              </Link>
+                            )}
+                              <Link
+                              href={`${MATCHES_ROUTE + MATCHES_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
+                              className=' reg-btn text-white reg-custom-btn empty text-capitalize  '
+                            >
+                              View Contests
+                            </Link>
                           
                           </div>
                         </td>
@@ -358,7 +373,20 @@ export default function MatchTable({
                     Create Team
                   </Link>
                 )}
-               
+               {admin && (
+                  <Link
+                    href={`${ADMIN_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
+                    className=' reg-btn text-white reg-custom-btn empty text-capitalize  '
+                  >
+                    Create Contest
+                  </Link>
+                )}
+                   <Link
+                  href={`${MATCHES_ROUTE + MATCHES_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
+                  className=' reg-btn text-white reg-custom-btn empty text-capitalize  '
+                >
+                  View Contests
+                </Link>
 
                
               </div>

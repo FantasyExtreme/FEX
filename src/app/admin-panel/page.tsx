@@ -1,58 +1,37 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import Link from 'next/link';
-import {
-  Container,
-  Row,
-  Col,
-  Tabs,
-  Tab,
-  Table,
-  Spinner,
-  Button,
-  Form,
-  FormGroup,
-} from 'react-bootstrap';
+import { Container, Row, Col, Tabs, Tab, Button, Form } from 'react-bootstrap';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
 import { useRouter } from 'next/navigation';
-import {
-  getMatches,
-  getTournaments,
-} from '@/components/utils/fantasy';
+import { getMatches, getTournaments } from '@/components/utils/fantasy';
 import {
   LoadingState,
-  MATCH_STATUS_TYPE,
   Match,
   MatchesCountType,
   MatchesType,
   TournamentType,
 } from '@/types/fantasy';
-import { MATCHES_ICON_SIZES } from '@/constant/fantasticonst';
 import {
   DEFAULT_MATCH_STATUS,
   MatchStatuses,
   QURIES,
-  MATCHES_ITEMSPERPAGE,
 } from '@/constant/variables';
-import logger from '@/lib/logger';
-import BeatLoader from 'react-spinners/BeatLoader';
-import Loader from '@/components/Components/Loader';
 import MatchTable from '@/components/Components/MatchTable';
-import PaginatedList from '@/components/Components/Pagination';
 import CarouselSlider from '@/components/Components/CalenderSlider';
 import MatchesPagination from '@/components/Components/MatchesPagination';
-import { MATCHES_ROUTE } from '@/constant/routes';
 import useSearchParamsHook from '@/components/utils/searchParamsHook';
+import { MATCHES_ROUTE } from '@/constant/routes';
 import calander from '@/assets/images/calender.png';
-import { date } from 'yup';
 import DatePicker from 'react-date-picker';
+import logger from '@/lib/logger';
 type ValuePiece = Date | null;
 
 type Value = ValuePiece | [ValuePiece, ValuePiece];
-export default function Matches() {
+const SuperAdmin = () => {
   const urlparama = useSearchParamsHook();
   const searchParams = new URLSearchParams(urlparama);
   const [matchTab, setMatchTab] = useState<string>(DEFAULT_MATCH_STATUS);
@@ -60,9 +39,10 @@ export default function Matches() {
   const [hasMounted, setHasMounted] = useState(true);
   const [tournamnets, setTournaments] = useState<TournamentType | null>(null);
   const [value, onChange] = useState<Value>(new Date());
+  const childRef = useRef<any>(null);
+  const [prevSelectedTime, setPrevSelectedTime] = useState<null | number>(null);
 
   // const [upcomingMatches, setUpcomingMatches] = useState<any[]>([]);
-  const tournamentId = searchParams.get(QURIES.tournamentId);
   const [loading, setLoading] = useState<LoadingState>({
     upcoming: true,
     ongoing: true,
@@ -78,20 +58,21 @@ export default function Matches() {
     ongoing: 0,
     finished: 0,
   });
-
   const [pageCount, setPageCount] = useState<MatchesCountType>({
     upcoming: 0,
     ongoing: 0,
     finished: 0,
   });
-
   const matchProps = {
     status: DEFAULT_MATCH_STATUS,
     search: '',
     page: 0,
     limit: 10,
   };
+
   // const [tournamentId, selectTournamentId] = useState<string | null>(null);
+  const tournamentId = searchParams.get(QURIES.tournamentId);
+
   const { auth, userAuth } = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
     userAuth: (state as ConnectPlugWalletSlice).userAuth,
@@ -108,11 +89,15 @@ export default function Matches() {
       { ...matchProps, status, page: 0 },
       setLoading,
       setPageCount,
-      selectedTime ? [selectedTime] : [],
+       [],
       Id ? Id : null,
     );
   }
-
+  const callChildMethod = () => {
+    if (childRef.current) {
+      childRef.current.updateActiveIndex(); // Call the child method
+    } 
+  };
   /**
    * Select the tab and get matches according to status
    * @param tab The status of match (which is being used as the keys of tabs)
@@ -120,6 +105,9 @@ export default function Matches() {
    */
   function changeTab(tab: string | null) {
     if (!tab) return;
+    callChildMethod(); 
+    setSelectedTime(null);
+   
     const params = new URLSearchParams(searchParams.toString());
     params.set(QURIES.matchTab, tab);
     window.history.pushState(null, '', `?${params.toString()}`);
@@ -208,17 +196,8 @@ export default function Matches() {
       [time],
       tournamentId ? tournamentId : null,
     );
-    setOffset({
-      upcoming: 0,
-      ongoing: 0,
-      finished: 0,
-    });
-    setPageCount({
-      upcoming: 0,
-      ongoing: 0,
-      finished: 0,
-    });
   };
+
   /**
    * Fetches and sets the matches for the selected tournament.
    *
@@ -226,6 +205,11 @@ export default function Matches() {
    */
   function selectTournament(Id: string) {
     changeOffset(0);
+    const currentUrl = new URL(window.location.href);
+    const currentParams = new URLSearchParams(currentUrl.search);
+    currentParams.set(QURIES.tournamentId, Id);
+    const newUrl = `${currentUrl.pathname}?${currentParams.toString()}`;
+    router.push(newUrl);
     getMatches(
       auth.actor,
       setMatches,
@@ -236,33 +220,14 @@ export default function Matches() {
       },
       setLoading,
       setPageCount,
-      [],
+      selectedTime ? [selectedTime] : [],
       Id ? Id : null,
     );
   }
-   /**
-   * change reward able match status by match id
-   * @param {matchId, status}
+  /**
+   * use to get matches of spacific date selected by calender which show in table view
+   * @param date 
    */
-   let handleRewardableMatchUpdate = (matchId: string, status: boolean) => {
-    let filteredMatches: [string, Match][] | null = matches.upcoming
-      ? matches.upcoming.map(([tournament, matches]) => {
-          let updatedMatches = matches?.map((match:Match) => {
-            if (match.id === matchId) {
-              return { ...match, isRewardable: status }; // Update the isRewardable field
-            }
-            return match; // Return the original match if no changes
-          });
-          return [tournament, updatedMatches]; // Return the tuple [string, Match[]]
-        })
-      : null;
-  
-    setMatches((prev: MatchesType) => ({
-      ...prev,
-      upcoming: filteredMatches || prev.upcoming, // Ensure it’s either the filtered matches or the previous state
-    }));
-  };
-  
   const handleDateChange = (date: Value) => {
     if (Array.isArray(date)) {
       const [startDate, endDate] = date;
@@ -274,12 +239,29 @@ export default function Matches() {
     }
     onChange(date);
   };
-  let tempTab = searchParams.get(QURIES.matchTab);
-  useEffect(() => {
-    let tempTab = searchParams.get(QURIES.matchTab);
-    if (tempTab) setMatchTab(tempTab);
-    changeTab(tempTab)
-  }, [tempTab]);
+    /**
+   * change reward able match status by match id
+   * @param {matchId, status}
+   */
+    let handleRewardableMatchUpdate = (matchId: string, status: boolean) => {
+      let filteredMatches: [string, Match][] | null = matches.upcoming
+        ? matches.upcoming.map(([tournament, matches]) => {
+            let updatedMatches = matches?.map((match:Match) => {
+              if (match.id === matchId) {
+                return { ...match, isRewardable: status }; // Update the isRewardable field
+              }
+              return match; // Return the original match if no changes
+            });
+            return [tournament, updatedMatches]; // Return the tuple [string, Match[]]
+          })
+        : null;
+    
+      setMatches((prev: MatchesType) => ({
+        ...prev,
+        upcoming: filteredMatches || prev.upcoming, // Ensure it’s either the filtered matches or the previous state
+      }));
+    };
+    
   useEffect(() => {
     if (auth.actor) {
       let tempTab = searchParams.get(QURIES.matchTab);
@@ -298,16 +280,23 @@ export default function Matches() {
       );
       getTournaments(auth.actor, matchProps, setTournaments);
     }
-  }, [auth.actor, tournamentId]);
+  }, [auth.actor]);
+
+  const navigation = useRouter();
+  useEffect(() => {
+    if (!auth.isLoading && !userAuth.userPerms?.admin) {
+      navigation.replace('/');
+    }
+  }, [auth.state]);
 
   return (
     <>
-      <Container fluid className='inner-page'>
-        <Row>
-          <Container>
-            <Row>
-
-              <Col xl='12' lg='12' md='12'>
+      {userAuth.userPerms?.admin && (
+        <Container fluid className='inner-page'>
+          <Row>
+            <Container>
+              <Row>
+                <Col xl='12' lg='12' md='12'>
                 <div className='calender-details-continer'>
                   <h2 className='animedown tablet-view-none'>
                     <span>MATCHES</span>
@@ -327,10 +316,11 @@ export default function Matches() {
                         //   );
                         // }}
                         const selectedValue = e.target.value;
+
                         selectTournament(selectedValue);
-                        router.push(
-                          `${MATCHES_ROUTE}?tournament=${selectedValue}`,
-                        );
+                        // router.push(
+                        //   `${MATCHES_ROUTE}?tournament=${selectedValue}`,
+                        // );
                       }}
                     >
                       <option value=''>Leagues</option>
@@ -346,18 +336,15 @@ export default function Matches() {
                     </Form.Select>
                   </div>
                   <div className='mobile-view'>
-                    {MatchStatuses.ongoing !=
-                      (tempTab ?? DEFAULT_MATCH_STATUS) && (
-                      <Button className='trans '>
-                        <DatePicker
-                          onChange={handleDateChange}
-                          value={value}
-                          clearIcon={null}
-                          calendarAriaLabel={undefined}
-                          calendarIcon={<Image src={calander} alt='calender' />}
-                        />
-                      </Button>
-                    )}
+                  {MatchStatuses.ongoing !=
+                  (matchTab ?? DEFAULT_MATCH_STATUS) &&<Button className='trans '>
+
+
+                      <DatePicker  onChange={handleDateChange} value={value} clearIcon={null} calendarAriaLabel={undefined} calendarIcon={<Image
+                          src={calander}
+                          alt='calender'/>}/>
+                
+                      </Button> }
                   </div>
                 </div>
 
@@ -367,60 +354,72 @@ export default function Matches() {
                     <div
                       className={`Calender-chart ${
                         MatchStatuses.ongoing ==
-                        (tempTab ?? DEFAULT_MATCH_STATUS)
+                        (matchTab ?? DEFAULT_MATCH_STATUS)
                           ? 'invisible remove-tranisiton'
                           : 'visible'
                       }`}
                     >
+                      
+
                       <CarouselSlider
                         getSelectedDate={getMatchOfSelectedDate}
                       />
                     </div>
+                      <Tabs
+                        activeKey={matchTab}
+                        onSelect={changeTab}
+                        className='mb-5'
+                      >
+                        <Tab eventKey={MatchStatuses.upcoming} title='Upcoming'>
+                          <MatchTable
+                            loading={loading.upcoming}
+                            tab={matchTab}
+                            admin={true}
+                            groupMatches={matches?.upcoming}
+                            handleRewardableMatchUpdate={handleRewardableMatchUpdate}
+                          />
+                        </Tab>
+                        <Tab
+                          eventKey={MatchStatuses.ongoing}
+                          title='In Progress'
+                        >
+                          <MatchTable
+                            loading={loading.ongoing}
+                            tab={matchTab}
+                            admin={true}
+                            groupMatches={matches?.ongoing}
 
-                    <Tabs
-                      activeKey={matchTab}
-                      onSelect={changeTab}
-                      className='mb-5 tabbb'
-                    >
-                      <Tab eventKey={MatchStatuses.upcoming} title='Upcoming'>
-                        <MatchTable
-                          loading={loading.upcoming}
-                          tab={matchTab}
-                          groupMatches={matches?.upcoming}
-                          admin={userAuth.userPerms?.admin}
-                          handleRewardableMatchUpdate={handleRewardableMatchUpdate}
-                        />
-                      </Tab>
-                      <Tab eventKey={MatchStatuses.ongoing} title='In Progress'>
-                        <MatchTable
-                          loading={loading.ongoing}
-                          tab={matchTab}
-                          groupMatches={matches?.ongoing}
-                          admin={userAuth.userPerms?.admin}
-                        />
-                      </Tab>
-                      <Tab eventKey={MatchStatuses.finished} title='Completed'>
-                        <MatchTable
-                          loading={loading.finished}
-                          tab={matchTab}
-                          groupMatches={matches?.finished}
-                          admin={userAuth.userPerms?.admin}
-                        />
-                      </Tab>
-                    </Tabs>
+                          />
+                        </Tab>
+                        <Tab
+                          eventKey={MatchStatuses.finished}
+                          title='Completed'
+                        >
+                          <MatchTable
+                            loading={loading.finished}
+                            tab={matchTab}
+                            admin={true}
+                            groupMatches={matches?.finished}
+
+                          />
+                        </Tab>
+                      </Tabs>
+                    </div>
+                    <MatchesPagination
+                      matchTab={matchTab}
+                      pageCount={pageCount}
+                      offset={offset}
+                      pageClicked={pageClicked}
+                    />
                   </div>
-                  <MatchesPagination
-                    matchTab={matchTab}
-                    pageCount={pageCount}
-                    offset={offset}
-                    pageClicked={pageClicked}
-                  />
-                </div>
-              </Col>
-            </Row>
-          </Container>
-        </Row>
-      </Container>
+                </Col>
+              </Row>
+            </Container>
+          </Row>
+        </Container>
+      )}
     </>
   );
-}
+};
+
+export default SuperAdmin;

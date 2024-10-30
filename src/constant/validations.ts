@@ -18,16 +18,13 @@ export const Validations = {
     slots: {
       min: 1,
     },
-    entryFee: {
-      min: 0,
-    },
-    rewardDistribution: {
-      min: 1,
-    },
     minCap: {
       min: 1,
     },
     maxCap: {
+      min: 1,
+    },
+    teamsPerUser: {
       min: 1,
     },
   },
@@ -44,10 +41,6 @@ export const Messages = {
       req: `Slots are required`,
       min: `Slots ${messageTemplate.min} ${Validations.contests.slots.min}`,
     },
-    entryFee: {
-      req: `Entry Fee ${messageTemplate.req}`,
-      min: `Entry Fee can not be less than ${Validations.contests.entryFee.min}`,
-    },
     minCap: {
       req: `Min Cap ${messageTemplate.req}`,
       min: `Min Cap can not be less than ${Validations.contests.minCap.min}`,
@@ -55,6 +48,13 @@ export const Messages = {
     maxCap: {
       req: `Max Cap ${messageTemplate.req}`,
       min: `Max Cap can not be less than ${Validations.contests.maxCap.min}`,
+    },
+    teamsPerUser: {
+      req: `Teams Per User ${messageTemplate.req}`,
+      min: `Teams Per User can not be less than ${Validations.contests.teamsPerUser.min}`,
+    },
+    rules: {
+      req: `Contest Rule ${messageTemplate.req}`,
     },
   },
 };

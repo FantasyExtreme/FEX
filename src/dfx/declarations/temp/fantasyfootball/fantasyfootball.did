@@ -1,26 +1,86 @@
-type _anon_class_19_1 = 
+type _anon_class_22_1 = 
  service {
+   addContest: (IContest) -> (Result_2);
+   addLeague: (Tournament__1, Season__1, vec ITeamWithPlayers) -> () oneway;
+   addMatches: (vec InputMatch) ->
+    (record {
+       err: vec record {
+                  bool;
+                  text;
+                };
+       succ: vec record {
+                   bool;
+                   Match;
+                 };
+     });
+   addNewMatches: (vec InputMatch, Key) ->
+    (record {
+       err: vec record {
+                  bool;
+                  text;
+                };
+       succ: vec record {
+                   bool;
+                   Match;
+                 };
+     });
    addPlayer: (Player__1) -> () oneway;
+   addPlayerSquad: (IPlayerSquad) -> (Result_2);
    addUser: (IUser) -> (Result);
    getAdmins: () -> (Users) query;
    getBudget: () -> (opt text) query;
-   getMatch: (Key__1) -> (opt RefinedMatch) query;
-   getMatchesWithTournamentId: (GetProps, opt int, opt Key__1) ->
+   getContest: (Key) -> (opt Contest) query;
+   /// getContestNames use to get list of contest names og given ids
+   ///    @param array of contestIds
+   ///    @return [(id, contestname)]
+   ///   *
+   getContestNames: (vec Key) -> (vec record {
+                                        text;
+                                        text;
+                                      }) query;
+   /// getContestWithMatch use to get  contest with match with contest id
+   ///    @param array of contestId
+   ///    @return {contest:Contest;match:RefinedMatch}
+   ///   *
+   getContestWithMatch: (Key) ->
+    (opt record {
+           contest: Contest;
+           match: opt RefinedMatch;
+         }) query;
+   getContestsByMatchId: (Key) -> (Contests) query;
+   getFilterdContests: (GetProps) -> (ReturnContests) query;
+   getFilterdRawPlayerSquadsByMatch: (opt Key, opt Key, GetProps) ->
+    (ReturnTeams) query;
+   getListPlayerSquadsByMatch: (Key, opt Key) -> (ListPlayerSquads) query;
+   getMatch: (Key) -> (opt RefinedMatch) query;
+   getMatchesWithTournamentId: (GetProps, opt int, int, opt Key) ->
     (ReturnMatches) query;
-   getPlayer: (Key__1) -> (opt Player__1) query;
-   getPlayersByPosition: (Position__1) -> (Result_2) query;
-   getPlayersByTeamId: (Key__1) -> (Result_1) query;
-   getPlayersByTeamIds: (vec Key__1) -> (Result_1) query;
-   getTeamById: (Key__1) -> (opt Team) query;
+   getPaginatedContestsByMatchId: (Key, GetProps) ->
+    (ReturnPagContests) query;
+   getPlayer: (Key) -> (opt Player__1) query;
+   getPlayerSquad: (Key) -> (opt RankPlayerSquad) query;
+   getPlayersByPosition: (Position__1) -> (Result_4) query;
+   getPlayersByTeamId: (Key) -> (Result_3) query;
+   getPlayersByTeamIds: (vec Key) -> (Result_3) query;
+   getSeasonByProvider: (MonkeyId, MonkeyId) -> (opt ISeason) query;
+   getSeasons: (Key) -> (Seasons) query;
+   getTeamById: (Key) -> (opt Team) query;
+   getTeamByName: (text) -> (opt record {
+                                   Key;
+                                   Team;
+                                 }) query;
+   getTournaments: () -> (Tournaments) query;
    getTournamentsN: (GetProps) -> (ReturnTournaments) query;
    getUser: (opt text) -> (opt User) query;
    makeAdmin: (principal) -> (bool);
-   savePlayers_mg: (Players) -> (bool);
+   removeContest: (Key) -> (opt Contest);
+   updateContest: (IContest, Key) -> (Result_2);
+   updatePlayerSquad: (Key, IPlayerSquad) -> (Result_1);
    updateUser: (IUser) -> (Result);
  };
 type Users = 
  vec record {
-       Key;
+       Key__1;
        User__1;
      };
 type User__1 = 
@@ -39,9 +99,18 @@ type User =
  };
 type Tournaments = 
  vec record {
-       Key;
+       Key__1;
        Tournament;
      };
+type Tournament__1 = 
+ record {
+   country: text;
+   description: text;
+   endDate: int;
+   name: text;
+   providerId: MonkeyId;
+   startDate: int;
+ };
 type Tournament = 
  record {
    country: text;
@@ -56,7 +125,7 @@ type Team__1 =
    logo: text;
    name: text;
    providerId: MonkeyId;
-   seasonId: Key;
+   seasonId: Key__1;
    shortName: text;
  };
 type Team = 
@@ -64,8 +133,29 @@ type Team =
    logo: text;
    name: text;
    providerId: MonkeyId;
-   seasonId: Key;
+   seasonId: Key__1;
    shortName: text;
+ };
+type Seasons = 
+ vec record {
+       Key__1;
+       Season;
+     };
+type Season__1 = 
+ record {
+   endDate: int;
+   providerId: MonkeyId;
+   seasonName: text;
+   startDate: int;
+   tournamentId: Key__1;
+ };
+type Season = 
+ record {
+   endDate: int;
+   providerId: MonkeyId;
+   seasonName: text;
+   startDate: int;
+   tournamentId: Key__1;
  };
 type Role = 
  variant {
@@ -77,22 +167,50 @@ type ReturnTournaments =
    total: nat;
    tournaments: Tournaments;
  };
+type ReturnTeams = 
+ record {
+   teams: RawPlayerSquads;
+   total: nat;
+ };
+type ReturnPagContests = 
+ record {
+   contests: Contests;
+   total: nat;
+ };
 type ReturnMatches = 
  record {
    matches: RTournamentMatches;
    total: nat;
  };
-type Result_2 = 
+type ReturnContests = 
+ record {
+   contests: MatchContests;
+   total: nat;
+ };
+type Result_4 = 
  variant {
    err: text;
    ok: Players;
  };
-type Result_1 = 
+type Result_3 = 
  variant {
    err: text;
    ok: record {
          Players;
          PlayerCount;
+       };
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: record {
+         message: text;
+         squad: opt PlayerSquad;
        };
  };
 type Result = 
@@ -107,34 +225,76 @@ type RefinedMatch =
  record {
    awayScore: nat;
    awayTeam: record {
-               Key;
+               Key__1;
                opt Team__1;
              };
    homeScore: nat;
    homeTeam: record {
-               Key;
+               Key__1;
                opt Team__1;
              };
    location: text;
    providerId: MonkeyId;
-   seasonId: Key;
+   seasonId: Key__1;
    status: MatchStatus;
    time: int;
+ };
+type RawPlayerSquads = 
+ vec record {
+       Key__1;
+       RawPlayerSquad;
+     };
+type RawPlayerSquad = 
+ record {
+   cap: Key__1;
+   creation_time: int;
+   formation: text;
+   hasParticipated: bool;
+   matchId: Key__1;
+   matchName: text;
+   matchTime: int;
+   name: text;
+   points: RPoints;
+   rank: nat;
+   userId: Key__1;
+   viceCap: Key__1;
+ };
+type RankPlayerSquad = 
+ record {
+   cap: Key__1;
+   creation_time: int;
+   formation: text;
+   hasParticipated: bool;
+   matchId: Key__1;
+   name: text;
+   players: vec record {
+                  Key__1;
+                  PlayerS;
+                  bool;
+                };
+   points: RPoints;
+   rank: nat;
+   ranks: vec record {
+                Key__1;
+                nat;
+              };
+   userId: Key__1;
+   viceCap: Key__1;
  };
 type RTournamentMatches = vec RTournamentMatch;
 type RTournamentMatch = 
  record {
    awayScore: nat;
-   awayTeam: Key;
+   awayTeam: Key__1;
    homeScore: nat;
-   homeTeam: Key;
-   id: Key;
+   homeTeam: Key__1;
+   id: Key__1;
    location: text;
    providerId: MonkeyId;
-   seasonId: Key;
+   seasonId: Key__1;
    status: MatchStatus;
    time: int;
-   tournamentId: Key;
+   tournamentId: Key__1;
    tournamentName: text;
  };
 type RPoints = int;
@@ -154,7 +314,7 @@ type Position =
  };
 type Players = 
  vec record {
-       Key;
+       Key__1;
        Player;
      };
 type Player__1 = 
@@ -170,7 +330,39 @@ type Player__1 =
    points: opt RPoints;
    position: Position;
    providerId: MonkeyId;
-   teamId: Key;
+   teamId: Key__1;
+ };
+type PlayerSquad = 
+ record {
+   cap: Key__1;
+   creation_time: int;
+   formation: text;
+   hasParticipated: bool;
+   matchId: Key__1;
+   name: text;
+   players: vec record {
+                  Key__1;
+                  bool;
+                };
+   points: RPoints;
+   rank: nat;
+   userId: Key__1;
+   viceCap: Key__1;
+ };
+type PlayerS = 
+ record {
+   active: bool;
+   country: text;
+   fantasyPrice: nat;
+   isPlaying: bool;
+   isSub: bool;
+   name: text;
+   number: nat;
+   photo: text;
+   points: opt RPoints;
+   position: Position;
+   providerId: MonkeyId;
+   teamId: Key__1;
  };
 type PlayerCount = 
  record {
@@ -192,16 +384,137 @@ type Player =
    points: opt RPoints;
    position: Position;
    providerId: MonkeyId;
-   teamId: Key;
+   teamId: Key__1;
  };
 type MonkeyId = text;
 type MatchStatus = text;
+type MatchContests = 
+ vec record {
+       Key__1;
+       MatchContest;
+     };
+type MatchContest = 
+ record {
+   awayScore: nat;
+   awayTeamName: text;
+   creatorUserId: Key__1;
+   homeScore: nat;
+   homeTeamName: text;
+   matchId: Key__1;
+   matchName: text;
+   maxCap: nat;
+   minCap: nat;
+   name: text;
+   providerId: MonkeyId;
+   rules: text;
+   slots: nat;
+   slotsUsed: nat;
+   teamsPerUser: nat;
+ };
+type Match = 
+ record {
+   awayScore: nat;
+   awayTeam: Key__1;
+   homeScore: nat;
+   homeTeam: Key__1;
+   location: text;
+   providerId: MonkeyId;
+   seasonId: Key__1;
+   status: MatchStatus;
+   time: int;
+ };
+type ListPlayerSquads = 
+ vec record {
+       Key__1;
+       ListPlayerSquad;
+     };
+type ListPlayerSquad = 
+ record {
+   cap: Key__1;
+   creation_time: int;
+   formation: text;
+   hasParticipated: bool;
+   joinedContestsName: vec text;
+   matchId: Key__1;
+   name: text;
+   points: RPoints;
+   rank: nat;
+   userId: Key__1;
+   viceCap: Key__1;
+ };
 type Key__1 = text;
 type Key = text;
+type InputMatch = 
+ record {
+   awayScore: nat;
+   awayTeamName: text;
+   homeScore: nat;
+   homeTeamName: text;
+   id: text;
+   location: text;
+   providerId: MonkeyId;
+   seasonId: Key__1;
+   status: MatchStatus;
+   time: int;
+ };
 type IUser = 
  record {
    email: text;
    name: text;
+ };
+type ITeamWithPlayers = 
+ record {
+   id: text;
+   logo: text;
+   name: text;
+   players: vec IPlayer;
+   providerId: MonkeyId;
+   seasonId: Key__1;
+   shortName: text;
+ };
+type ISeason = 
+ record {
+   endDate: int;
+   id: Key__1;
+   providerId: MonkeyId;
+   seasonName: text;
+   startDate: int;
+   tournamentId: Key__1;
+ };
+type IPlayerSquad = 
+ record {
+   cap: Key__1;
+   formation: text;
+   matchId: Key__1;
+   name: text;
+   players: vec record {
+                  Key__1;
+                  bool;
+                };
+   viceCap: Key__1;
+ };
+type IPlayer = 
+ record {
+   country: text;
+   fantasyPrice: nat;
+   id: Key__1;
+   name: text;
+   number: nat;
+   photo: text;
+   position: Position;
+   providerId: MonkeyId;
+   teamId: Key__1;
+ };
+type IContest = 
+ record {
+   matchId: Key__1;
+   maxCap: nat;
+   minCap: nat;
+   name: text;
+   providerId: MonkeyId;
+   rules: text;
+   slots: nat;
+   teamsPerUser: nat;
  };
 type GetProps = 
  record {
@@ -210,4 +523,35 @@ type GetProps =
    search: text;
    status: text;
  };
-service : () -> _anon_class_19_1
+type Contests = 
+ vec record {
+       Key__1;
+       Contest__1;
+     };
+type Contest__1 = 
+ record {
+   creatorUserId: Key__1;
+   matchId: Key__1;
+   maxCap: nat;
+   minCap: nat;
+   name: text;
+   providerId: MonkeyId;
+   rules: text;
+   slots: nat;
+   slotsUsed: nat;
+   teamsPerUser: nat;
+ };
+type Contest = 
+ record {
+   creatorUserId: Key__1;
+   matchId: Key__1;
+   maxCap: nat;
+   minCap: nat;
+   name: text;
+   providerId: MonkeyId;
+   rules: text;
+   slots: nat;
+   slotsUsed: nat;
+   teamsPerUser: nat;
+ };
+service : () -> _anon_class_22_1

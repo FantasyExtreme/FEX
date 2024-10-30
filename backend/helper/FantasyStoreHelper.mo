@@ -1,11 +1,8 @@
 
-import Types "../model/Types";
-
+import Int "mo:base/Int";
 module FantasyStoreHelper {
 
-  type Key = Types.Key;
-  type User = Types.User;
-  type Users = Types.Users;
+ // Constants
   let millisecondsPerDay : Int = 86400000; //24 * 60 * 60 * 1000;
 
   // Function to extract year, month, and day from a timestamp in milliseconds
@@ -52,10 +49,16 @@ module FantasyStoreHelper {
 
     return (year, month, day);
   };
-  // Function to compare two timestamps and return true if they fall on the same day
+  // Function to compare two timestamps and return true if they fall on the same dayisSameDay
   public func isSameDay(timestamp1 : Int, timestamp2 : Int) : Bool {
     let (year1, month1, day1) = getDateParts(timestamp1);
     let (year2, month2, day2) = getDateParts(timestamp2);
+    return year2 == year1 and month2 == month1 and day2 == day1;
+  };
+
+  public func isSameDayWithOffset(timestamp1 : Int, timestamp2 : Int,offset:Int) : Bool {
+    let (year1, month1, day1) = getDateParts(timestamp1+offset);
+    let (year2, month2, day2) = getDateParts(timestamp2+offset);
     return year2 == year1 and month2 == month1 and day2 == day1;
   };
 

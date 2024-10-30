@@ -6,12 +6,46 @@ label {
 input.form-control {
   background-color: $dark-grey;
   border-color: $dark-grey;
-  height: 50px;
+  &:not(.textarea) {
+    height: 50px;
+  }
   border-radius: 10px;
+  color: rgb(255, 251, 251);
+  ::placeholder {
+    color: white;
+  }
+  &:focus {
+    box-shadow: none !important;
+  }
 }
+.form-control-custom:focus::placeholder {
+  color: black !important;
+}
+.search-input:focus::placeholder {
+  color: white !important;
+}
+
 input[type='search'] {
-  background-image: url(../assets/images/icons/icon-search.png);
+  background-image: url('https://fantasy-extreme-assets.s3.us-east-005.backblazeb2.com/Compressed/icons/icon-search.png');
   background-repeat: no-repeat;
   background-position: 10px center;
   padding-left: 40px;
+}
+.button-select {
+  background-color: $white;
+  font-family: $Nasalization;
+  max-width: 220px;
+  font-size: 18px;
+  font-weight: 400;
+  color: $black;
+  &:focus {
+    box-shadow: none !important;
+    border-color: $color;
+  }
+  &.large {
+    max-width: 300px;
+  }
+  &.small {
+    max-width: 200px;
+  }
 }

@@ -1,8 +1,11 @@
-import { Auth } from "@/types/store";
+import { Auth, UserAuth } from "@/types/store";
 import { toast } from "react-toastify";
 import {
 
+  Contest,
+  ContestType,
   GetProps,
+  GroupedContests,
   GroupedPlayers,
   LoadingState,
   Match,
@@ -13,14 +16,17 @@ import {
 
 } from '@/types/fantasy';
 import {
+  EnvironmentEnum,
   MatchStatusNames,
   MatchStatuses,
+  Packages,
   PlayerStatusText,
   PlayerStatuses,
 
 } from '@/constant/variables';
 import {
   
+  groupContestsByMatch,
   groupMatchesByTournamentId,
   
 } from '@/lib/helper';
@@ -31,6 +37,10 @@ import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { convertMotokoObject } from "./convertMotokoObject";
 
 import moment from 'moment';
+import logger from "@/lib/logger";
+import axios from 'axios';
+import { API_ROUTE_GET_USD_RATE } from "@/constant/routes";
+import { PackageIcons } from "@/constant/icons";
 
 
 export function isConnected(state: string): boolean {
@@ -174,6 +184,405 @@ export function groupPlayersByRole(
   }
 
   return playersByRole;
+}
+export async function getContest(
+  actor: any,
+  id: string,
+  set: React.Dispatch<React.SetStateAction<any>>,
+) {
+  const _contest: any = fromNullable(await actor.getContest(id));
+
+  const contest = {
+    ..._contest,
+    slots: Number(_contest?.slots),
+    slotsUsed: Number(_contest?.slotsUsed),
+    minCap: Number(_contest?.minCap),
+    teamsPerUser: Number(_contest?.teamsPerUser),
+  };
+  logger({ _contest, contest }, 'looogogogogo');
+  set(contest);
+}
+interface GetContestProps {
+  matchId?: string;
+  actor: any;
+  setContests?: React.Dispatch<React.SetStateAction<Contest[] | null>>;
+  setGroupedContests?: React.Dispatch<
+    React.SetStateAction<GroupedContests[] | null>
+  >;
+  userAuth: UserAuth;
+}
+/**
+ * getcontests with and without matchId
+ * @param { GetContestProps } param matchId, actor and set state function
+ */
+export async function getContests({
+  matchId,
+  actor,
+  setContests,
+  setGroupedContests,
+  userAuth,
+}: GetContestProps) {
+  if (!actor) return;
+  let response = null;
+  if (matchId) {
+    response = await actor.getContestsByMatchId(matchId);
+  } else {
+    response = await actor.getJoinedContests();
+  }
+  const _contests = response
+    ?.map((contest: any) => {
+      contest[1].slots = Number(contest[1].slots);
+      contest[1].slotsUsed = Number(contest[1].slotsUsed);
+      contest[1].teamsPerUser = Number(contest[1].teamsPerUser);
+
+      let slotsLeft = contest[1]?.slots - contest[1]?.slotsUsed;
+
+  
+      return {
+        ...contest[1],
+        id: contest[0],
+        slotsLeft,
+      };
+    })
+    .sort((a: Contest, b: Contest) => Number(b.id) - Number(a.id));
+  if (setContests) {
+    logger(_contests, 'tranchullll');
+
+    setContests(_contests);
+  } else if (setGroupedContests) {
+    let groupedContests = groupContestsByMatch(_contests);
+    setGroupedContests(groupedContests);
+  }
+}
+/**
+ * sliceText use to slice text if length is less then maxlength then add dots at the end of text
+ *
+ * @param start -starting point of slice the text
+ * @param maxlength - Max size to slice
+ * @returns sliced text
+ */
+export function sliceText(text: any, start: number, maxlength: number) {
+  return text?.length > maxlength
+    ? `${text?.slice(start, maxlength)}...`
+    : text;
+}
+/**
+ * sliceText use to slice text if length is less then maxlength then add dots at the end of text
+ *
+ * @param start -starting point of slice the text
+ * @param maxlength - Max size to slice
+ * @returns sliced text
+ */
+export function sliceTextFromStartAndEnd(text: any, maxlength: number) {
+  return  `${text?.slice(0, maxlength)}...${text?.slice(text.length-maxlength, text.length)}`
+}
+export function isDev() {
+  return process.env.NEXT_PUBLIC_DFX_NETWORK == EnvironmentEnum.dev;
+}
+export async function getRawPlayerSquads(
+  matchId: string,
+  actor: any,
+  teamsPerUser: number,
+  setPlayerSquads: React.Dispatch<React.SetStateAction<any>>,
+  setParticipants: React.Dispatch<React.SetStateAction<number | null>>,
+  setMaximumParticipated: React.Dispatch<React.SetStateAction<boolean>>,
+  contestId: string | null,
+) {
+  try {
+    logger(contestId, 'my contest id is disss');
+    //   const resp = await actor.getPlayerSquadsByMatchId(matchId);
+    const resp = await actor.getListPlayerSquadsByMatch(
+      matchId,
+      contestId ? [contestId] : [],
+    );
+    logger(resp, 'my contest is disss');
+
+    let _participants = 0;
+    const _playerSquads = resp
+      ?.map((squad: any) => {
+        if (squad[1].hasParticipated) _participants++;
+        let joinedContestsName = squad[1].joinedContestsName.join(',');
+        return {
+          ...squad[1],
+          id: squad[0],
+          points: Number(squad[1].points),
+          rank: Number(squad[1].rank),
+          joinedContestsName: joinedContestsName,
+        };
+      })
+      ?.sort(
+        (squadA: any, squadB: any) =>
+          Number(squadB.creation_time) - Number(squadA.creation_time),
+      );
+
+    setParticipants(_participants);
+    if (_participants >= teamsPerUser) setMaximumParticipated(true);
+    setPlayerSquads(_playerSquads);
+  } catch (error) {
+    logger(error);
+  }
+}
+export function getPackage(text: string): string {
+  switch (text.toLowerCase()) {
+    case Packages.bronze:
+      return Packages.bronze;
+    case Packages.gold:
+      return Packages.gold;
+    case Packages.free:
+      return Packages.free;
+    default:
+      return Packages.free;
+  }
+}
+export function getPackageIcon(text: string) {
+  let _package = getPackage(text);
+  return PackageIcons[_package];
+}
+/**
+ * use this func to make the text copy able.
+ * @param {auth}  - pricipale is require to copy it.
+ */
+export async function copyId(id: any,msg:string) {
+  window.navigator.clipboard.writeText(id);
+  toast.success(`${msg} copied to clipboard`, { autoClose: 750 });
+}
+/**
+ * Copy User Account to clipboard
+ *  - auth
+ */
+/**
+ * Checks if the given time is in the future.
+ *
+ * @param time - The time to check. Can be null, a number, or a string.
+ * @returns Returns true if the time is in the future, false otherwise.
+ */
+export function isInFuture(time: null | number | string | undefined): boolean {
+  const timeValue = typeof time === 'string' ? Number(time) : time;
+  return (timeValue ?? moment().valueOf()) > moment().valueOf();
+}
+/**
+ * Checks if the given time is in the past.
+ *
+ * @param time - The time to check. Can be null, a number, or a string.
+ * @returns Returns true if the time is in the past, false otherwise.
+ */
+export function isInPast(time: null | number | string | undefined): boolean {
+  const timeValue = typeof time === 'string' ? Number(time) : time;
+  return (timeValue ?? moment().valueOf()) < moment().valueOf();
+}
+
+export function getMatchStatus({ status, time }: any): string {
+  let _status = MatchStatuses.upcoming;
+  if (isInFuture(time)) {
+    _status = MatchStatuses.upcoming;
+  } else if (isInPast(time)) {
+    if (status === 'Match Finished') {
+      _status = MatchStatuses.finished;
+    } else if (status === 'Match Postponed') {
+      _status = MatchStatuses.postponed;
+    } else {
+      _status = MatchStatuses.ongoing;
+    }
+  }
+  return _status;
+}
+interface FetchMatchProps {
+  actor: any;
+  matchId: string;
+  setMatch: React.Dispatch<React.SetStateAction<Match | null>>;
+}
+
+/**
+ * Get the match and players and store in the states
+ * @returns match
+ */
+export async function fetchMatch({
+  actor,
+  matchId,
+  setMatch,
+}: FetchMatchProps): Promise<Match | null> {
+  const match: any = fromNullable(await actor.getMatch(matchId));
+  if (match) {
+    match.homeTeam[1] = fromNullable(match.homeTeam[1]);
+    match.awayTeam[1] = fromNullable(match.awayTeam[1]);
+    const homeTeam = convertMotokoObject(match.homeTeam);
+    const awayTeam = convertMotokoObject(match.awayTeam);
+    let newMatch = {
+      ...match,
+      id: matchId,
+      homeTeam,
+      awayTeam,
+      status: getMatchStatus({ time: match?.time, status: match?.status }),
+      time: Number(match.time),
+    };
+
+    setMatch(newMatch);
+    return newMatch;
+  } else {
+    return null;
+  }
+}
+/**
+ * Retrieves filtered contests based on match and status criteria.
+ * @param {string | null} matchId - The ID of the match to filter contests for.
+ * @param {any} actor - The actor object used to interact with the backend.
+ * @param {UserAuth} userAuth - User authentication information.
+ * @param {React.Dispatch<React.SetStateAction<ContestType>> | null} setGroupedContests - Setter function for grouped contests state.
+ * @param {GetProps} props - Additional props for filtering contests.
+ * @param {React.Dispatch<React.SetStateAction<Contest[] | null>> | null} setContests - Setter function for contests state.
+ * @param {React.Dispatch<React.SetStateAction<MatchesCountType>> | null} setMatchesCount - Setter function for matches count state.
+ * @param {React.Dispatch<React.SetStateAction<LoadingState>>} setLoadingState - Setter function for loading state.
+ */
+export async function getFilterdContests(
+  matchId: string | null,
+  actor: any,
+  userAuth: UserAuth,
+  setGroupedContests: React.Dispatch<React.SetStateAction<ContestType>> | null,
+  props: GetProps,
+  setContests: React.Dispatch<React.SetStateAction<Contest[] | null>> | null,
+  setMatchesCount: React.Dispatch<React.SetStateAction<MatchesCountType>>,
+  setLoadingState?: React.Dispatch<React.SetStateAction<LoadingState>>,
+) {
+  try {
+    if (!actor) {
+      switch (props.status) {
+        case MatchStatuses.upcoming:
+          if (setLoadingState)
+            setLoadingState((prev) => ({ ...prev, upcoming: false }));
+          break;
+
+        case MatchStatuses.ongoing:
+          if (setLoadingState)
+            setLoadingState((prev) => ({ ...prev, ongoing: false }));
+          break;
+
+        case MatchStatuses.finished:
+          if (setLoadingState)
+            setLoadingState((prev) => ({ ...prev, finished: false }));
+          break;
+      }
+      return;
+    }
+    let response = null;
+    if (setLoadingState) {
+      switch (props.status) {
+        case MatchStatuses.upcoming:
+          setLoadingState((prev) => ({ ...prev, upcoming: true }));
+          break;
+        case MatchStatuses.ongoing:
+          setLoadingState((prev) => ({ ...prev, ongoing: true }));
+          break;
+        case MatchStatuses.finished:
+          setLoadingState((prev) => ({ ...prev, finished: true }));
+          break;
+      }
+    }
+    if (matchId) {
+      response = await actor.getPaginatedContestsByMatchId(matchId, props);
+    } else {
+      response = await actor.getFilterdContests(props);
+    }
+    var totalMatches = Number(response?.total) ?? 0;
+
+    const _contests = response?.contests
+      ?.map((contest: any) => {
+        // let contestv1 = convertMotokoObject(contest);
+        contest[1].slots = Number(contest[1].slots);
+        contest[1].slotsUsed = Number(contest[1].slotsUsed);
+        contest[1].teamsPerUser = Number(contest[1].teamsPerUser);
+        let slotsLeft = contest[1]?.slots - contest[1]?.slotsUsed;
+        // let distributees =
+        return {
+          ...contest[1],
+          id: contest[0],
+          slotsLeft,
+        };
+      })
+      .sort((a: Contest, b: Contest) => Number(b.id) - Number(a.id));
+    if (setContests) {
+      setContests(_contests);
+    }
+    var groupedContests = groupContestsByMatch(_contests);
+    const filteredGroupedContests = groupedContests?.filter(
+      ([matchId, contestArray]) =>
+        contestArray.some((contest) => contest.name.includes(props.search)),
+    );
+
+    switch (props.status) {
+      case MatchStatuses.upcoming:
+        if (setLoadingState)
+          setLoadingState((prev) => ({ ...prev, upcoming: false }));
+        if (setMatchesCount)
+          setMatchesCount((prev: any) => ({ ...prev, upcoming: totalMatches }));
+
+        if (setGroupedContests)
+          setGroupedContests((prev: any) => ({
+            ...prev,
+            upcoming: groupedContests,
+          }));
+        break;
+
+      case MatchStatuses.ongoing:
+        if (setLoadingState)
+          setLoadingState((prev) => ({ ...prev, ongoing: false }));
+        if (setMatchesCount)
+          setMatchesCount((prev: any) => ({ ...prev, ongoing: totalMatches }));
+
+        if (setGroupedContests)
+          setGroupedContests((prev: any) => ({
+            ...prev,
+            ongoing: groupedContests,
+          }));
+        break;
+
+      case MatchStatuses.finished:
+        if (setLoadingState)
+          setLoadingState((prev) => ({ ...prev, finished: false }));
+        if (setMatchesCount)
+          setMatchesCount((prev: any) => ({ ...prev, finished: totalMatches }));
+
+        if (setGroupedContests)
+          setGroupedContests((prev: any) => ({
+            ...prev,
+            finished: groupedContests,
+          }));
+        break;
+    }
+  } catch (error) {
+    switch (props.status) {
+      case MatchStatuses.upcoming:
+        if (setLoadingState)
+          setLoadingState((prev) => ({ ...prev, upcoming: false }));
+        break;
+
+      case MatchStatuses.ongoing:
+        if (setLoadingState)
+          setLoadingState((prev) => ({ ...prev, ongoing: false }));
+        break;
+
+      case MatchStatuses.finished:
+        if (setLoadingState)
+          setLoadingState((prev) => ({ ...prev, finished: false }));
+        break;
+    }
+  }
+}
+export async function getIcpRate() {
+  try {
+    // Make the API call
+    const response = await axios.get(API_ROUTE_GET_USD_RATE);
+
+    // Access the USD rate from the response data
+    const rate = response.data['internet-computer']?.usd;
+
+    // Log the rate
+    return rate.toFixed(2);
+    logger(rate, 'errorerror');
+  } catch (error) {
+    // Log the error
+    logger(error, 'errorerror');
+    return 0;
+  }
 }
 export async function getPlayers({
   auth,
@@ -330,6 +739,17 @@ export async function getTeam(teamId: string, actor: any) {
   if (team) return { id: teamId, ...team };
   else return null;
 }
+/**
+ * 
+ * @returns offset in miliseconds
+ */
+export function getTimeZone() {
+  const date = new Date();
+const timezoneOffset = date.getTimezoneOffset()*60*1_000; 
+if(timezoneOffset != 0) return timezoneOffset*-1
+else return timezoneOffset
+
+}
 export async function getMatches(
   actor: any,
   setMatches: React.Dispatch<React.SetStateAction<MatchesType>>,
@@ -354,7 +774,7 @@ export async function getMatches(
       break;
   }
   let id = toNullable(tournamentId);
-  const resp = await actor.getMatchesWithTournamentId(props, time, id);
+  const resp = await actor.getMatchesWithTournamentId(props, time,getTimeZone(), id);
 const matches = resp?.matches;
   let totalMatches = Number(resp?.total) ?? 0;
   const matchesWithTeams = await Promise.all(

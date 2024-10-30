@@ -529,120 +529,110 @@ export default function PlayerSelection() {
   async function saveTeam(values: FormikValues) {
 
     setSaving(true);
-    setTimeout(() => {
+  
+    let allPlayers = [...selectedPlayers.all, ...selectedSubstitudePlayers.all];
+    let goalKepersPlayers = [
+      ...selectedPlayers.goalKeeper,
+      ...selectedSubstitudePlayers.goalKeeper,
+    ];
+    let midfielderPlayers = [
+      ...selectedPlayers.midfielder,
+      ...selectedSubstitudePlayers.midfielder,
+    ];
+    let forwardPlayers = [
+      ...selectedPlayers.forward,
+      ...selectedSubstitudePlayers.forward,
+    ];
+    let defenderPlayers = [
+      ...selectedPlayers.defender,
+      ...selectedSubstitudePlayers.defender,
+    ];
+
+    if (allPlayers?.length < MAX_PLAYERS) {
+      setSaving(false);
+      return toast.warning(`Please select ${MAX_PLAYERS} players`);
+    }
+
+    try {
+      let _goalkeeper = goalKepersPlayers?.map((player, index) => {
+        if (index >= teamFormation?.goalKeeper) {
+          logger({
+            index,
+            tgk: teamFormation?.goalKeeper - 1,
+            lg: index >= teamFormation?.goalKeeper - 1,
+          });
+          return [player.id, true];
+        } else {
+          return [player.id, false];
+        }
+      });
+      let _defender = defenderPlayers?.map((player, index) => {
+        if (index >= teamFormation?.defender) {
+          return [player.id, true];
+        } else {
+          return [player.id, false];
+        }
+      });
+      let _midfielder = midfielderPlayers?.map((player, index) => {
+        if (index >= teamFormation?.midfielder) {
+          return [player.id, true];
+        } else {
+          return [player.id, false];
+        }
+      });
+      let _forward = forwardPlayers.map((player, index) => {
+        if (index >= teamFormation?.forward) {
+          return [player.id, true];
+        } else {
+          return [player.id, false];
+        }
+      });
+      let newPlayers = [
+        ..._goalkeeper,
+        ..._defender,
+        ..._midfielder,
+        ..._forward,
+      ];
+      let formationString = `${teamFormation?.defender}-${teamFormation?.midfielder}-${teamFormation?.forward}`;
+      let squad = {
+        name: values.name,
+        matchId: matchId,
+        cap: '',
+        viceCap: '',
+        players: newPlayers,
+        formation: `${teamFormation?.defender}-${teamFormation?.midfielder}-${teamFormation?.forward}`,
+      };
+      if (squadId) {
+        const addedSquad = await auth.actor.updatePlayerSquad(squadId, squad);
+        if (addedSquad?.ok) {
+          toast.success('Team Updated');
+          resetPlayers(true);
+          router.push(
+            `${MATCH_CONTEST_ROUTE}matchId=${matchId}&type=${QueryParamType.simple}`,
+          );
+        } else if (addedSquad?.err) {
+          toast.error(addedSquad?.err);
+        }
+
+        logger(addedSquad, 'sSquad updated');
+      } else {
+        const addedSquad = await auth.actor.addPlayerSquad(squad);
+        if (addedSquad?.ok) {
+          toast.success(addedSquad?.ok);
+          resetPlayers(true);
+          router.push(
+            `${MATCH_CONTEST_ROUTE}matchId=${matchId}&type=${QueryParamType.simple}`,
+          );
+        } else if (addedSquad?.err) {
+          toast.error(addedSquad?.err);
+        }
+
+        logger(addedSquad, 's:::::');
+      }
+    } catch (error) {
+      console.error(error);
+    }
     setSaving(false);
-    toast.success("Team created successfully.")
-    resetPlayers(true);
-    router.push(MATCHES_ROUTE);
-    }, 2000);
-    // let allPlayers = [...selectedPlayers.all, ...selectedSubstitudePlayers.all];
-    // let goalKepersPlayers = [
-    //   ...selectedPlayers.goalKeeper,
-    //   ...selectedSubstitudePlayers.goalKeeper,
-    // ];
-    // let midfielderPlayers = [
-    //   ...selectedPlayers.midfielder,
-    //   ...selectedSubstitudePlayers.midfielder,
-    // ];
-    // let forwardPlayers = [
-    //   ...selectedPlayers.forward,
-    //   ...selectedSubstitudePlayers.forward,
-    // ];
-    // let defenderPlayers = [
-    //   ...selectedPlayers.defender,
-    //   ...selectedSubstitudePlayers.defender,
-    // ];
-
-    // if (allPlayers?.length < MAX_PLAYERS) {
-    //   setSaving(false);
-    //   return toast.warning(`Please select ${MAX_PLAYERS} players`);
-    // }
-
-    // try {
-    //   let _goalkeeper = goalKepersPlayers?.map((player, index) => {
-    //     if (index >= teamFormation?.goalKeeper) {
-    //       logger({
-    //         index,
-    //         tgk: teamFormation?.goalKeeper - 1,
-    //         lg: index >= teamFormation?.goalKeeper - 1,
-    //       });
-    //       return [player.id, true];
-    //     } else {
-    //       return [player.id, false];
-    //     }
-    //   });
-    //   let _defender = defenderPlayers?.map((player, index) => {
-    //     if (index >= teamFormation?.defender) {
-    //       return [player.id, true];
-    //     } else {
-    //       return [player.id, false];
-    //     }
-    //   });
-    //   let _midfielder = midfielderPlayers?.map((player, index) => {
-    //     if (index >= teamFormation?.midfielder) {
-    //       return [player.id, true];
-    //     } else {
-    //       return [player.id, false];
-    //     }
-    //   });
-    //   let _forward = forwardPlayers.map((player, index) => {
-    //     if (index >= teamFormation?.forward) {
-    //       return [player.id, true];
-    //     } else {
-    //       return [player.id, false];
-    //     }
-    //   });
-    //   let newPlayers = [
-    //     ..._goalkeeper,
-    //     ..._defender,
-    //     ..._midfielder,
-    //     ..._forward,
-    //   ];
-    //   let formationString = `${teamFormation?.defender}-${teamFormation?.midfielder}-${teamFormation?.forward}`;
-    //   let squad = {
-    //     name: values.name,
-    //     matchId: matchId,
-    //     cap: '',
-    //     viceCap: '',
-    //     players: newPlayers,
-    //     formation: `${teamFormation?.defender}-${teamFormation?.midfielder}-${teamFormation?.forward}`,
-    //   };
-    //   if (squadId) {
-    //     const addedSquad = await auth.actor.updatePlayerSquad(squadId, squad);
-    //     if (addedSquad?.ok) {
-    //       toast.success('Team Updated');
-    //       resetPlayers(true);
-    //       router.push(
-    //         `${MATCH_CONTEST_ROUTE}matchId=${matchId}&type=${QueryParamType.simple}`,
-    //       );
-    //     } else if (addedSquad?.err) {
-    //       toast.error(addedSquad?.err);
-    //     }
-    //     // toast.success('Team Updated');
-    //     // router.push(
-    //     //   `${TEAMS_ROUTE}?matchId=${matchId}&type=${QueryParamType.simple}`,
-    //     // );
-    //     // resetPlayers(true);
-
-    //     logger(addedSquad, 'sSquad updated');
-    //   } else {
-    //     const addedSquad = await auth.actor.addPlayerSquad(squad);
-    //     if (addedSquad?.ok) {
-    //       toast.success(addedSquad?.ok);
-    //       resetPlayers(true);
-    //       router.push(
-    //         `${MATCH_CONTEST_ROUTE}matchId=${matchId}&type=${QueryParamType.simple}`,
-    //       );
-    //     } else if (addedSquad?.err) {
-    //       toast.error(addedSquad?.err);
-    //     }
-
-    //     logger(addedSquad, 's:::::');
-    //   }
-    // } catch (error) {
-    //   console.error(error);
-    // }
-    // setSaving(false);
   }
   /**
    * The function to take the name of the team in the values params and adds the team with the selected players to the canister

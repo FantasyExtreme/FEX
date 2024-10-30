@@ -1,5 +1,6 @@
 import {
 
+  Contest,
     Match,
     matchWithGroupedId,
   } from '@/types/fantasy';
@@ -17,6 +18,22 @@ import {
     }
     return null;
   }
+  /**
+ * Groupe Contests by match
+ * @param {null | Contest[]} contests
+ * @returns {GroupedContests}  [string,Match]
+ */
+export function groupContestsByMatch(
+  contests: null | Contest[],
+): null | [string, Contest[]][] {
+  if (!contests) return null;
+
+  // Use lodash's groupBy function
+  const grouped = _.groupBy(contests, (contest) => contest.matchId);
+
+  // Convert the grouped object into an array of key-value pairs
+  return Object.entries(grouped);
+}
   /**
    *
    * @param {null| Match[]} matches
