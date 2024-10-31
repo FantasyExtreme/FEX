@@ -675,7 +675,7 @@
     position: absolute;
     font-weight: 700;
     left: -2px;
-    top: -56px;
+    top: -50px;
     padding: 10px 15px 10px 15px;
     background-color: #3a3a3a;
     border-radius: 15px 15px 0px 0px;
@@ -814,7 +814,7 @@
     width: 100%;
     margin-top: 30px;
     margin-bottom: 30px;
-    min-height: 99px;
+    min-height: 30px;
     @media (max-width: 767px) {
       background-color: black;
       border-radius: 15px;
@@ -1216,7 +1216,7 @@
       );
     }
     .calculate-list {
-      min-height: 99px;
+      min-height: 30px;
       i {
         color: #e7ac18 !important;
       }

@@ -80,16 +80,34 @@ export const TRANSACTIONS_ITEMSPERPAGE = 10;
 
 export const TOP_FANTASY_PLAYERS_ITEMSPERPAGE = 4;
 export const TOP_FANTASY_PLAYERS_PAGE_ITEMSPERPAGE = 10;
-
+export const Intervals = {
+  contest: 20000,
+  ranking: 20000,
+};
 export enum QURIES {
   matchTab = 'match_tab',
   squadId = 'squadId',
   matchId = 'matchId',
   tournamentId = 'tournament',
   contestId = 'contestId',
-}
-;
+};
 
+export const JoinContestText = {
+  upcoming: 'Join',
+  ongoing: 'Match Live',
+  finished: 'Match Finished',
+  participated: 'Joined',
+};
+export const DefaultContest = {
+  name: 'FX League',
+  slots: 200,
+  teamsPerUser: 3,
+  minCap: 1,
+  maxCap: 0,
+  providerId: '0',
+  rules: `Teams Per User = ${3}
+`,
+};
 export const DefaultTeam = {
   matchId: null,
   cap: '',

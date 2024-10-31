@@ -16,8 +16,8 @@ import {
   QueryParamType,
 } from '@/constant/variables';
 import { MATCHES_SLIDER_SIZES } from '@/constant/fantasticonst';
-export const MATCHES_CONTESTS_ROUTE = '/contest';
 import {
+  MATCHES_CONTESTS_ROUTE,
   MATCHES_ROUTE,
   TEAM_CREATION_ROUTE,
 } from '@/constant/routes';
@@ -93,7 +93,7 @@ export default function UpcomingMatches() {
                 {matches.upcoming?.map((match: any) => (
                   <li key={match.id}>
                     <Link
-                      href={"#"}
+                      href={`${MATCHES_ROUTE + MATCHES_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
                       className='upcoming-match-post'
                     >
                       <div>

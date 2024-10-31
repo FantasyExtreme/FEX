@@ -199,6 +199,110 @@ public type InputMatch = {
     homeScore : Nat;
     awayScore : Nat;
   };
+   public type ContestCommon = {
+    providerId : MonkeyId;
+    matchId : Key;
+    name : Text;
+    slots : Nat;
+    minCap : Nat;
+    maxCap : Nat;
+    teamsPerUser : Nat;
+    rules : Text;
+  };
+  public type Contest = ContestCommon and {
+    creatorUserId : Key;
+    slotsUsed : Nat;
+  };
+    public type Participant = {
+    contestId : Key;
+    userId : Key;
+    squadId : Key;
+    rank : Nat;
+  };
+    public type Participants = [(Key, Participant)];
+public type IPlayerSquad = {
+    // providerId : MonkeyId;
+    name : Text;
+    matchId : Key;
+    cap : Key;
+    viceCap : Key;
+    players : [(Key, Bool)];
+    formation : Text;
+  };
+    public type PlayerSquadCommon = {
+    userId : Key;
+    name : Text;
+    matchId : Key;
+    cap : Key;
+    viceCap : Key;
+    formation : Text;
+    creation_time : Int;
+    rank : Nat;
+    points : RPoints;
+    hasParticipated : Bool;
+  };
+    public type PlayerSquad = PlayerSquadCommon and {
+    players : [(Key, Bool)];
+  };
+    public type ListPlayerSquad = PlayerSquadCommon and {
+    points : RPoints;
+    joinedContestsName : [Text];
+  };
+   public type RefinedPlayerSquad = PlayerSquadCommon and {
+    // providerId : MonkeyId;
+    players : [(Key, PlayerS, Bool)];
+  };
+   public type RefinedPlayerSquadRanking = {
+    // providerId : MonkeyId;
+    userId : Key;
+    name : Text;
+    matchId : Key;
+    points : RPoints;
+    creation_time : Int;
+    rank : Nat;
+  };
+    public type RawPlayerSquad = PlayerSquadCommon and {
+    matchTime : Int;
+    points : RPoints;
+    matchName : Text;
+  };
+ public type PlayerSquads = [(Key, PlayerSquad)];
+  public type ListPlayerSquads = [(Key, ListPlayerSquad)];
+  public type RefinedPlayerSquads = [(Key, RefinedPlayerSquad)];
+  public type RefinedPlayerSquadRankings = [(Key, RefinedPlayerSquadRanking)];
+  public type RawPlayerSquads = [(Key, RawPlayerSquad)];
+  public type ContestWithMatch = ContestCommon and {
+    creatorUserId : Key;
+    slotsUsed : Nat;
+    homeTeamName : Text;
+    awayTeamName : Text;
+    awayScore : Nat;
+    homeScore : Nat;
+  };
+
+  public type DetailedContest = Contest and {
+    teamsJoinedContest : Nat;
+    teamsCreatedOnContest : Nat;
+
+  };
+
+  public type ContestArray = [DetailedContest];
+  public type DetailedMatchContest = RMatch and {
+    latest : Bool;
+    contests : ContestArray;
+    providerId : Key;
+    teamsCreated : Nat;
+    teamsJoined : Nat;
+  };
+  // Contest with matchName
+  public type MatchContest = Contest and {
+    matchName : Text;
+    homeTeamName : Text;
+    awayTeamName : Text;
+    awayScore : Nat;
+    homeScore : Nat;
+  };
+  public type IContest = ContestCommon;
   public type ITournament = {
     id : Key;
     providerId : MonkeyId;
@@ -207,6 +311,15 @@ public type InputMatch = {
     description : Text;
     startDate : Int;
     endDate : Int;
+  };
+  public type ContestsWithId = [(Key, ContestWithMatch)];
+ public type DetailedMatchContests = [DetailedMatchContest];
+  public type RMatchContest = [MatchContest];
+    public type MatchContests = [(Key, MatchContest)];
+  public type Contests = [(Key, Contest)];
+ public type RankPlayerSquad = RefinedPlayerSquad and {
+    // providerId : MonkeyId;
+    ranks : [(Key, Nat)];
   };
 
  public type ITeamWithPlayers = {
@@ -229,14 +342,11 @@ public type InputMatch = {
     homeScore : Nat;
     awayScore : Nat;
   };
+    public let MAX_PLAYER_PER_SQUAD = 15;
  public let AdminSettings = {
     budget = "budget";
     platformPercentage = "platformPercentage";
-    contestWinnerReward = "contestWinnerReward";
-    rewardableUsersPercentage = "rewardableUsersPercentage";
-    referalFirstPositionPercentage = "referalFirstPositionPercentage";
-    referalSecondPositionPercentage = "referalSecondPositionPercentage";
-    referalThirdPositionPercentage = "referalThirdPositionPercentage";
+
 
   };
   public func generateNewRemoteObjectId() : Key {

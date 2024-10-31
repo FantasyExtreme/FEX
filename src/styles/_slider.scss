@@ -1,0 +1,139 @@
+.main_slider {
+    position: relative;
+    width: 350px;
+    height: 80px;
+    border-radius: 50px;
+    background-color: #3a3a3a;
+    color: white;
+    padding-top: 14px;
+    box-shadow: 0 0 9.2px 2.75px rgba(0, 0, 0, 0.15);
+    @media (max-width: 991px) {
+      display: none;
+    }
+  
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%; // Adjust to center the pseudo-element
+      transform: translateX(-50%);
+      width: 85px;
+      border: 2px solid #00ff00;
+      height: 95px;
+      margin-top: -8px;
+      font-weight: 900 !important;
+      border-radius: 25px;
+      box-shadow:
+        0 0 6px 2px rgba(0, 246, 84, 0.4),
+        0 0 32px 4px rgba(0, 246, 84, 0.61);
+      background: linear-gradient(
+        to bottom,
+        rgba(45, 45, 45, 1) 0%,
+        rgba(16, 16, 16, 1) 97%
+      );
+    }
+    .react-multi-carousel-list {
+      position: static !important;
+    }
+    .react-multiple-carousel__arrow--right {
+      right: 0 !important;
+      width: 90px;
+      height: auto;
+      min-height: unset;
+      border-radius: 0 35px 35px 0;
+      top: 0px;
+      bottom: 0px;
+      background: linear-gradient(
+        to right,
+        rgba(58, 58, 58, 0.64) 0%,
+        rgba(39, 39, 39, 0.94) 82%,
+        rgba(39, 39, 39, 1) 100%
+      );
+      &:before {
+        content: '\f138' !important;
+        left: 20px;
+        font: normal normal normal 22px/1 FontAwesome !important;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      &:hover {
+        background: none;
+        // background: linear-gradient(
+        //   to right,
+        //   rgba(58, 58, 58, 0.64) 0%,
+        //   rgba(39, 39, 39, 0.94) 82%,
+        //   rgba(39, 39, 39, 1) 100%
+        // );
+        &:before {
+          color: rgba(255, 255, 255, 1);
+        }
+      }
+    }
+    .react-multiple-carousel__arrow--left {
+      left: 0 !important;
+      width: 90px;
+      height: auto;
+      min-height: unset;
+      border-radius: 35px 0px 0px 35px;
+      top: 0px;
+      bottom: 0px;
+      background: linear-gradient(
+        to right,
+        rgba(39, 39, 39, 1) 0%,
+        rgba(39, 39, 39, 0.94) 18%,
+        rgba(58, 58, 58, 0.64) 100%
+      );
+      &:before {
+        content: '\f137' !important;
+        font: normal normal normal 22px/1 FontAwesome !important;
+        color: rgba(255, 255, 255, 0.5);
+        right: 20px;
+      }
+      &:hover {
+        background: linear-gradient(
+          to right,
+          rgba(39, 39, 39, 1) 0%,
+          rgba(39, 39, 39, 0.94) 18%,
+          rgba(58, 58, 58, 0.64) 100%
+        );
+        &:before {
+          color: rgba(255, 255, 255, 1);
+        }
+      }
+    }
+    .dayOfWeek {
+      font-size: 18px !important;
+      color: #cecece;
+    }
+    .date {
+      color: #cecece;
+    }
+    .react-multi-carousel-item--active {
+      .slide-item {
+        .dayOfWeek,
+        .date {
+          color: $white;
+        }
+      }
+    }
+  }
+  
+  .active_ {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 10px;
+  }
+  
+  .slide-item {
+    font-size: 16px !important;
+    text-align: center;
+    z-index: 222;
+    color: #cecece;
+    text-transform: uppercase;
+  }
+  .custom_height {
+    height: 50px;
+  }
+  .custom_ {
+    height: 35px;
+  }
+  

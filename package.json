@@ -44,7 +44,7 @@
     "@types/react-slick": "^0.23.13",
     "@types/uuid": "^9.0.3",
     "assert": "^2.0.0",
-    "axios": "^1.4.0",
+    "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
     "buffer": "^6.0.3",
     "bufferutil": "^4.0.7",

@@ -10,6 +10,7 @@ interface RawPlayer {
   positionString: 'goalKeeper' | 'midfielder' | 'forward' | 'defender';
   teamId: Key;
 }
+type GroupedContests = [string, GroupedContest[]];
 interface Player {
   country: string;
   id: Key;
@@ -24,6 +25,33 @@ interface Player {
   teamName: string;
   number: number;
   photo: string;
+}
+interface PlayerSquad {
+  id: string;
+  userId: string;
+  name: string;
+  matchId: string;
+  cap: string;
+  viceCap: string;
+  points: number;
+  formation: string;
+  creation_time: number;
+  rank: number;
+  matchTime?: number;
+  hasParticipated?: boolean;
+  joinedContestsName?: string;
+}
+interface Contest {
+  name: string;
+  matchId: Key;
+  creatorUserId: string;
+  id: Key;
+  slots: number;
+  slotsUsed: number;
+  slotsLeft: number;
+  minCap: number;
+  teamsPerUser: number;
+  rules: string;
 }
 interface GroupedPlayers {
   [role: string]: Player[];

@@ -15,6 +15,9 @@ import Nat "mo:base/Nat";
 import Prim "mo:prim";
 import Types "../model/Types";
 import FantasyStoreHelper "../helper/FantasyStoreHelper";
+import Validation "../model/Validation";
+import Nat32 "mo:base/Nat32";
+import Char "mo:base/Char";
 
 shared ({ caller = initializer }) actor class () {
 
@@ -32,7 +35,26 @@ shared ({ caller = initializer }) actor class () {
   type ISeason = Types.ISeason;
   type ITournament = Types.ITournament;
   type InputMatch = Types.InputMatch;
-
+  type IContest = Types.IContest;
+  type Contest = Types.Contest;
+    type ContestsWithId = Types.ContestsWithId;
+  type MatchContests = Types.MatchContests;
+  type RMatchContest = Types.RMatchContest;
+  type ReturnContests = { contests : MatchContests; total : Nat };
+  type Contests = Types.Contests;
+  type MatchContest = Types.MatchContest;
+  type Participants = Types.Participants;
+  type Participant = Types.Participant;
+  type IPlayerSquad = Types.IPlayerSquad;
+  type PlayerSquad = Types.PlayerSquad;
+  type PlayerS = Types.PlayerS;
+  type RawPlayerSquads = Types.RawPlayerSquads;
+  type ListPlayerSquads = Types.ListPlayerSquads;
+  type ReturnPagContests = {
+    contests : Contests;
+    total : Nat;
+  };
+    type RawPlayerSquad = Types.RawPlayerSquad;
 
   type Match = Types.Match;
   type RMatch = Types.RMatch;
@@ -47,12 +69,15 @@ shared ({ caller = initializer }) actor class () {
   type IAdminSetting = Types.IAdminSetting;
   type Matches = Types.Matches;
   type RefinedMatch = Types.RefinedMatch;
+  type PlayerSquads = Types.PlayerSquads;
+  type ListPlayerSquad = Types.ListPlayerSquad;
 
   type RMatches = Types.RMatches;
   type Team = Types.Team;
 
   type ReturnMatches = { matches : RTournamentMatches; total : Nat };
   type ReturnTournaments = { tournaments : Tournaments; total : Nat };
+  type ReturnTeams = { teams : RawPlayerSquads; total : Nat };
 
   type Users = Types.Users;
 
@@ -67,6 +92,11 @@ shared ({ caller = initializer }) actor class () {
   stable var stable_seasons : Seasons = [];
   stable var stable_teams : Teams = [];
   stable var stable_adminSettings : AdminSettings = [];
+  stable var stable_contests : Contests = [];
+  stable var stable_participants : Participants = [];
+  stable var stable_playerSquads : PlayerSquads = [];
+
+
 
   var playerStorage = Map.fromIter<Key, Player>(stable_players.vals(), 0, Text.equal, Text.hash);
   var seasonStorage = Map.fromIter<Key, Season>(stable_seasons.vals(), 0, Text.equal, Text.hash);
@@ -76,11 +106,39 @@ shared ({ caller = initializer }) actor class () {
   var tournamentStorage = Map.fromIter<Key, Tournament>(stable_tournaments.vals(), 0, Text.equal, Text.hash);
   var teamStorage = Map.fromIter<Key, Team>(stable_teams.vals(), 0, Text.equal, Text.hash);
   var adminSettingStorage = Map.fromIter<Key, AdminSetting>(stable_adminSettings.vals(), 0, Text.equal, Text.hash);
+  var contestStorage = Map.fromIter<Key, Contest>(stable_contests.vals(), 0, Text.equal, Text.hash);
+  var participantStorage = Map.fromIter<Key, Participant>(stable_participants.vals(), 0, Text.equal, Text.hash);
+  var playerSquadStorage = Map.fromIter<Key, PlayerSquad>(stable_playerSquads.vals(), 0, Text.equal, Text.hash);
 
   private func getLimit(limit : Nat) : Nat {
     var _l = MAX_LIMIT;
     if (limit < MAX_LIMIT) _l := limit;
     return _l;
+  };
+  private func getMatchName(isHome : Team, isAway : Team) : Text {
+    return isHome.name # " vs " # isAway.name;
+  };
+    private func shouldShowPlayer(player : Player) : Bool {
+    if (player.active) true else false;
+  };
+  private func textToNat(txt : Text) : Nat {
+    assert (txt.size() > 0);
+    let chars = txt.chars();
+
+    var num : Nat = 0;
+    for (v in chars) {
+      let charToNum = Nat32.toNat(Char.toNat32(v) -48);
+      assert (charToNum >= 0 and charToNum <= 9);
+      num := num * 10 + charToNum;
+    };
+
+    num;
+  };
+  private func isInPast(time : Int) : Bool {
+    return time < getTime();
+  };
+  private func isInFuture(time : Int) : Bool {
+    return time > getTime();
   };
     private func search({ compare; s } : { compare : Text; s : Text }) : Bool {
     let searchString = Text.map(s, Prim.charToLower);
@@ -675,7 +733,7 @@ shared ({ caller = initializer }) actor class () {
     return { succ = succArray; err = errArray };
   };
 
-  private func pGetMatches(props : GetProps, time : ?Int, tournamentId : ?Key) : RMatches {
+  private func pGetMatches(props : GetProps, time : ?Int,offset:Int, tournamentId : ?Key) : RMatches {
     let currentTime = getTime();
     var isUpcoming : Bool = true;
     var isCompleted : Bool = false;
@@ -721,7 +779,7 @@ shared ({ caller = initializer }) actor class () {
           case (?isTime) {
             if (isCompleted) {
 
-              if (FantasyStoreHelper.isSameDay(isTime, v.time)) {
+               if (FantasyStoreHelper.isSameDayWithOffset(isTime, v.time,offset)) {
                 return ?{ v with id = k };
               } else {
                 return null;
@@ -797,10 +855,10 @@ shared ({ caller = initializer }) actor class () {
     };
   };
   // function for filtering the matchws with tournamnet
-  public query func getMatchesWithTournamentId(props : GetProps, time : ?Int, tournamentId : ?Key) : async ReturnMatches {
+  public query func getMatchesWithTournamentId(props : GetProps, time : ?Int,offset:Int, tournamentId : ?Key) : async ReturnMatches {
 
     var limit = getLimit(props.limit);
-    let sortedMatches = pGetMatches(props : GetProps, time : ?Int, tournamentId : ?Key);
+    let sortedMatches = pGetMatches(props : GetProps, time : ?Int,offset:Int, tournamentId : ?Key);
     // let sortedMatches : [Match] = [];
     let totalMatches = Array.size(sortedMatches);
     let startIndex : Nat = props.page * limit;
@@ -857,7 +915,798 @@ shared ({ caller = initializer }) actor class () {
       tournaments = Iter.toArray(Array.slice<(Key, Tournament)>(sortedTournaments, startIndex, endIndex));
     };
   };
+    private func getJoinedContestNamesBySquadId(squadId : Key) : [Text] {
+    var contestNames : [Text] = [];
+    label contestName for ((key, participant) in participantStorage.entries()) {
+      if (squadId == participant.squadId) {
+        let contest = contestStorage.get(participant.contestId);
+        switch (contest) {
+          case (null) {};
+          case (?isContest) {
 
+            contestNames := Array.append(contestNames, [isContest.name]);
+            //  break contestName;
+          };
+        };
+
+      };
+
+    };
+    return contestNames;
+  };
+   private func getJoinedContestsSquadIds(userId : Key, contestId : ?Key) : [Key] {
+    let contestKeys = Buffer.Buffer<Key>(participantStorage.size());
+    for ((key, participant) in participantStorage.entries()) {
+      switch (contestId) {
+        case (null) {
+          if (participant.userId == userId) {
+            contestKeys.add(participant.squadId);
+          };
+        };
+        case (?isContestId) {
+          if (participant.userId == userId and isContestId == participant.contestId) {
+            contestKeys.add(participant.squadId);
+          };
+        };
+      };
+
+    };
+    return Buffer.toArray(contestKeys);
+  };
+    public query ({ caller }) func getListPlayerSquadsByMatch(matchId : Key, contestId : ?Key) : async ListPlayerSquads {
+    let playerSquad = Buffer.Buffer<(Key, ListPlayerSquad)>(playerSquadStorage.size());
+    // let contestsIdsOfMatches=getContestIdsByMatch(matchId);
+    let joinedContests = getJoinedContestsSquadIds(Principal.toText(caller), contestId);
+    label squadsLoop for ((key, squad) in playerSquadStorage.entries()) {
+
+      if (squad.userId == Principal.toText(caller) and matchId == squad.matchId) {
+        var participated = false;
+        for (id in joinedContests.vals()) {
+          if (id == key) {
+            participated := true;
+          };
+          // else {
+          //   participated := false;
+          // };
+        };
+        let newSquad = nRefinePlayerSquad(squad, key);
+        // let match = matchStorage.get(squad.matchId);
+        // switch (match) {
+        //   case (?isMatch) {
+        //     let homeTeam = teamStorage.get(isMatch.homeTeam);
+        //     let awayTeam = teamStorage.get(isMatch.awayTeam);
+        //     switch (homeTeam, awayTeam) {
+        //       case (?isHome, ?isAway) {
+        //         playerSquad.add((key, { newSquad with hasParticipated = participated; matchName = getMatchName(isHome, isAway) }));
+
+        //       };
+        //       case (_, _) {
+
+        //       };
+        //     };
+
+        //   };
+        //   case (null) {};
+        // };
+        var rank : Nat = 0;
+        switch (contestId) {
+          case (?isId) {
+            for ((key, newRank) in newSquad.ranks.vals()) {
+              if (key == isId) {
+                rank := newRank;
+              };
+            };
+          };
+          case (null) {};
+        };
+        let joindedContestName = getJoinedContestNamesBySquadId(key);
+
+        playerSquad.add((key, { newSquad with hasParticipated = participated; rank; joinedContestsName = joindedContestName }));
+
+      };
+    };
+    return Buffer.toArray(playerSquad);
+  };
+
+  public query ({ caller }) func getFilterdRawPlayerSquadsByMatch(matchId : ?Key, contestId : ?Key, props : GetProps) : async ReturnTeams {
+    let currentTime = getTime();
+    var limit = getLimit(props.limit);
+    var isUpcoming : Bool = true;
+    var isCompleted : Bool = false;
+    if (props.status == "0") {
+      isUpcoming := true;
+    } else if (props.status == "1") {
+      isUpcoming := false;
+    } else if (props.status == "2") {
+      isUpcoming := false;
+      isCompleted := true;
+    };
+    let playerSquad = Buffer.Buffer<(Key, RawPlayerSquad)>(playerSquadStorage.size());
+    //  var tempMatchId:Key="";
+
+    // switch(matchId) {
+    //   case(null) {  };
+    //   case(?isId) {
+    //     tempMatchId:=isId;
+
+    //    };
+    // };
+    //         let contestsIdsOfMatches=getContestIdsByMatch(tempMatchId);
+
+    let joinedContests = getJoinedContestsSquadIds(Principal.toText(caller), contestId);
+    label squadsLoop for ((key, squad) in playerSquadStorage.entries()) {
+
+      switch (matchId) {
+        case (?isId) {
+          if (not (squad.matchId == isId)) continue squadsLoop;
+        };
+        case (null) {
+          // continue squadsLoop;
+        };
+      };
+
+      if (squad.userId == Principal.toText(caller)) {
+        var participated = false;
+        for (id in joinedContests.vals()) {
+          if (id == key) {
+            participated := true;
+          } else {
+            participated := false;
+          };
+        };
+        let newSquad = nRefinePlayerSquad(squad, key);
+        let match = matchStorage.get(squad.matchId);
+        switch (match) {
+          case (?isMatch) {
+            let homeTeam = teamStorage.get(isMatch.homeTeam);
+            let awayTeam = teamStorage.get(isMatch.awayTeam);
+
+            // Determine match status based on time
+            let matchTime = isMatch.time;
+            let isMatchUpcoming = (matchTime > currentTime);
+            let isMatchCompleted = (matchTime < currentTime);
+
+            // Apply filters based on the props
+            if (isUpcoming and not isMatchUpcoming) continue squadsLoop;
+            if (isCompleted and not isMatchCompleted) continue squadsLoop;
+            if (not ((isUpcoming and isMatchUpcoming) or (((not isUpcoming) and isMatchCompleted)))) continue squadsLoop;
+            if (not ((isCompleted and checkMatchCompleted(isMatch.status)) or (not isCompleted and not checkMatchCompleted(isMatch.status)))) continue squadsLoop;
+            switch (homeTeam, awayTeam) {
+              case (?isHome, ?isAway) {
+
+                playerSquad.add((key, { newSquad with hasParticipated = participated; matchName = getMatchName(isHome, isAway); matchTime = matchTime }));
+
+              };
+              case (_, _) {
+
+              };
+            };
+
+          };
+          case (null) {};
+        };
+
+      };
+
+    };
+    let filteredArr = Buffer.toArray(playerSquad);
+    var totalTeams = playerSquad.size();
+    let startIndex : Nat = props.page * limit;
+    if (startIndex >= totalTeams) {
+      return { total = totalTeams; teams = [] };
+    };
+
+    var endIndex : Nat = startIndex + limit;
+    if (endIndex > totalTeams) {
+      endIndex := totalTeams;
+    };
+
+    let slicedTeams = Iter.toArray(Array.slice<(Key, RawPlayerSquad)>(filteredArr, startIndex, endIndex));
+
+    return {
+      total = totalTeams;
+      teams = slicedTeams;
+    };
+    // return Buffer.toArray(playerSquad);
+  };
+    // Utility
+  //  get time in miliseconds
+  private func getContestIdsByMatch(matchId : Key) : [Key] {
+
+    let contestIdsBuffer = Buffer.Buffer<Key>(contestStorage.size());
+    for ((key, contest) in contestStorage.entries()) {
+      if (contest.matchId == matchId) {
+        contestIdsBuffer.add(key);
+      };
+    };
+    return Buffer.toArray(contestIdsBuffer);
+  };
+    private func verifyBudget(players : [(Key, Bool)]) : Result.Result<Text, Text> {
+    if (players.size() > Types.MAX_PLAYER_PER_SQUAD) {
+      return #err("Player size exceeded");
+    };
+    var budget = 0;
+    for ((key, _) in players.vals()) {
+      let player = playerStorage.get(key);
+      switch (player) {
+        case (?isPlayer) {
+          budget += isPlayer.fantasyPrice;
+        };
+        case (null) {
+          return #err("Player not found");
+        };
+      };
+    };
+    let budgetsetting = adminSettingStorage.get(Types.AdminSettings.budget);
+    switch (budgetsetting) {
+      case (?isSetting) {
+        if (budget > textToNat(isSetting.settingValue)) {
+          return #err("Budget exceeded");
+        };
+      };
+      case (null) {
+        return #err("Price is not fixed yet, please try again or ask admin");
+      };
+    };
+    return #ok("Budget verified");
+  };
+    func countDuplicates(playerKeys : [Text]) : Result.Result<Nat, Text> {
+    var count : Nat = 0;
+    var size = Array.size(playerKeys);
+    var i = 0;
+
+    // Iterate over each key in playerKeys using a while loop
+    while (i < size) {
+      let key1 = playerKeys[i];
+      var isDuplicate : Bool = false;
+
+      // Compare key1 with previous keys
+      var j = 0;
+      while (j < i) {
+        let key2 = playerKeys[j];
+        if (key1 == key2) {
+          isDuplicate := true; // Use := for assignment
+          return #err("Duplicate player keys found in the squad."); // Stop checking further once a duplicate is found
+        };
+        j += 1; // Increment inner loop index
+      };
+
+      // If a duplicate is found, increment the count
+      if (isDuplicate) {
+        count += 1;
+      };
+      i += 1; // Increment outer loop index
+    };
+    return #ok(count);
+  };
+  public shared ({ caller }) func updatePlayerSquad(squadId : Key, newSquad : IPlayerSquad) : async Result.Result<{ message : Text; squad : ?PlayerSquad }, Text> {
+    onlyUser(caller);
+
+    // Assuming `playerKeys` is derived from `newSquad.players`
+    let playerKeys = Array.map<(Text, Bool), Text>(
+      newSquad.players,
+      func(playerTuple : (Text, Bool)) : Text {
+        let (key, _) = playerTuple;
+        key;
+      },
+    );
+    let playersCount = Validation.playersCount(newSquad.players);
+    switch (playersCount) {
+      case (#ok(_)) {};
+      case (#err(res)) {
+        return #err(res);
+      };
+    };
+
+    switch (countDuplicates(playerKeys)) {
+      case (#ok(count)) {
+
+        let maybeSquad = playerSquadStorage.get(squadId);
+        switch (maybeSquad) {
+          case (?isSquad) {
+            let match = matchStorage.get(isSquad.matchId);
+            switch (match) {
+              case (?isMatch) {
+                if (isInPast(isMatch.time)) return #err("Time limit exceeded");
+              };
+              case (null) {};
+            };
+
+            // let r = verifyBudget(newSquad.players);
+            // switch (r) {
+            //   case (#err(error)) {
+            //     return #err(error);
+            //   };
+            //   case (#ok(_)) {};
+            // };
+
+            thisUser(Principal.toText(caller), isSquad.userId);
+            let teamFormatiopnValidate = Validation.validateTeamFormation(newSquad.players, newSquad.formation, playerStorage);
+            switch (teamFormatiopnValidate) {
+              case (#err(err)) {
+                return #err(err);
+              };
+              case (#ok(_)) {
+                let getMatch = matchStorage.get(newSquad.matchId);
+                switch (getMatch) {
+                  case (null) {
+                    return #err("Match not found");
+                  };
+                  case (?isMatch) {
+
+                    let selectedPlayersNotFromSingleTeam = Validation.validateSelectedPlayersAreNotFromSingleTeam(newSquad.players, isMatch.homeTeam, isMatch.awayTeam, playerStorage);
+
+                    switch (selectedPlayersNotFromSingleTeam) {
+                      case (#err(err)) {
+                        return #err(err);
+                      };
+                      case (#ok(_)) {
+
+                        let updatedSquad = {
+                          userId = isSquad.userId;
+                          name = newSquad.name;
+                          matchId = newSquad.matchId;
+                          cap = newSquad.cap;
+                          viceCap = newSquad.viceCap;
+                          players = newSquad.players;
+                          formation = newSquad.formation;
+                          creation_time = isSquad.creation_time;
+                          rank = isSquad.rank;
+                          hasParticipated = isSquad.hasParticipated;
+                          points = isSquad.points;
+                          // providerId = newSquad.providerId;
+                        };
+
+                        let oldSquad = playerSquadStorage.replace(squadId, updatedSquad);
+                        return #ok({
+                          message = "Squad updated successfully";
+                          squad = oldSquad;
+                        });
+                      };
+                    };
+                  };
+
+                };
+              };
+            };
+          };
+          case (null) {
+            return #err("Squad not found");
+          };
+        };
+
+      };
+      case (#err(msg)) {
+        Debug.print(msg);
+        return #err(msg);
+      };
+    };
+
+  };
+
+  // Contests
+  public shared ({ caller }) func addContest(inputContest : IContest) : async Result.Result<Text, Text> {
+    onlyAdmin(caller);
+    let maybeMatch = matchStorage.get(inputContest.matchId);
+    switch (maybeMatch) {
+      case (?isMatch) {
+        let currentTime = getTime();
+        if (currentTime > isMatch.time) return #err("Time limit exceeded");
+
+        // let maybeContest = contestStorage.get(contestId);
+        let contestId = Types.generateNewRemoteObjectId();
+
+        let newContest : Contest = {
+          creatorUserId = Principal.toText(caller);
+          name = inputContest.name;
+          matchId = inputContest.matchId;
+          slots = inputContest.slots;
+          slotsUsed = 0;
+          minCap = inputContest.minCap;
+          maxCap = inputContest.maxCap;
+          providerId = inputContest.providerId;
+          teamsPerUser = inputContest.teamsPerUser;
+          rules = inputContest.rules;
+        };
+        // using the matchId as the contestId because a match can only have one contest
+        contestStorage.put(
+          contestId,
+          newContest,
+        );
+        return #ok("Contest added successfully");
+
+      };
+      case (null) {
+        return #err("No match found")
+
+      };
+    };
+
+  };
+  public shared ({ caller }) func updateContest(inputContest : IContest, contestId : Key) : async Result.Result<Text, Text> {
+    onlyAdmin(caller);
+    let maybeMatch = matchStorage.get(inputContest.matchId);
+    switch (maybeMatch) {
+      case (?isMatch) {
+        let currentTime = getTime();
+        if (currentTime < isMatch.time) {
+          let maybeContest = contestStorage.get(contestId);
+          switch (maybeContest) {
+            case (null) {
+              return #err("No Contest found");
+            };
+            case (?isContest) {
+
+              let newContest : Contest = {
+                creatorUserId = Principal.toText(caller);
+                name = inputContest.name;
+                matchId = inputContest.matchId;
+                slots = inputContest.slots;
+                slotsUsed = isContest.slotsUsed;
+                minCap = inputContest.minCap;
+                maxCap = inputContest.maxCap;
+                providerId = inputContest.providerId;
+                teamsPerUser = inputContest.teamsPerUser;
+                rules = inputContest.rules;
+
+              };
+              let _t = contestStorage.replace(
+                contestId,
+                newContest,
+              );
+            };
+          };
+
+          return #ok("Contest updated successfully");
+        } else {
+          return #err("Time limit exceeded");
+        };
+      };
+      case (null) {
+        return #err("No match found")
+
+      };
+    };
+
+  };
+  public shared ({ caller }) func removeContest(contestId : Key) : async ?Contest {
+    onlyAdmin(caller);
+    contestStorage.remove(contestId);
+  };
+  public query func getContest(contestId : Key) : async ?Contest {
+    return contestStorage.get(contestId);
+  };
+  /**
+   getContestWithMatch use to get  contest with match with contest id
+   @param array of contestId
+   @return {contest:Contest;match:RefinedMatch}
+
+  **/
+  public query func getContestWithMatch(contestId : Key) : async ?{
+    contest : Contest;
+    match : ?RefinedMatch;
+  } {
+    let contest = contestStorage.get(contestId);
+    switch (contest) {
+      case (null) return null;
+      case (?isContest) {
+        let getMatch = pGetMatch(isContest.matchId);
+        return ?{ match = getMatch; contest = isContest };
+      };
+    };
+  };
+
+  /**
+   getContestNames use to get list of contest names og given ids
+   @param array of contestIds
+   @return [(id, contestname)]
+
+  **/
+  public query func getContestNames(contestIds : [Key]) : async [(Text, Text)] {
+    var tempContextNames : [(Text, Text)] = [];
+    for (id in contestIds.vals()) {
+      let getContest = contestStorage.get(id);
+
+      switch (getContest) {
+        case (?isContest) {
+          tempContextNames := Array.append(tempContextNames, [(id, isContest.name)]);
+        };
+        case (null) {
+          tempContextNames := Array.append(tempContextNames, [(id, "")]);
+
+        };
+      };
+    };
+    return tempContextNames;
+  };
+  public query func getContestsByMatchId(matchId : Key) : async Contests {
+    let contests = Buffer.Buffer<(Key, Contest)>(contestStorage.size());
+    for ((key, contest) in contestStorage.entries()) {
+      if (contest.matchId == matchId) {
+        contests.add((key, contest));
+      };
+    };
+    return Buffer.toArray(contests);
+  };
+    public query func getPaginatedContestsByMatchId(matchId : Key, props : GetProps) : async ReturnPagContests {
+    let contests = Buffer.Buffer<(Key, Contest)>(contestStorage.size());
+    var totalCount = 0;
+
+    // Count total number of contests matching matchId
+    for ((_, contest) in contestStorage.entries()) {
+      if (contest.matchId == matchId) {
+        totalCount += 1;
+
+      };
+    };
+    if (totalCount == 0) {
+      return { contests = []; total = totalCount };
+    };
+
+    let startIndex : Nat = (props.page) * props.limit;
+    var endIndex : Nat = startIndex + props.limit;
+
+    // Adjust endIndex if props.limit exceeds total number of contests
+    if (endIndex > totalCount) {
+      endIndex := totalCount;
+    };
+
+    // If startIndex is beyond total count, return empty array
+    if (startIndex >= totalCount) {
+      return { contests = []; total = totalCount };
+    };
+
+    // Iterate through contestStorage to collect contests for pagination
+    var count : Nat = 0;
+    label participantLoop for ((key, contest) in contestStorage.entries()) {
+      if (contest.matchId == matchId) {
+        count += 1;
+        if (count > startIndex and count <= endIndex) {
+    
+          contests.add((key, contest ));
+        };
+        if (count == endIndex) {
+          break participantLoop; // Exit loop once endIndex is reached
+        };
+      };
+    };
+
+    return { contests = Buffer.toArray(contests); total = totalCount };
+  };
+  public query ({ caller }) func getFilterdContests(props : GetProps) : async ReturnContests {
+    let currentTime = getTime();
+    var limit = getLimit(props.limit);
+    var isUpcoming : Bool = true;
+    var isCompleted : Bool = false;
+    if (props.status == "0") {
+      isUpcoming := true;
+    } else if (props.status == "1") {
+      isUpcoming := false;
+    } else if (props.status == "2") {
+      isUpcoming := false;
+      isCompleted := true;
+    };
+
+    var contestMap = Map.HashMap<Key, MatchContest>(participantStorage.size(), Text.equal, Text.hash);
+    label participantLoop for ((key, participant) in participantStorage.entries()) {
+      if (participant.userId == Principal.toText(caller)) {
+        let isAlreadyIncluded = contestMap.get(participant.contestId);
+        if (isAlreadyIncluded != null) {
+          continue participantLoop;
+        };
+
+        let contest = contestStorage.get(participant.contestId);
+        switch (contest) {
+          case (?isContest) {
+     
+          
+            let match = matchStorage.get(isContest.matchId);
+            switch (match) {
+              case (?isMatch) {
+                let homeTeam = teamStorage.get(isMatch.homeTeam);
+                let awayTeam = teamStorage.get(isMatch.awayTeam);
+                let homeScore = isMatch.homeScore;
+                let awayScore = isMatch.awayScore;
+                let matchTime = isMatch.time;
+                let isMatchUpcoming = (matchTime > currentTime);
+                let isMatchCompleted = (matchTime < currentTime);
+                if (isUpcoming and not isMatchUpcoming) continue participantLoop;
+                if (isCompleted and not isMatchCompleted) continue participantLoop;
+                if (not ((isUpcoming and isMatchUpcoming) or (((not isUpcoming) and isMatchCompleted)))) continue participantLoop;
+                if (not ((isCompleted and checkMatchCompleted(isMatch.status)) or (not isCompleted and not checkMatchCompleted(isMatch.status)))) continue participantLoop;
+                switch (homeTeam, awayTeam) {
+                  case (?isHome, ?isAway) {
+                    if (not search({ compare = isContest.name; s = props.search }) and not search({ compare = getMatchName(isHome, isAway); s = props.search })) continue participantLoop;
+
+                    let newContest = {
+                      isContest with matchName = getMatchName(isHome, isAway);
+                      homeTeamName = isHome.name;
+                      awayTeamName = isAway.name;
+                      awayScore = awayScore;
+                      homeScore = homeScore;
+               
+                    };
+
+                    contestMap.put(participant.contestId, newContest);
+
+                  };
+                  case (_, _) {
+
+                  };
+                };
+
+              };
+              case (null) {};
+            };
+
+          };
+          case (null) {};
+        };
+      };
+    };
+    let filteredArr = Iter.toArray(contestMap.entries());
+    let totalContests = Array.size(filteredArr);
+    let startIndex : Nat = props.page * limit;
+    if (startIndex >= totalContests) {
+      return { total = totalContests; contests = [] };
+
+    };
+
+    var endIndex : Nat = startIndex + limit;
+    if (endIndex > totalContests) {
+      endIndex := totalContests;
+    };
+
+    let slicedContests = Iter.toArray(Array.slice<(Key, MatchContest)>(filteredArr, startIndex, endIndex));
+    return {
+      total = totalContests;
+      contests = slicedContests;
+    };
+  };
+    // PlayerSquads
+  public shared ({ caller }) func addPlayerSquad(inputSquad : IPlayerSquad) : async Result.Result<Text, Text> {
+    onlyUser(caller);
+    // let r = verifyBudget(inputSquad.players);
+    let maybeMatch = matchStorage.get(inputSquad.matchId);
+    switch (maybeMatch) {
+      case (?isMatch) {
+        if (isInPast(isMatch.time)) {
+          return #err("Time limit exceeded");
+
+          // onlyAdmin(caller);
+        };
+      };
+      case (null) {
+        return #err("Match does not exist");
+      };
+    };
+    // switch (r) {
+    //   case (#err(error)) {
+    //     return #err(error);
+    //   };
+    //   case (#ok(_)) {};
+    // };
+
+    // Count the number of players and substitutes
+    let playersCount = Validation.playersCount(inputSquad.players);
+    switch (playersCount) {
+      case (#ok(_)) {};
+      case (#err(res)) {
+        return #err(res);
+      };
+    };
+
+    let playerKeys = Array.map<(Text, Bool), Text>(
+      inputSquad.players,
+      func(playerTuple : (Text, Bool)) : Text {
+        let (key, _) = playerTuple;
+        key;
+      },
+    );
+    switch (countDuplicates(playerKeys)) {
+      case (#ok(count)) {
+        let teamFormatiopnValidate = Validation.validateTeamFormation(inputSquad.players, inputSquad.formation, playerStorage);
+        switch (teamFormatiopnValidate) {
+          case (#err(err)) {
+            return #err(err);
+          };
+          case (#ok(_)) {
+
+            let getMatch = matchStorage.get(inputSquad.matchId);
+            switch (getMatch) {
+              case (null) {
+                return #err("Match not found");
+              };
+              case (?isMatch) {
+                //this check what ever selected players are not from single team
+                let selectedPlayersNotFromSingleTeam = Validation.validateSelectedPlayersAreNotFromSingleTeam(inputSquad.players, isMatch.homeTeam, isMatch.awayTeam, playerStorage);
+
+                switch (selectedPlayersNotFromSingleTeam) {
+                  case (#err(err)) {
+                    return #err(err);
+                  };
+                  case (#ok(_)) {
+
+                    let newSquad = {
+                      inputSquad with
+                      rank = 0;
+                      points = 0;
+                      userId = Principal.toText(caller);
+                      creation_time = getTime();
+                      hasParticipated = false;
+                    };
+                    playerSquadStorage.put(
+                      Types.generateNewRemoteObjectId(),
+                      newSquad,
+                    );
+                    return #ok("Squad created successfully");
+                  };
+                };
+
+              };
+            };
+          };
+        };
+      };
+      case (#err(msg)) {
+        Debug.print(msg);
+        return #err(msg);
+      };
+    };
+
+  };
+    private func nRefinePlayerSquad(squad : PlayerSquad, squadId : Key) : Types.RankPlayerSquad {
+    let refinedPlayers = Buffer.Buffer<(Key, PlayerS, Bool)>(squad.players.size());
+    // var squadPoints : RPoints = 0;
+    for ((key, bool) in squad.players.vals()) {
+      let player = playerStorage.get(key);
+      switch (player) {
+        case (?is) {
+          refinedPlayers.add((key, is, bool));
+        };
+        case (null) {};
+      };
+    };
+    let rankBuffer = Buffer.Buffer<(Key, Nat)>(0);
+    for (id in getContestIdsByMatch(squad.matchId).vals()) {
+      let maybeParticipant = participantStorage.get(squadId # id);
+      switch (maybeParticipant) {
+        case (?isParticipant) {
+          rankBuffer.add(id, isParticipant.rank);
+        };
+        case (null) {};
+      };
+    };
+    let newSquad = {
+      squad with players = Buffer.toArray(refinedPlayers);
+      ranks = Buffer.toArray(rankBuffer);
+    };
+    return newSquad;
+  };
+  public query ({ caller }) func getPlayerSquad(squadId : Key) : async ?Types.RankPlayerSquad {
+    let maybeSquad = playerSquadStorage.get(squadId);
+    switch (maybeSquad) {
+      case (?squad) {
+        if (squad.userId != Principal.toText(caller)) {
+          let match = matchStorage.get(squad.matchId);
+          switch (match) {
+            case (?isMatch) {
+              if (isInFuture(isMatch.time)) {
+                return null;
+              };
+            };
+            case (null) {
+              return null;
+            };
+          };
+        };
+        return ?nRefinePlayerSquad(squad, squadId);
+      };
+      case (null) {
+        return null;
+      };
+    };
+  };
   system func preupgrade() {
     Debug.print("Starting pre-upgrade hook...");
     stable_users := Iter.toArray(userStorage.entries());
@@ -867,6 +1716,8 @@ shared ({ caller = initializer }) actor class () {
     stable_seasons := Iter.toArray(seasonStorage.entries());
     stable_teams := Iter.toArray(teamStorage.entries());
     stable_adminSettings := Iter.toArray(adminSettingStorage.entries());
+    stable_contests := Iter.toArray(contestStorage.entries());
+    stable_participants := Iter.toArray(participantStorage.entries());
 
     Debug.print("pre-upgrade finished.");
   };
@@ -880,6 +1731,8 @@ shared ({ caller = initializer }) actor class () {
     seasonStorage := Map.fromIter<Key, Season>(stable_seasons.vals(), stable_seasons.size(), Text.equal, Text.hash);
     teamStorage := Map.fromIter<Key, Team>(stable_teams.vals(), stable_teams.size(), Text.equal, Text.hash);
     adminSettingStorage := Map.fromIter<Key, AdminSetting>(stable_adminSettings.vals(), stable_adminSettings.size(), Text.equal, Text.hash);
+    contestStorage := Map.fromIter<Key, Contest>(stable_contests.vals(), stable_contests.size(), Text.equal, Text.hash);
+    participantStorage := Map.fromIter<Key, Participant>(stable_participants.vals(), stable_participants.size(), Text.equal, Text.hash);
 
     stable_users := [];
     stable_players := [];
@@ -888,7 +1741,8 @@ shared ({ caller = initializer }) actor class () {
     stable_seasons:=[];
     stable_teams:=[];
     stable_adminSettings:=[];
-
+    stable_contests:=[];
+    stable_participants:=[];
     Debug.print("post-upgrade finished.");
   };
 };

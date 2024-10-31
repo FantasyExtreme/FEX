@@ -1,5 +1,5 @@
 'use client';
-import React, { use, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { use, useEffect, useRef, useState } from 'react';
 import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
 import { Container, Row, Col } from 'react-bootstrap';
@@ -8,10 +8,8 @@ import useSearchParamsHook from '@/components/utils/searchParamsHook';
 import { QURIES } from '@/constant/variables';
 export default function CarouselSlider({
   getSelectedDate,
-  myuseRef
 }: {
   getSelectedDate: any;
-  myuseRef : any;
 }) {
   interface DateInfo {
     dates: string;
@@ -101,23 +99,7 @@ export default function CarouselSlider({
       dateInMiliseconds:timeInMiliseconds,
     };
   }
-  function updateActiveIndex() {
-    const currentDefaultDate = new Date().setHours(0, 0, 0, 0);
-    if (slides && slides.length > 0) {
-      const defaultIndex = slides.findIndex(
-        (slide) => slide.dateInMiliseconds === currentDefaultDate
-      );
-      if (defaultIndex !== -1) {
-        carouselRef?.current.goToSlide(defaultIndex + 5);
-        if (defaultIndex !== activeIndex) {
-          getSelectedDate(slides[defaultIndex].dateInMiliseconds);
-        }
-      }
-    }
-  }
-  useImperativeHandle(myuseRef, () => ({   // Expose the childMethod to parent
-    updateActiveIndex,
-  }));
+
   useEffect(() => {
     let timeoutId = setTimeout(() => {
       if (carouselRef?.current) {
