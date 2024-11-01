@@ -4,6 +4,7 @@ import {
 
   Contest,
   ContestType,
+  DetailedMatchContest,
   GetProps,
   GroupedContests,
   GroupedPlayers,
@@ -11,12 +12,16 @@ import {
   Match,
   MatchesCountType,
   MatchesType,
+  MeAsTopPlayers,
   Player,
+  RfRefinedPlayerSquad,
+  TopPlayers,
   TournamentType,
 
 } from '@/types/fantasy';
 import {
   EnvironmentEnum,
+  JoinContestText,
   MatchStatusNames,
   MatchStatuses,
   Packages,
@@ -582,6 +587,260 @@ export async function getIcpRate() {
     // Log the error
     logger(error, 'errorerror');
     return 0;
+  }
+}
+
+
+export function refineSquad(squad: any): RfRefinedPlayerSquad | null {
+  if (!squad) return null;
+  return {
+    ...squad,
+    points: Number(squad.points),
+    creation_time: Number(squad.creation_time),
+    rank: Number(squad?.rank),
+  };
+}
+/**
+ * Fetches getMeAsTopplayers use to get user Rank
+ * @param actor - The actor object used to fetch  top fantasy player.
+ * @param userId - The properties required for fetching  top fantasy player.
+ * @param setTopPlayers - State setter function for  top fantasy player.
+ * @returns A Promise that resolves once tournaments are fetched and state is updated.
+ */
+export async function getMeAsTopplayers(
+  actor: any,
+  userId: string,
+  setTopPlayer: React.Dispatch<React.SetStateAction<MeAsTopPlayers | null>>,
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>,
+) {
+  if (actor) {
+    setLoading(true);
+    var res = await actor.getUserRank(userId);
+    if (res) {
+      let mapPlayers = res.map((item: any) => {
+        let player = item;
+
+        return {
+          name: player?.name,
+          userId,
+          image: player?.image,
+          participated: Number(player?.assets?.participated),
+          contestWon: Number(player?.assets?.contestWon),
+       
+          rank: Number(player?.rank),
+        };
+      });
+      setTopPlayer(mapPlayers[0]);
+    } else {
+      setTopPlayer(null);
+    }
+    setLoading(false);
+  }
+}
+/**
+ * Calls the backend function getAssetsOfUser() and sets the state with the object value.
+ *
+ * @param actor - The object used to interact with the backend.
+ * @param setState - The state setter function.
+ */
+
+export async function getUserAssets(
+  actor: any,
+  userId: string,
+  setState: React.Dispatch<React.SetStateAction<any>>,
+) {
+  let newUser = await actor.getAssetsOfUser(userId);
+  if (newUser) {
+    let tempAssets = {
+      participated: Number(newUser.participated) ?? 0,
+      contestWon: Number(newUser.contestWon) ?? 0,
+
+    };
+    setState(tempAssets);
+  }
+}
+/**
+ * Fetches getTopplayers use to get top fantasy players
+ * @param actor - The actor object used to fetch  top fantasy players.
+ * @param props - The properties required for fetching  top fantasy players.
+ * @param setTopPlayers - State setter function for  top fantasy players.
+ * @returns A Promise that resolves once tournaments are fetched and state is updated.
+ */
+export async function getTopplayers(
+  actor: any,
+  props: GetProps,
+  setTopPlayers: React.Dispatch<React.SetStateAction<TopPlayers[] | null>>,
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  setTotallCount: React.Dispatch<React.SetStateAction<number>>,
+) {
+  try {
+    
+ 
+  if (actor) {
+    setLoading(true);
+    var res = await actor.getTopPlayers(props);
+    logger(res,"players")
+    if (res) {
+      let tempPlayers = res?.players;
+      let total = Number(res?.total ?? 0);
+      setTotallCount(total);
+      let mapPlayers = tempPlayers.map((item: any) => {
+        let userId = item[0];
+        let player = item[1];
+
+        return {
+          name: player?.name,
+          userId,
+          image: player?.image,
+          participated: Number(player?.assets?.participated),
+          contestWon: Number(player?.assets?.contestWon),
+          rewardsWon: Number(player?.assets?.rewardsWon),
+          totalEarning: Number(player?.assets?.totalEarning),
+        };
+      });
+
+      setTopPlayers(mapPlayers);
+    } else {
+      setTopPlayers(null);
+    }
+    setLoading(false);
+  }
+} catch (error) {
+    logger(error,"error while getting players")
+    
+}
+};
+
+export async function getDashboardMatches(
+  actor: any,
+  setMatches: React.Dispatch<
+    React.SetStateAction<DetailedMatchContest[] | null>
+  >,
+  props: GetProps,
+  setLoadingState: React.Dispatch<React.SetStateAction<boolean>>,
+  setMatchesCount: React.Dispatch<React.SetStateAction<number>> | null,
+) {
+  try {
+    
+
+  setLoadingState(true);
+  const resp = await actor.getDetailedMatchesContests(props);
+  logger(resp,"gasdjfkasdfasdfasdfadf")
+  const matches = resp?.matches;
+  let totalMatches = Number(resp?.total) ?? 0;
+  const matchesWithTeams = await Promise.all(
+    matches?.map(async (match: any) => {
+      const homeTeam = await getTeam(match?.homeTeam, actor);
+      const awayTeam = await getTeam(match?.awayTeam, actor);
+      if (!homeTeam || !awayTeam) {
+        return null;
+      }
+      const newDate = utcToLocal(match.time, 'DD-MM-YYYY');
+      const newTime = utcToLocal(match?.time, 'hh:mm A');
+      let status = getMatchStatus({ time: match?.time, status: match?.status });
+      let totalTeamsPerUser = 0;
+      match?.contests.map((cont: any) => {
+        totalTeamsPerUser += Number(cont.teamsPerUser);
+      });
+
+      return {
+        ...match,
+        id: match.id,
+        homeTeam: homeTeam,
+        awayTeam: awayTeam,
+        location: match?.location,
+        teamsCreated: Number(match.teamsCreated),
+        teamsJoined: Number(match.teamsJoined),
+        status: status,
+        date: newDate,
+        time: newTime,
+        matchTime: Number(match?.time),
+        teamsPerUser: totalTeamsPerUser,
+        homeScore: Number(match?.homeScore),
+        awayScore: Number(match?.awayScore),
+       
+      };
+    }),
+  );
+  const filteredMatches = matchesWithTeams.filter((match: any) => {
+    if (match != null) {
+      return true;
+    } else {
+      return false;
+    }
+  });
+  if (setMatchesCount) setMatchesCount(totalMatches);
+  setMatches(filteredMatches);
+  setLoadingState(false);
+} catch (error) {
+  setMatches(null);
+  setLoadingState(false);
+}
+};
+interface TeamStatusProps {
+  id: string;
+  hasParticipated?: boolean;
+  Matchstatus: any;
+  teamsPerUser: number;
+  time: number;
+  isParticipating: boolean;
+  selectedSquad: string;
+  maximumParticipated: boolean;
+  participants: number;
+}
+
+export function getTeamStatus({
+  id,
+  hasParticipated,
+  Matchstatus,
+  teamsPerUser,
+  time,
+  isParticipating,
+  selectedSquad,
+  maximumParticipated,
+  participants,
+}: TeamStatusProps) {
+  const loading = isParticipating && id == selectedSquad;
+  let status = 'Not joined';
+  const kickedOff = isInPast(time);
+  let maximum = false;
+  let show = false;
+  const finished = Matchstatus == MatchStatusNames.finished;
+  let buttonText = JoinContestText.upcoming;
+  if (kickedOff) buttonText = JoinContestText.ongoing;
+  if (finished) buttonText = JoinContestText.finished;
+  if (hasParticipated) {
+    buttonText = JoinContestText.participated;
+    status = JoinContestText.participated;
+  }
+  if (maximumParticipated && !hasParticipated) {
+    maximum = true;
+    // getPackage();
+    buttonText = `${participants} / ${teamsPerUser} Joined`;
+    // status = `${participants} / ${match?.teamsPerUser} Max Joined`;
+  }
+  const disabled = isParticipating || kickedOff || hasParticipated || maximum;
+  return { loading, disabled, status, buttonText };
+}
+/**
+ * Retrieves the key from the MatchStatuses enum based on the given status.
+ *
+ * @param  status - The status to search for in the MatchStatuses enum.
+ * @return  The key corresponding to the given status, or undefined if not found.
+ */
+export function getKeyFromMatchStatus(status: MatchStatuses): string {
+  switch (status) {
+    case MatchStatuses.upcoming:
+      return 'upcoming';
+    case MatchStatuses.ongoing:
+      return 'ongoing';
+    case MatchStatuses.finished:
+      return 'finished';
+    case MatchStatuses.postponed:
+      return 'postponed';
+    default:
+      return 'upcoming';
+      break;
   }
 }
 export async function getPlayers({

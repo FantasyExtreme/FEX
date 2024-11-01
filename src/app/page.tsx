@@ -21,6 +21,7 @@ import { ConnectPlugWalletSlice } from "@/types/store";
 import { useAuthStore } from "@/store/useStore";
 import { MATCHES_ROUTE } from "@/constant/routes";
 import { QURIES } from "@/constant/variables";
+import FantasyPlayers from "@/components/Components/FantasyPlayers";
 
 export default function HomePage() {
   const { auth } = useAuthStore((state) => ({
@@ -214,11 +215,39 @@ export default function HomePage() {
         </Row>
       </Container>
       {/* matches Result Panel */}
-
-    
-
       {/* Top Fantasy Player */}
-
+      <Container
+        fluid
+        id='Fantasy'
+        className={
+          isVisible4 == true
+            ? 'animate top-fantasy-panel pb-0'
+            : 'top-fantasy-panel pb-0'
+        }
+      >
+        <div className='bg-layer' />
+        <Row>
+          <Container>
+            <Row>
+              <Col xl='12' lg='12' md='12' sm='12'>
+                <div className='flex-div'>
+                  <h2>
+                    Top Fantasy <span>Players</span>
+                  </h2>
+                  <Link className='simple-link mb-3' href='/fantasyplayer'>
+                    View All{' '}
+                    <i className='fa fa-arrow-right' aria-hidden='true'></i>
+                  </Link>
+                </div>
+              </Col>
+              <Col xl='12' lg='12' md='12' sm='12'>
+                <div className='spacer-50' />
+              </Col>
+              <FantasyPlayers />
+            </Row>
+          </Container>
+        </Row>
+      </Container>
       {/* Top Fantasy Player */}
     </>
   );

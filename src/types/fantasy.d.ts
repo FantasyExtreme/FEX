@@ -41,6 +41,21 @@ interface PlayerSquad {
   hasParticipated?: boolean;
   joinedContestsName?: string;
 }
+interface TopPlayers {
+  userId: string;
+  name: string;
+  image: string;
+  participated: number;
+  contestWon: number;
+}
+interface MeAsTopPlayers {
+  userId: string;
+  name: string;
+  image: string;
+  participated: number;
+  contestWon: number;
+  rank: number;
+}
 interface Contest {
   name: string;
   matchId: Key;
@@ -52,6 +67,25 @@ interface Contest {
   minCap: number;
   teamsPerUser: number;
   rules: string;
+}
+interface SquadRanking {
+  userId: Key;
+  name: string;
+  matchId: Key;
+  points: BigInt;
+  creation_time: BigInt;
+}
+interface RFSquadRanking extends SquadRanking {
+  id: string;
+  points: number;
+  creation_time: number;
+  rank: number;
+  mine: boolean;
+}
+interface RfRefinedPlayerSquad extends RefinedPlayerSquad {
+  points: number;
+  creation_time: number;
+  players: Player[];
 }
 interface GroupedPlayers {
   [role: string]: Player[];

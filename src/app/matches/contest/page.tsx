@@ -49,6 +49,7 @@ import Countdown from 'react-countdown';
 import CountdownRender from '@/components/Components/CountdownRenderer';
 import { TEAM_CREATION_ROUTE } from '@/constant/routes';
 import ConnectModal from '@/components/Components/ConnectModal';
+import RankingModal from '@/components/Components/Ranking';
 
 export default function Contests() {
   const urlparama = useSearchParamsHook();
@@ -397,6 +398,14 @@ export default function Contests() {
           </Container>
         </Row>
       </Container>
+      {selectedContest && (
+        <RankingModal
+          handleCloseModal={handleCloseRanking}
+          showModal={showRanking}
+          contestId={selectedContest?.id}
+          match={match}
+        />
+      )}
       <ConnectModal
         show={showConnect}
         hideModal={handleHideConnect}
