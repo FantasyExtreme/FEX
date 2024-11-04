@@ -22,6 +22,7 @@ import { Auth } from '@/types/store';
 import { toast } from 'react-toastify';
 import TeamRow from './TeamRow';
 import useAuth from '@/lib/auth';
+import ConfirmTransaction from './ConfirmTransaction';
 
 const DashboardTable = ({
   squads,
@@ -190,6 +191,13 @@ const DashboardTable = ({
             </div>
           </div>
         )}
+              <ConfirmTransaction
+         
+          show={showConfirm}
+          onConfirm={addParticipant}
+          loading={isParticipating}
+          hideModal={handleHideConfirm}
+        />
       </div>
       {/* </div> */}
     </>

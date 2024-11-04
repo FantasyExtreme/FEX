@@ -212,11 +212,11 @@
     padding-left: 30px;
     padding-right: 20px;
     @media (max-width: 1500px) {
-      width: calc(100% - 180px);
+      width: calc(100% );
       padding-left: 0px;
     }
     @media (max-width: 1200px) {
-      width: calc(100% - 200px);
+      width: calc(100% );
     }
     @media (max-width: 991px) {
       width: 100%;

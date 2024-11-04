@@ -42,11 +42,15 @@ import {
 } from 'react-bootstrap';
 import logger from '@/lib/logger';
 import {
-  copyPrincipal
+  copyPrincipal,
+  getUserAssets
 } from '@/components/utils/fantasy';
 import { useRouter } from 'next/navigation';
 import Tippy from '@tippyjs/react';
 import { TransferFromError } from '@dfinity/ledger-icp/dist/candid/ledger';
+import LeaderBoardSvg from '@/components/Icons/LeaderboardSvg';
+import GiftSvg from '@/components/Icons/GiftSvg';
+import UserTeams from '@/components/Components/UserTeams';
 
 
 export default function Dashboard() {
@@ -63,6 +67,10 @@ export default function Dashboard() {
 
   let router = useRouter();
 
+  const [userAssets, setUserAssets] = useState({
+    participated: 0,
+    contestWon: 0,
+  });
 
   const handleShowModal = () => {
     setShowModal(true);
@@ -132,7 +140,11 @@ export default function Dashboard() {
       return num.toFixed(2);
     }
   }
-  
+  function handleGetAssets() {
+    let userPincipal = auth?.identity?.getPrincipal().toString();
+
+    getUserAssets(auth.actor, userPincipal, setUserAssets);
+  }
   /**
    * use to check is it staging or production project
    * @returns boolean
@@ -143,6 +155,7 @@ export default function Dashboard() {
     if (auth.identity) {
       let userPincipal = auth?.identity?.getPrincipal().toString();
       setuserPrincipal(userPincipal);
+      getUserAssets(auth.actor, userPincipal, setUserAssets);
     } else {
       setuserPrincipal('');
     }
@@ -157,7 +170,7 @@ export default function Dashboard() {
           <Container>
             <Row>
               <Col xl='12'>
-                <div className='profile-info d-flex justify-content-center mb-5'>
+                <div className='profile-info'>
                   <div className='profile-info'>
                     <div className='profile-picture'>
                       <img
@@ -182,18 +195,59 @@ export default function Dashboard() {
                       {userPrincipal?.slice(0, 7)}...{userPrincipal?.slice(-7)}
                     </h5>
                   </div>
-                  
-                    
-                    
+                  <div className={`right-pnl`}>
+                    <div className='text-pnl'>
+                      <h4 className='Nasalization text-uppercase whitecolor'>
+                        Your <span>Stats</span>
+                      </h4>
+                      <ul className='total-stat-list'>
+                        <li>
+                          <h5>Total Participated Contests</h5>
+                          <div className='stat-container custom_margin'>
+                            <span>
+                              <LeaderBoardSvg />
+                            </span>
+                            <span>{userAssets?.participated}</span>
+                          </div>
+                        </li>
+                        <li>
+                          <h5>Total Contests Won</h5>
+                          <div className='stat-container custom_margin'>
+                            <span>
+                              <GiftSvg />
+                            </span>
+                            <span>{userAssets?.contestWon}</span>
+                          </div>
+                        </li>
+                      
+                      </ul>
+                    </div>
+                 
+                  </div>
                 </div>
               </Col>
             </Row>
-           
+     
           </Container>
         </Row>
       </Container>
     
-   
+      <Container fluid>
+        <Row>
+          <Container>
+            <Row>
+              <Col xl='12'>
+              <div className='spacer-50' />
+              <div className='spacer-50' />
+
+                <UserTeams handleGetAssets={handleGetAssets} dashboard={true} />
+             
+                <div className='spacer-50' />
+              </Col>
+            </Row>
+          </Container>
+        </Row>
+      </Container>
       <Modal show={showModal} centered onHide={handleCloseModal}>
         <Modal.Body>
           <h5 className='text-center'>Update Profile</h5>

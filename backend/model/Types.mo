@@ -199,6 +199,119 @@ public type InputMatch = {
     homeScore : Nat;
     awayScore : Nat;
   };
+
+  type Shots = {
+    shots_total : Int;
+    shots_on_goal : Int;
+  };
+
+  type Goals = {
+    scored : Int;
+    assists : Int;
+    conceded : Int;
+    owngoals : Int;
+    team_conceded : Int;
+  };
+
+  type Fouls = {
+    drawn : Int;
+    committed : Int;
+  };
+
+  type Cards = {
+    yellowcards : Int;
+    redcards : Int;
+    yellowredcards : Int;
+  };
+
+  type Passing = {
+    total_crosses : Int;
+    crosses_accuracy : Int;
+    passes : Int;
+    accurate_passes : Int;
+    passes_accuracy : Int;
+    key_passes : Int;
+  };
+
+  type Dribbles = {
+    attempts : Int;
+    success : Int;
+    dribbled_past : Int;
+  };
+
+  type Duels = {
+    total : Int;
+    won : Int;
+  };
+
+  type Other = {
+    aerials_won : Int;
+    punches : Int;
+    offsides : Int;
+    saves : Int;
+    inside_box_saves : Int;
+    pen_scored : Int;
+    pen_missed : Int;
+    pen_saved : Int;
+    pen_committed : Int;
+    pen_won : Int;
+    hit_woodwork : Int;
+    tackles : Int;
+    blocks : Int;
+    interceptions : Int;
+    clearances : Int;
+    dispossesed : Int;
+    minutes_played : Int;
+  };
+
+  public type PlayerStats = {
+    playerId : Key;
+    matchId : Key;
+    stats : {
+      shots : Shots;
+      goals : Goals;
+      fouls : Fouls;
+      cards : Cards;
+      passing : Passing;
+      dribbles : Dribbles;
+      duels : Duels;
+      other : Other;
+    };
+    rating : Text;
+  };
+  public type PlayerStatsWithName = PlayerStats and {
+    name : Text;
+  };
+  public type IPlayerStats = {
+    playerId : Key;
+    matchId : Key;
+    stats : {
+      shots : Shots;
+      goals : Goals;
+      fouls : Fouls;
+      cards : Cards;
+      passing : Passing;
+      dribbles : Dribbles;
+      duels : Duels;
+      other : Other;
+    };
+    rating : Text;
+  };
+
+
+    public type Points = {
+    shots : Shots;
+    goals : Goals;
+    fouls : Fouls;
+    cards : Cards;
+    passing : Passing;
+    dribbles : Dribbles;
+    duels : Duels;
+    other : Other;
+  };
+  public type PlayersStats = [(Key, PlayerStats)];
+
+
    public type ContestCommon = {
     providerId : MonkeyId;
     matchId : Key;
@@ -212,6 +325,7 @@ public type InputMatch = {
   public type Contest = ContestCommon and {
     creatorUserId : Key;
     slotsUsed : Nat;
+       winner : ?Key;
   };
     public type Participant = {
     contestId : Key;
@@ -251,6 +365,18 @@ public type IPlayerSquad = {
    public type RefinedPlayerSquad = PlayerSquadCommon and {
     // providerId : MonkeyId;
     players : [(Key, PlayerS, Bool)];
+  };
+    public type TopPlayer = {
+    name : Text;
+    joiningDate : Int;
+    role : Role;
+    email : Text;
+    assets : UserAssets;
+  };
+    public type TopPlayers = [(Key, TopPlayer)];
+      public type PointsPlayerSquad = PlayerSquadCommon and {
+    // providerId : MonkeyId;
+    players : [(Key, Bool)];
   };
    public type RefinedPlayerSquadRanking = {
     // providerId : MonkeyId;
@@ -341,7 +467,42 @@ public type IPlayerSquad = {
     status : MatchStatus;
     homeScore : Nat;
     awayScore : Nat;
+  }; 
+  
+    public type MatchScore = {
+    id : Key;
+    homeScore : Nat;
+    awayScore : Nat;
+    status : MatchStatus;
   };
+   public type RMVPSTournamentMatch = { matchId : Key } and RefinedMatch and {
+    mvps : ?(Key, MVPSPlayers);
+    contestWinner : ?(Key, User);
+  };
+
+  public type ContestWinner=User;
+    public type RMVPSTournamentMatchs = [RMVPSTournamentMatch];
+
+  public type MeAsTopPlayer = TopPlayer and {
+    rank : Nat;
+  };
+  public type MVPSPlayers = {
+    name : Text;
+    number : Int;
+    photo : Text;
+  };
+
+  // --------------  join contest ------------
+  public type TransferFromError = {
+    #GenericError : { error_code : Nat; message : Text };
+  };
+
+  public type UserAssets = {
+    participated : Nat;
+    contestWon : Nat;
+
+  };
+    public type UsersAssets = [(Key, UserAssets)];
     public let MAX_PLAYER_PER_SQUAD = 15;
  public let AdminSettings = {
     budget = "budget";
@@ -349,6 +510,24 @@ public type IPlayerSquad = {
 
 
   };
+  public let MatchStatuses = {
+    finished = "Match Finished";
+    postponed = "Match Postponed";
+  };
+  public let Default_Contest_free = {
+    name = "Free";
+    slots = 1000;
+    teamsPerUser = 3;
+    minCap = 100;
+    maxCap = 0;
+    providerId = "0";
+    rules = "No entry fee,
+             Max limit for teams per user is 3";
+  };
+
+ 
+
+  public let Default_Contests=[Default_Contest_free];
   public func generateNewRemoteObjectId() : Key {
     return Int.toText(Time.now());
   };
