@@ -15,6 +15,8 @@ import {
   MeAsTopPlayers,
   Player,
   RfRefinedPlayerSquad,
+  Team,
+  TeamCreationErrorType,
   TopPlayers,
   TournamentType,
 
@@ -46,6 +48,7 @@ import logger from "@/lib/logger";
 import axios from 'axios';
 import { API_ROUTE_GET_USD_RATE } from "@/constant/routes";
 import { PackageIcons } from "@/constant/icons";
+import { RContestTypes } from "@/dfx/declarations/temp/fantasyfootball/fantasyfootball.did";
 
 
 export function isConnected(state: string): boolean {
@@ -101,6 +104,19 @@ export function renamePosition(ps: string) {
       break;
   }
 }
+export async function getContestTypes({
+  actor,
+  set,
+  all,
+}: {
+  actor: any;
+  set: React.Dispatch<React.SetStateAction<RContestTypes | null>>;
+  all: boolean;
+}) {
+  let res = await actor.getContestTypes(all);
+  set(res);
+}
+
 /**
  * Generates a random team name by combining a random adjective and a random noun.
  * @returns {string} A random team name.
@@ -856,6 +872,7 @@ export async function getPlayers({
     if (team) return team.id;
   });
   const data = await auth.actor.getPlayersByTeamIds(refinedIds);
+  logger(data,"datadatadata")
 
   const playersData = data?.ok ? data?.ok[0] : null;
   const playersCountData = data?.ok ? data?.ok[1] : null;
@@ -960,6 +977,26 @@ export function formatEmail(email: string): string {
   }
   const slicedLocalPart = localPart.slice(0, 3);
   return `${slicedLocalPart}...@${domain}`;
+}
+/**
+ * Retrieves teams for a specific tournament.
+ *
+ * @param actor - The object used to interact with the backend.
+ * @param tournamentId - The ID of the tournament to retrieve teams for.
+ * @param setTeams - A function to set the state of teams.
+ */
+export async function getTeamsByTournament(
+  actor: any,
+  tournamentId: string,
+  setTeams: React.Dispatch<React.SetStateAction<Team[] | null>>,
+) {
+  if (actor) {
+    const res = await actor.getTeamsByTournament(tournamentId);
+    if (res?.ok) {
+      let teams = res?.ok?.[0]?.map((team: any) => convertMotokoObject(team));
+      setTeams(teams);
+    }
+  }
 }
 /**
  * Fetches tournaments using the provided actor and updates the state with the fetched data.
@@ -1148,4 +1185,19 @@ const matches = resp?.matches;
 export async function copyPrincipal(auth: any) {
   window.navigator.clipboard.writeText(auth.identity.getPrincipal().toString());
   toast.success('Principal copied to clipboard', { autoClose: 750 });
+}
+
+/**
+ * Handles different types of transfer errors and returns a corresponding message based on the error type.
+ *
+ * @param error - The transfer error object containing specific error types.
+ * @return The corresponding message based on the error type.
+ */
+export function handleTeamJoingingError(error: TeamCreationErrorType) {
+  switch (true) {
+    case 'GenericError' in error:
+      return error.GenericError.message;
+  default:
+      return 'Unknown error';
+  }
 }

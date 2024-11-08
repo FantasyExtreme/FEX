@@ -30,6 +30,7 @@ import coinicon from '@/assets/images/icons/coin-icon.png';
 import tethericon from '@/assets/images/icons/tether-icon.png';
 import CountdownRender from './CountdownRenderer';
 import PrincipalSvg from '../Icons/PrincipalSvg';
+import JoinContestModal from './JoinContestModal';
 
 interface Props {
   contest: Contest;
@@ -67,6 +68,7 @@ function ContestItem({
   const [modalType, setModalType] = useState<ContestInfoType>(
     ContestInfoType.rules,
   );
+
   const [contestInfo, setContestInfo] = useState({
     entryFee: 0,
     totalparticipants: 0,
@@ -81,7 +83,12 @@ function ContestItem({
     userAuth: (state as ConnectPlugWalletSlice).userAuth,
   }));
 
-
+  function handleShowJoin() {
+    setShowJoin(true);
+  }
+  function handleCloseJoin() {
+    setShowJoin(false);
+  }
   /**
    * Decreases the number of slots left.
    *
@@ -229,7 +236,7 @@ function ContestItem({
                 </Button>{' '}
               </>
             ) : Number(match?.time) > Date.now() ? (
-              <Button  className='reg-btn'>
+              <Button  onClick={handleShowJoin} className='reg-btn'>
                 Join Contest
               </Button>
             ) : (
@@ -253,6 +260,7 @@ function ContestItem({
                 contestPage={true}
                 updateSquad={showJoin}
                 contestName={contest.name}
+               
               />
             )}
           </div>
@@ -265,7 +273,18 @@ function ContestItem({
         callBackfn={clickRef}
       />
     
-     
+    {showJoin && (
+        <JoinContestModal
+         
+          teamsPerUser={contest.teamsPerUser}
+          contestId={contest?.id}
+          matchId={contest?.matchId}
+          match={match ?? null}
+          decreaseSlots={decreaseSlots}
+          show={showJoin}
+          handleClose={handleCloseJoin}
+        />
+      )}
     </>
   );
 }

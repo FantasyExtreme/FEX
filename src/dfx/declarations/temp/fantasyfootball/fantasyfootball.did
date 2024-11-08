@@ -1,9 +1,11 @@
 type _anon_class_22_1 = 
  service {
    _updatePlayersStats: (vec IPlayerStats) -> (vec bool);
+   addAdminSetting: (IAdminSetting) -> (bool);
    addContest: (IContest) -> (Result_2);
+   addDefaultContestsOnMatches: () -> (Result_2);
    addLeague: (Tournament__1, Season__1, vec ITeamWithPlayers) -> () oneway;
-   addMatch: (InputMatch) -> (Result_5);
+   addMatch: (InputMatch) -> (Result_6);
    addMatchToMvpsAdmin: (Key) -> () oneway;
    addMatches: (vec InputMatch) ->
     (record {
@@ -32,7 +34,9 @@ type _anon_class_22_1 =
    addPlayerSquad: (IPlayerSquad) -> (Result_2);
    addPlayerStats: (IPlayerStats) -> (bool);
    addUser: (IUser) -> (Result);
+   deleteAdminSetting: (text) -> (opt AdminSetting__1);
    finishMatch: (MatchScore) -> (Result_2);
+   getAdminSettings: (GetProps) -> (ReturnAdminSettings) query;
    getAdmins: () -> (Users) query;
    getAllParticipants: () -> (Participants) query;
    getBudget: () -> (opt text) query;
@@ -92,18 +96,20 @@ type _anon_class_22_1 =
            Key;
            PlayerStatsWithName;
          }) query;
-   getPlayersByPosition: (Position__1) -> (Result_4) query;
-   getPlayersByTeamId: (Key) -> (Result_3) query;
-   getPlayersByTeamIds: (vec Key) -> (Result_3) query;
+   getPlayersByPosition: (Position__1) -> (Result_5) query;
+   getPlayersByTeamId: (Key) -> (Result_4) query;
+   getPlayersByTeamIds: (vec Key) -> (Result_4) query;
    getRawPlayerSquadsByMatch: (opt Key, opt Key) -> (PlayerSquads) query;
    getSeasonByProvider: (MonkeyId, MonkeyId) -> (opt ISeason) query;
    getSeasons: (Key) -> (Seasons) query;
    getSquadWithPoints: (Key) -> (opt RefinedPlayerSquad) query;
-   getTeamById: (Key) -> (opt Team) query;
+   getStatsSystem: () -> (Points);
+   getTeamById: (Key) -> (opt Team__1) query;
    getTeamByName: (text) -> (opt record {
                                    Key;
-                                   Team;
+                                   Team__1;
                                  }) query;
+   getTeamsByTournament: (Key) -> (Result_3) query;
    getTopPlayers: (record {
                      limit: nat;
                      page: nat;
@@ -131,12 +137,18 @@ type _anon_class_22_1 =
    reScheduleMatch: (Key, MatchStatus) -> (bool);
    removeContest: (Key) -> (opt Contest);
    testingStartMatch: (Key, nat) -> (opt Match);
+   updateAdminSetting: (IAdminSetting) -> (bool);
    updateContest: (IContest, Key) -> (Result_2);
    updateMatchScore: (MatchScore) -> (bool);
    updateMatchStatus: (MatchStatus, Key) -> (bool);
+   updatePlayerPrices: (vec record {
+                              fantasyPrice: nat;
+                              id: Key;
+                            }) -> (bool);
    updatePlayerSquad: (Key, IPlayerSquad) -> (Result_1);
    updatePlayersStats: (vec IPlayerStats) -> (vec bool);
    updateRanking: (Key) -> () oneway;
+   updateStatsSysteam: (Points) -> (bool);
    updateUser: (IUser) -> (Result);
  };
 type Users = 
@@ -205,6 +217,11 @@ type TopPlayer =
    name: text;
    role: Role;
  };
+type Teams = 
+ vec record {
+       Key__1;
+       Team;
+     };
 type Team__1 = 
  record {
    logo: text;
@@ -291,12 +308,17 @@ type ReturnContests =
    contests: MatchContests;
    total: nat;
  };
+type ReturnAdminSettings = 
+ record {
+   settings: AdminSettings;
+   total: nat;
+ };
 type ReturnAddParticipant = 
  variant {
    err: TransferFromError;
    ok: text;
  };
-type Result_5 = 
+type Result_6 = 
  variant {
    err: record {
           text;
@@ -307,17 +329,25 @@ type Result_5 =
          Match;
        };
  };
-type Result_4 = 
+type Result_5 = 
  variant {
    err: text;
    ok: Players;
  };
-type Result_3 = 
+type Result_4 = 
  variant {
    err: text;
    ok: record {
          Players;
          PlayerCount;
+       };
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: record {
+         Teams;
+         nat;
        };
  };
 type Result_2 = 
@@ -410,12 +440,12 @@ type RefinedMatch =
    awayScore: nat;
    awayTeam: record {
                Key__1;
-               opt Team__1;
+               opt Team;
              };
    homeScore: nat;
    homeTeam: record {
                Key__1;
-               opt Team__1;
+               opt Team;
              };
    location: text;
    providerId: MonkeyId;
@@ -494,7 +524,7 @@ type RMVPSTournamentMatch =
    awayScore: nat;
    awayTeam: record {
                Key__1;
-               opt Team__1;
+               opt Team;
              };
    contestWinner: opt record {
                         Key__1;
@@ -503,7 +533,7 @@ type RMVPSTournamentMatch =
    homeScore: nat;
    homeTeam: record {
                Key__1;
-               opt Team__1;
+               opt Team;
              };
    location: text;
    matchId: Key__1;
@@ -529,6 +559,17 @@ type Position =
    forward;
    goalKeeper;
    midfielder;
+ };
+type Points = 
+ record {
+   cards: Cards;
+   dribbles: Dribbles;
+   duels: Duels;
+   fouls: Fouls;
+   goals: Goals;
+   other: Other;
+   passing: Passing;
+   shots: Shots;
  };
 type Players = 
  vec record {
@@ -896,6 +937,12 @@ type IContest =
    slots: nat;
    teamsPerUser: nat;
  };
+type IAdminSetting = 
+ record {
+   settingName: text;
+   settingType: text;
+   settingValue: text;
+ };
 type Goals = 
  record {
    assists: int;
@@ -1000,5 +1047,28 @@ type Cards =
    redcards: int;
    yellowcards: int;
    yellowredcards: int;
+ };
+type AdminSettings = 
+ vec record {
+       Key__1;
+       AdminSetting;
+     };
+type AdminSetting__1 = 
+ record {
+   creation_date: int;
+   last_modified_by: Key__1;
+   modification_date: int;
+   settingName: text;
+   settingType: text;
+   settingValue: text;
+ };
+type AdminSetting = 
+ record {
+   creation_date: int;
+   last_modified_by: Key__1;
+   modification_date: int;
+   settingName: text;
+   settingType: text;
+   settingValue: text;
  };
 service : () -> _anon_class_22_1

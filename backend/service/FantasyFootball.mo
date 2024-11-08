@@ -57,6 +57,7 @@ shared ({ caller = initializer }) actor class () {
   type TopPlayer = Types.TopPlayer;
   type RMVPSTournamentMatch = Types.RMVPSTournamentMatch;
   type ContestArray = Types.ContestArray;
+  type ReturnAdminSettings = { settings : AdminSettings; total : Nat };
 
   type ReturnPagContests = {
     contests : Contests;
@@ -2490,7 +2491,60 @@ shared ({ caller = initializer }) actor class () {
   };
 
   // --------------- join contest ------------------
-
+  private func getTeams(seasonId : Key) : Result.Result<(Teams, Nat), (Text)> {
+    // let allTeams = Iter.toArray(teamStorage.entries());
+    let teamBuffer = Buffer.Buffer<(Key, Team)>(teamStorage.size());
+    for ((key, team) in teamStorage.entries()) {
+      if (team.seasonId == seasonId) {
+        teamBuffer.add((key, team));
+      };
+    };
+    return #ok(Buffer.toArray(teamBuffer), teamBuffer.size());
+  };
+  public query ({ caller }) func getTeamsByTournament(tournamentId : Key) : async Result.Result<(Teams, Nat), (Text)> {
+    // let allTeams = Iter.toArray(teamStorage.entries());
+    onlyAdmin(caller);
+    let tournament = tournamentStorage.get(tournamentId);
+    switch (tournament) {
+      case (?isTournament) {
+        let season = getCurrentSeason(tournamentId);
+        switch (season) {
+          case (?(key, _)) {
+            return getTeams(key);
+          };
+          case (null) {
+            return #err("No season found");
+          };
+        };
+      };
+      case (null) {
+        return #err("No tournament found");
+      };
+    };
+  };
+    public shared ({ caller }) func updatePlayerPrices(prices : [{ id : Key; fantasyPrice : Nat }]) : async Bool {
+    onlyAdmin(caller);
+    label priceLoop for (price in prices.vals()) {
+      let maybePlayer = playerStorage.get(price.id);
+      switch (maybePlayer) {
+        case (?player) {
+          if (player.fantasyPrice == price.fantasyPrice) continue priceLoop;
+          let _ = playerStorage.put(price.id, { player with fantasyPrice = price.fantasyPrice });
+        };
+        case (null) {};
+      };
+    };
+    return true;
+  };
+    public shared ({ caller }) func updateStatsSysteam(points : Points) : async Bool {
+    onlyAdmin(caller);
+    stable_points := points;
+    return true;
+  };
+    public shared ({ caller }) func getStatsSystem() : async Points {
+    onlyAdmin(caller);
+    return stable_points;
+  };
 
   // public query func getRankingOfSquads
   // Participant
@@ -3499,6 +3553,123 @@ shared ({ caller = initializer }) actor class () {
       i += 1; // Increment outer loop index
     };
     return #ok(count);
+  };
+  private func alreadyContestsCreated(matchId : Key) : Bool
+ {
+ 
+var isContestCreated:Bool=false;
+    label contestLoop for ((key, contest) in contestStorage.entries()) {
+      if (isContestCreated) {
+        break contestLoop;
+      };
+      if (contest.matchId == matchId) {
+
+        if (search({ compare = contest.name; s = "Free" })) isContestCreated := true;
+        
+
+      };
+    };
+    return isContestCreated;
+  };
+ public shared ({
+    caller;
+  }) func addDefaultContestsOnMatches() : async Result.Result<(Text), (Text)> {
+    onlyAdmin(caller);
+    let currentTime = getTime();
+
+    for ((key, match) in matchStorage.entries()) {
+              let alreadyContestCreated = alreadyContestsCreated(key);
+
+      if (not alreadyContestCreated and match.time >= currentTime  ) {
+     
+        let id = Int.toText(Time.now()) # key;
+     
+          contestStorage.put(
+            id,
+            {
+              Types.Default_Contests[0] with matchId = key;
+              creatorUserId = "";
+              slotsUsed = 0;
+              winner = null;
+              isDistributed = false;
+            },
+          );
+    
+
+      };
+    };
+    return #ok("contest created successfully");
+  };  
+    public shared ({ caller }) func updateAdminSetting(setting : IAdminSetting) : async Bool {
+    onlyAdmin(caller);
+    let currentTime = getTime();
+    let maybeOldSetting = adminSettingStorage.get(setting.settingName);
+    switch maybeOldSetting {
+      case (?oldSetting) {
+        let newSetting : AdminSetting = {
+          setting with
+          creation_date = oldSetting.creation_date;
+          modification_date = currentTime;
+          last_modified_by = Principal.toText(caller);
+        };
+        adminSettingStorage.put(setting.settingName, newSetting);
+        return true;
+      };
+      case (null) {
+        return false;
+      };
+    };
+  };
+    public shared ({ caller }) func deleteAdminSetting(settingName : Text) : async ?AdminSetting {
+    onlyAdmin(caller);
+    let maybeOldSetting = adminSettingStorage.get(settingName);
+    switch maybeOldSetting {
+      case (?oldSetting) {
+        adminSettingStorage.remove(settingName);
+      };
+      case (null) {
+        return null;
+      };
+    };
+  };
+    public query ({ caller }) func getAdminSettings(props : GetProps) : async ReturnAdminSettings {
+    onlyAdmin(caller);
+    let settings = HashMap.mapFilter<Key, AdminSetting, AdminSetting>(
+      adminSettingStorage,
+      Text.equal,
+      Text.hash,
+      func(k, v) {
+        if (not (search({ compare = v.settingName; s = props.search }) or search({ compare = v.settingValue; s = props.search }))) return null;
+        return ?v;
+
+      },
+    );
+    let limit = getLimit(props.limit);
+    let totalSettings = settings.size();
+    let startIndex : Nat = props.page * limit;
+    if (startIndex >= totalSettings) {
+      return { total = totalSettings; settings = [] };
+    };
+
+    var endIndex : Nat = startIndex + limit;
+    if (endIndex > totalSettings) {
+      endIndex := totalSettings;
+    };
+
+    let slicedSettings = Iter.toArray(Array.slice<(Key, AdminSetting)>(Iter.toArray(settings.entries()), startIndex, endIndex));
+    return { total = totalSettings; settings = slicedSettings };
+  };
+  public shared ({ caller }) func addAdminSetting(setting : IAdminSetting) : async Bool {
+    onlyAdmin(caller);
+    let currentTime = getTime();
+    let newSetting : AdminSetting = {
+      setting with
+      creation_date = currentTime;
+      modification_date = currentTime;
+      last_modified_by = Principal.toText(caller);
+    };
+    adminSettingStorage.put(setting.settingName, newSetting);
+    return true;
   };
 
   system func preupgrade() {

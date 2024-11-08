@@ -20,8 +20,6 @@ import {
 import { number, object, string } from 'yup';
 import { Principal } from '@dfinity/principal';
 import useAuth from '@/lib/auth';
-import { E8S, GAS_FEE, GAS_FEE_ICP } from '@/constant/fantasticonst';
-import { makeICPLedgerCanister } from '@/dfx/service/actor-locator';
 import { toast } from 'react-toastify';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
@@ -32,11 +30,9 @@ import { Match } from '@/types/fantasy';
 import {
   getRawPlayerSquads,
   getTimeZone,
-  handleTransferError,
+  handleTeamJoingingError,
   isConnected,
 } from '../utils/fantasy';
-import { approveTokens, toE8S } from '@/lib/ledger';
-import { TransferFromError } from '@dfinity/ledger-icp/dist/candid/ledger';
 import ConfirmTransaction from './ConfirmTransaction';
 import Link from 'next/link';
 import { TEAM_CREATION_ROUTE } from '@/constant/routes';
@@ -47,7 +43,6 @@ import { useRouter } from 'next/navigation';
 interface Props {
   matchId: string;
   contestId: string;
-  entryFee: number;
   match: Match | null;
   teamsPerUser: number;
   // contest: Contest;
@@ -64,7 +59,6 @@ const JoinContestModal = ({
   contestId,
   // contest,
   match,
-  entryFee,
   teamsPerUser,
   decreaseSlots,
   show,
@@ -88,7 +82,6 @@ const JoinContestModal = ({
     teamName: null,
     teamId: null,
   });
-  const { updateBalance } = useAuth();
 
   async function getListPlayerSquads() {
     try {
@@ -110,18 +103,9 @@ const JoinContestModal = ({
     if (!match?.id) return logger(match, 'no match id');
     setIsParticipating(true);
     try {
-      logger({ entry: entryFee, GAS_FEE }, 'apprinving');
-      if (entryFee !== 0) {
-        let approve = await approveTokens(
-          toE8S(entryFee) + GAS_FEE,
-          auth.identity,
-        );
-        if (!approve) {
-          return toast.error('Unexpected Error');
-        }
-      }
+
       if (!selectTeam.teamId || !contestId) return;
-      const added: { err?: TransferFromError; ok?: string } =
+      const added: { err?: any; ok?: string } =
         await auth.actor.addParticipant(contestId, selectTeam.teamId,getTimeZone());
 
       if (added?.ok) {
@@ -149,11 +133,10 @@ const JoinContestModal = ({
           'hsjdagfkjhsagdkjfdsafsad',
         );
 
-        updateBalance();
         handleHideConfirm();
         handleClose();
       } else if (added?.err) {
-        toast.error(handleTransferError(added?.err));
+        toast.error(handleTeamJoingingError(added?.err));
       }
       logger(added);
     } catch (error) {
@@ -333,7 +316,6 @@ const JoinContestModal = ({
         </Modal.Body>
       </Modal>
       <ConfirmTransaction
-        entryFee={entryFee}
         show={showConfirm}
         onConfirm={addParticipant}
         loading={isParticipating}

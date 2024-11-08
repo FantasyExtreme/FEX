@@ -309,3 +309,8 @@ interface Stats {
   other: Other;
 }
 type LoginType = 0 | 1;
+export type TeamCreationErrorType = {
+  'GenericError' : { 'message' : string, 'error_code' : bigint }
+} |
+{ 'TemporarilyUnavailable' : null } |
+{ 'TooOld' : null } 

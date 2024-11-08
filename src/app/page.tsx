@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 
 import { ConnectPlugWalletSlice } from "@/types/store";
 import { useAuthStore } from "@/store/useStore";
-import { MATCHES_ROUTE } from "@/constant/routes";
+import { FANTASY_PLAYERS_ROUTE, MATCHES_ROUTE } from "@/constant/routes";
 import { QURIES } from "@/constant/variables";
 import FantasyPlayers from "@/components/Components/FantasyPlayers";
 
@@ -234,7 +234,7 @@ export default function HomePage() {
                   <h2>
                     Top Fantasy <span>Players</span>
                   </h2>
-                  <Link className='simple-link mb-3' href='/fantasyplayer'>
+                  <Link className='simple-link mb-3' href={FANTASY_PLAYERS_ROUTE}>
                     View All{' '}
                     <i className='fa fa-arrow-right' aria-hidden='true'></i>
                   </Link>

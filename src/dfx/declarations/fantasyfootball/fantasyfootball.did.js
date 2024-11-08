@@ -65,6 +65,11 @@ export const idlFactory = ({ IDL }) => {
     'matchId' : Key__1,
     'rating' : IDL.Text,
   });
+  const IAdminSetting = IDL.Record({
+    'settingValue' : IDL.Text,
+    'settingName' : IDL.Text,
+    'settingType' : IDL.Text,
+  });
   const MonkeyId = IDL.Text;
   const IContest = IDL.Record({
     'teamsPerUser' : IDL.Nat,
@@ -142,7 +147,7 @@ export const idlFactory = ({ IDL }) => {
     'providerId' : MonkeyId,
     'location' : IDL.Text,
   });
-  const Result_5 = IDL.Variant({
+  const Result_6 = IDL.Variant({
     'ok' : IDL.Tuple(IDL.Text, Match),
     'err' : IDL.Tuple(IDL.Text, IDL.Bool),
   });
@@ -192,11 +197,38 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Tuple(IDL.Text, IDL.Opt(User)),
     'err' : IDL.Text,
   });
+  const AdminSetting__1 = IDL.Record({
+    'last_modified_by' : Key__1,
+    'settingValue' : IDL.Text,
+    'modification_date' : IDL.Int,
+    'settingName' : IDL.Text,
+    'settingType' : IDL.Text,
+    'creation_date' : IDL.Int,
+  });
   const MatchScore = IDL.Record({
     'id' : Key__1,
     'status' : MatchStatus__1,
     'homeScore' : IDL.Nat,
     'awayScore' : IDL.Nat,
+  });
+  const GetProps = IDL.Record({
+    'status' : IDL.Text,
+    'page' : IDL.Nat,
+    'search' : IDL.Text,
+    'limit' : IDL.Nat,
+  });
+  const AdminSetting = IDL.Record({
+    'last_modified_by' : Key__1,
+    'settingValue' : IDL.Text,
+    'modification_date' : IDL.Int,
+    'settingName' : IDL.Text,
+    'settingType' : IDL.Text,
+    'creation_date' : IDL.Int,
+  });
+  const AdminSettings = IDL.Vec(IDL.Tuple(Key__1, AdminSetting));
+  const ReturnAdminSettings = IDL.Record({
+    'total' : IDL.Nat,
+    'settings' : AdminSettings,
   });
   const User__1 = IDL.Record({
     'name' : IDL.Text,
@@ -225,7 +257,7 @@ export const idlFactory = ({ IDL }) => {
     'providerId' : MonkeyId,
     'rules' : IDL.Text,
   });
-  const Team__1 = IDL.Record({
+  const Team = IDL.Record({
     'logo' : IDL.Text,
     'name' : IDL.Text,
     'seasonId' : Key__1,
@@ -234,11 +266,11 @@ export const idlFactory = ({ IDL }) => {
   });
   const RefinedMatch = IDL.Record({
     'status' : MatchStatus__1,
-    'homeTeam' : IDL.Tuple(Key__1, IDL.Opt(Team__1)),
+    'homeTeam' : IDL.Tuple(Key__1, IDL.Opt(Team)),
     'time' : IDL.Int,
     'seasonId' : Key__1,
     'homeScore' : IDL.Nat,
-    'awayTeam' : IDL.Tuple(Key__1, IDL.Opt(Team__1)),
+    'awayTeam' : IDL.Tuple(Key__1, IDL.Opt(Team)),
     'awayScore' : IDL.Nat,
     'providerId' : MonkeyId,
     'location' : IDL.Text,
@@ -257,12 +289,6 @@ export const idlFactory = ({ IDL }) => {
     'rules' : IDL.Text,
   });
   const Contests = IDL.Vec(IDL.Tuple(Key__1, Contest__1));
-  const GetProps = IDL.Record({
-    'status' : IDL.Text,
-    'page' : IDL.Nat,
-    'search' : IDL.Text,
-    'limit' : IDL.Nat,
-  });
   const DetailedContest = IDL.Record({
     'teamsPerUser' : IDL.Nat,
     'name' : IDL.Text,
@@ -363,14 +389,14 @@ export const idlFactory = ({ IDL }) => {
   });
   const RMVPSTournamentMatch = IDL.Record({
     'status' : MatchStatus__1,
-    'homeTeam' : IDL.Tuple(Key__1, IDL.Opt(Team__1)),
+    'homeTeam' : IDL.Tuple(Key__1, IDL.Opt(Team)),
     'contestWinner' : IDL.Opt(IDL.Tuple(Key__1, User__1)),
     'mvps' : IDL.Opt(IDL.Tuple(Key__1, MVPSPlayers__1)),
     'time' : IDL.Int,
     'seasonId' : Key__1,
     'matchId' : Key__1,
     'homeScore' : IDL.Nat,
-    'awayTeam' : IDL.Tuple(Key__1, IDL.Opt(Team__1)),
+    'awayTeam' : IDL.Tuple(Key__1, IDL.Opt(Team)),
     'awayScore' : IDL.Nat,
     'providerId' : MonkeyId,
     'location' : IDL.Text,
@@ -515,14 +541,14 @@ export const idlFactory = ({ IDL }) => {
     'points' : IDL.Opt(RPoints),
   });
   const Players = IDL.Vec(IDL.Tuple(Key__1, Player));
-  const Result_4 = IDL.Variant({ 'ok' : Players, 'err' : IDL.Text });
+  const Result_5 = IDL.Variant({ 'ok' : Players, 'err' : IDL.Text });
   const PlayerCount = IDL.Record({
     'd' : IDL.Int,
     'f' : IDL.Int,
     'g' : IDL.Int,
     'm' : IDL.Int,
   });
-  const Result_3 = IDL.Variant({
+  const Result_4 = IDL.Variant({
     'ok' : IDL.Tuple(Players, PlayerCount),
     'err' : IDL.Text,
   });
@@ -569,12 +595,27 @@ export const idlFactory = ({ IDL }) => {
     'players' : IDL.Vec(IDL.Tuple(Key__1, PlayerS, IDL.Bool)),
     'points' : RPoints,
   });
-  const Team = IDL.Record({
+  const Points = IDL.Record({
+    'fouls' : Fouls,
+    'other' : Other,
+    'cards' : Cards,
+    'shots' : Shots,
+    'passing' : Passing,
+    'dribbles' : Dribbles,
+    'goals' : Goals,
+    'duels' : Duels,
+  });
+  const Team__1 = IDL.Record({
     'logo' : IDL.Text,
     'name' : IDL.Text,
     'seasonId' : Key__1,
     'shortName' : IDL.Text,
     'providerId' : MonkeyId,
+  });
+  const Teams = IDL.Vec(IDL.Tuple(Key__1, Team));
+  const Result_3 = IDL.Variant({
+    'ok' : IDL.Tuple(Teams, IDL.Nat),
+    'err' : IDL.Text,
   });
   const UserAssets = IDL.Record({
     'participated' : IDL.Nat,
@@ -657,13 +698,15 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Bool)],
         [],
       ),
+    'addAdminSetting' : IDL.Func([IAdminSetting], [IDL.Bool], []),
     'addContest' : IDL.Func([IContest], [Result_2], []),
+    'addDefaultContestsOnMatches' : IDL.Func([], [Result_2], []),
     'addLeague' : IDL.Func(
         [Tournament__1, Season__1, IDL.Vec(ITeamWithPlayers)],
         [],
         ['oneway'],
       ),
-    'addMatch' : IDL.Func([InputMatch], [Result_5], []),
+    'addMatch' : IDL.Func([InputMatch], [Result_6], []),
     'addMatchToMvpsAdmin' : IDL.Func([Key], [], ['oneway']),
     'addMatches' : IDL.Func(
         [IDL.Vec(InputMatch)],
@@ -694,7 +737,9 @@ export const idlFactory = ({ IDL }) => {
     'addPlayerSquad' : IDL.Func([IPlayerSquad], [Result_2], []),
     'addPlayerStats' : IDL.Func([IPlayerStats], [IDL.Bool], []),
     'addUser' : IDL.Func([IUser], [Result], []),
+    'deleteAdminSetting' : IDL.Func([IDL.Text], [IDL.Opt(AdminSetting__1)], []),
     'finishMatch' : IDL.Func([MatchScore], [Result_2], []),
+    'getAdminSettings' : IDL.Func([GetProps], [ReturnAdminSettings], ['query']),
     'getAdmins' : IDL.Func([], [Users], ['query']),
     'getAllParticipants' : IDL.Func([], [Participants], ['query']),
     'getBudget' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
@@ -782,9 +827,9 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(Key, PlayerStatsWithName))],
         ['query'],
       ),
-    'getPlayersByPosition' : IDL.Func([Position__1], [Result_4], ['query']),
-    'getPlayersByTeamId' : IDL.Func([Key], [Result_3], ['query']),
-    'getPlayersByTeamIds' : IDL.Func([IDL.Vec(Key)], [Result_3], ['query']),
+    'getPlayersByPosition' : IDL.Func([Position__1], [Result_5], ['query']),
+    'getPlayersByTeamId' : IDL.Func([Key], [Result_4], ['query']),
+    'getPlayersByTeamIds' : IDL.Func([IDL.Vec(Key)], [Result_4], ['query']),
     'getRawPlayerSquadsByMatch' : IDL.Func(
         [IDL.Opt(Key), IDL.Opt(Key)],
         [PlayerSquads],
@@ -801,12 +846,14 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(RefinedPlayerSquad)],
         ['query'],
       ),
-    'getTeamById' : IDL.Func([Key], [IDL.Opt(Team)], ['query']),
+    'getStatsSystem' : IDL.Func([], [Points], []),
+    'getTeamById' : IDL.Func([Key], [IDL.Opt(Team__1)], ['query']),
     'getTeamByName' : IDL.Func(
         [IDL.Text],
-        [IDL.Opt(IDL.Tuple(Key, Team))],
+        [IDL.Opt(IDL.Tuple(Key, Team__1))],
         ['query'],
       ),
+    'getTeamsByTournament' : IDL.Func([Key], [Result_3], ['query']),
     'getTopPlayers' : IDL.Func(
         [
           IDL.Record({
@@ -843,9 +890,15 @@ export const idlFactory = ({ IDL }) => {
     'reScheduleMatch' : IDL.Func([Key, MatchStatus], [IDL.Bool], []),
     'removeContest' : IDL.Func([Key], [IDL.Opt(Contest)], []),
     'testingStartMatch' : IDL.Func([Key, IDL.Nat], [IDL.Opt(Match)], []),
+    'updateAdminSetting' : IDL.Func([IAdminSetting], [IDL.Bool], []),
     'updateContest' : IDL.Func([IContest, Key], [Result_2], []),
     'updateMatchScore' : IDL.Func([MatchScore], [IDL.Bool], []),
     'updateMatchStatus' : IDL.Func([MatchStatus, Key], [IDL.Bool], []),
+    'updatePlayerPrices' : IDL.Func(
+        [IDL.Vec(IDL.Record({ 'id' : Key, 'fantasyPrice' : IDL.Nat }))],
+        [IDL.Bool],
+        [],
+      ),
     'updatePlayerSquad' : IDL.Func([Key, IPlayerSquad], [Result_1], []),
     'updatePlayersStats' : IDL.Func(
         [IDL.Vec(IPlayerStats)],
@@ -853,6 +906,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateRanking' : IDL.Func([Key], [], ['oneway']),
+    'updateStatsSysteam' : IDL.Func([Points], [IDL.Bool], []),
     'updateUser' : IDL.Func([IUser], [Result], []),
   });
   return _anon_class_22_1;

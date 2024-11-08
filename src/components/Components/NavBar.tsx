@@ -39,7 +39,12 @@ import {
   GAMEPLAYRULES_ROUTE,
   MATCHES_ROUTE,
   CONTACT_US_ROUTE,
-  DASHBOARD_ROUTE
+  DASHBOARD_ROUTE,
+  ADMIN_ROUTE,
+  ADMIN_PLAYER_PRICES_ROUTE,
+  ADMIN_STATS_SYSTEM_ROUTE,
+  ADMIN_UPLOAD_LEAGUE_ROUTE,
+  ADMIN_SYSTEM_SETTINGS_ROUTE
 } from '@/constant/routes';
 import { TournamentType } from '@/types/fantasy';
 import { DEFAULT_MATCH_STATUS, QURIES } from '@/constant/variables';
@@ -132,7 +137,6 @@ export default function NavBar() {
   };
   return (
     <>
-   
       <Navbar
         expand='lg'
         expanded={expanded}
@@ -237,7 +241,53 @@ export default function NavBar() {
               >
                 Gameplay Rules
               </Nav.Link>
-             
+              {userAuth.userPerms?.admin && (
+                <NavDropdown
+                  title={
+                    <>
+                      <div className='user-button pointer'>Admin Panel</div>
+                    </>
+                  }
+                  id='navbarScrollingDropdown'
+                >
+                  <NavDropdown.Item
+                    as={Link}
+                    href={ADMIN_ROUTE}
+                    active={location == ADMIN_ROUTE}
+                  >
+                    Matches List
+                  </NavDropdown.Item>
+                  <NavDropdown.Item
+                    as={Link}
+                    href={ADMIN_PLAYER_PRICES_ROUTE}
+                    active={location == ADMIN_PLAYER_PRICES_ROUTE}
+                  >
+                    Player Points
+                  </NavDropdown.Item>
+                  <NavDropdown.Item
+                    as={Link}
+                    href={ADMIN_STATS_SYSTEM_ROUTE}
+                    active={location == ADMIN_STATS_SYSTEM_ROUTE}
+                  >
+                    Stats System
+                  </NavDropdown.Item>
+                  
+                  <NavDropdown.Item
+                    as={Link}
+                    href={ADMIN_UPLOAD_LEAGUE_ROUTE}
+                    active={location == ADMIN_UPLOAD_LEAGUE_ROUTE}
+                  >
+                    Manage Data
+                  </NavDropdown.Item>
+                  <NavDropdown.Item
+                    as={Link}
+                    href={ADMIN_SYSTEM_SETTINGS_ROUTE}
+                    active={location == ADMIN_SYSTEM_SETTINGS_ROUTE}
+                  >
+                    System Settings
+                  </NavDropdown.Item>
+                </NavDropdown>
+              )}
               <div className='webview-connect-btn'>
                 {isConnected(auth.state) ? (
                   <div className='d-flex'>
@@ -434,15 +484,56 @@ export default function NavBar() {
               </Dropdown.Menu>
             </Dropdown>
           </div>
- 
-          <Nav.Link
-            as={Link}
-            href={CONTACT_US_ROUTE}
-            active={location == CONTACT_US_ROUTE}
-            onClick={handleClose10}
-          >
-            Contact Us
-          </Nav.Link>
+          {userAuth.userPerms?.admin && (
+            <NavDropdown
+              title={
+                <>
+                  <div className='user-button pointer'>Admin Panel</div>
+                </>
+              }
+              id='navbarScrollingDropdown'
+              onSelect={(e) => {
+                handleClose10();
+              }}
+            >
+              <NavDropdown.Item
+                as={Link}
+                href={ADMIN_ROUTE}
+                active={location == ADMIN_ROUTE}
+              >
+                Matches List
+              </NavDropdown.Item>
+              <NavDropdown.Item
+                as={Link}
+                href={ADMIN_PLAYER_PRICES_ROUTE}
+                active={location == ADMIN_PLAYER_PRICES_ROUTE}
+              >
+                Player Points
+              </NavDropdown.Item>
+              <NavDropdown.Item
+                as={Link}
+                href={ADMIN_STATS_SYSTEM_ROUTE}
+                active={location == ADMIN_STATS_SYSTEM_ROUTE}
+              >
+                Stats System
+              </NavDropdown.Item>
+          
+              <NavDropdown.Item
+                as={Link}
+                href={ADMIN_UPLOAD_LEAGUE_ROUTE}
+                active={location == ADMIN_UPLOAD_LEAGUE_ROUTE}
+              >
+                Manage Data
+              </NavDropdown.Item>
+              <NavDropdown.Item
+                as={Link}
+                href={ADMIN_SYSTEM_SETTINGS_ROUTE}
+                active={location == ADMIN_SYSTEM_SETTINGS_ROUTE}
+              >
+                System Settings
+              </NavDropdown.Item>
+            </NavDropdown>
+          )}
           <Nav.Link
             as={Link}
             href={GAMEPLAYRULES_ROUTE}
