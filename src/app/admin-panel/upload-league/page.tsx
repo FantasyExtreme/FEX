@@ -86,7 +86,7 @@ export default function UploadLeague() {
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: `${process.env.NEXT_PUBLIC_API_URL}uploadTransfer?leagueId=${leagueId}`,
+      url: ``,
     };
 
     try {

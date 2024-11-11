@@ -3710,6 +3710,8 @@ var isContestCreated:Bool=false;
     stable_participants := Iter.toArray(participantStorage.entries());
     stable_userStats := Iter.toArray(userStatsStorage.entries());
     stable_playersStats := Iter.toArray(playersStatsStorage.entries());
+    stable_playerSquads := Iter.toArray(playerSquadStorage.entries());
+
 
     Debug.print("pre-upgrade finished.");
   };
@@ -3727,6 +3729,8 @@ var isContestCreated:Bool=false;
     participantStorage := Map.fromIter<Key, Participant>(stable_participants.vals(), stable_participants.size(), Text.equal, Text.hash);
     userStatsStorage := Map.fromIter<Key, UserAssets>(stable_userStats.vals(), stable_userStats.size(), Text.equal, Text.hash);
     playersStatsStorage := Map.fromIter<Key, PlayerStats>(stable_playersStats.vals(), stable_playersStats.size(), Text.equal, Text.hash);
+    playerSquadStorage := Map.fromIter<Key, PlayerSquad>(stable_playerSquads.vals(), stable_playerSquads.size(), Text.equal, Text.hash);
+
 
     stable_users := [];
     stable_players := [];
@@ -3739,6 +3743,7 @@ var isContestCreated:Bool=false;
     stable_participants:=[];
     stable_userStats:=[];
     stable_playersStats:=[];
+    stable_playerSquads:=[];
     Debug.print("post-upgrade finished.");
   };
 };
