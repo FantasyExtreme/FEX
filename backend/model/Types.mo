@@ -496,7 +496,17 @@ public type IPlayerSquad = {
   public type TransferFromError = {
     #GenericError : { error_code : Nat; message : Text };
   };
-
+    public type ContestType = {
+    name : Text;
+    color : Text;
+    isActive : Bool;
+    time : Int;
+    status : Text;
+  };
+    public type RContestType = ContestType and {
+    id : Text;
+  };
+  public type RContestTypes = [RContestType];
   public type UserAssets = {
     participated : Nat;
     contestWon : Nat;

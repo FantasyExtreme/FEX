@@ -834,6 +834,8 @@ export default function PlayerSelection() {
     return index;
   }
   async function fetchSquad(players: GroupedPlayers) {
+    logger({ players }, 'formationIndex');
+
     const _squad: any = fromNullable(await auth.actor.getPlayerSquad(squadId));
     // resetPlayers();
 
@@ -876,15 +878,11 @@ export default function PlayerSelection() {
     }
   }, [matchId, auth.actor]);
   useEffect(() => {
-    if (!isConnected(auth.state) || !teamBalance || !budget || !squadId) return;
+    if (!isConnected(auth.state) || !budget || !squadId) return;
 
     fetchMatch(true);
   }, [squadId, budget, auth.state]);
-  useEffect(() => {
-    if (auth.actor && squadId) {
-      // fetchSquad();
-    }
-  }, [squadId, budget, auth.actor]);
+ 
 
   const getAllTeams = (players: Player[]) => {
     const teamCounts: { [key: string]: number } = {};
@@ -1041,16 +1039,16 @@ export default function PlayerSelection() {
           <Row>
             <Container>
               <Row>
-                <Col xl='12' lg='12' md='12'>
+              <Col xl='12' lg='12' md='12'>
                   <div className='gray-panel creatTeam'>
                     <Row>
-                      <Col xl='5' lg='4'>
+                      <Col xl='12' lg='12'>
+                      <div className='flex-div-sm align-items-center'>
                         <h4 className='animeleft tablet-view-none whitecolor Nasalization fw-normal'>
                           {isSubstituteSelection ? 'Substitute ' : 'Player'}{' '}
                           <span>Selection</span>
                         </h4>
-                      </Col>
-                      <Col xl='7' lg='8'>
+                      
                         <div className='flexooo jus-end animeright'>
                           <Form.Select
                             className='button-select select-select Z_ind'
@@ -1144,6 +1142,7 @@ export default function PlayerSelection() {
                               {'add default team'}
                             </Button>
                           )}
+                        </div>
                         </div>
                       </Col>
                     </Row>

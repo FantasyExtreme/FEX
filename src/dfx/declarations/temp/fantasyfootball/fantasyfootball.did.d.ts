@@ -2,6 +2,23 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
+export interface AdminSetting {
+  'last_modified_by' : Key__1,
+  'settingValue' : string,
+  'modification_date' : bigint,
+  'settingName' : string,
+  'settingType' : string,
+  'creation_date' : bigint,
+}
+export interface AdminSetting__1 {
+  'last_modified_by' : Key__1,
+  'settingValue' : string,
+  'modification_date' : bigint,
+  'settingName' : string,
+  'settingType' : string,
+  'creation_date' : bigint,
+}
+export type AdminSettings = Array<[Key__1, AdminSetting]>;
 export interface Cards {
   'redcards' : bigint,
   'yellowredcards' : bigint,
@@ -86,6 +103,11 @@ export interface Goals {
   'conceded' : bigint,
   'owngoals' : bigint,
   'team_conceded' : bigint,
+}
+export interface IAdminSetting {
+  'settingValue' : string,
+  'settingName' : string,
+  'settingType' : string,
 }
 export interface IContest {
   'teamsPerUser' : bigint,
@@ -387,6 +409,16 @@ export interface Player__1 {
   'points' : [] | [RPoints],
 }
 export type Players = Array<[Key__1, Player]>;
+export interface Points {
+  'fouls' : Fouls,
+  'other' : Other,
+  'cards' : Cards,
+  'shots' : Shots,
+  'passing' : Passing,
+  'dribbles' : Dribbles,
+  'goals' : Goals,
+  'duels' : Duels,
+}
 export type Position = { 'goalKeeper' : null } |
   { 'midfielder' : null } |
   { 'forward' : null } |
@@ -397,14 +429,14 @@ export type Position__1 = { 'goalKeeper' : null } |
   { 'defender' : null };
 export interface RMVPSTournamentMatch {
   'status' : MatchStatus__1,
-  'homeTeam' : [Key__1, [] | [Team__1]],
+  'homeTeam' : [Key__1, [] | [Team]],
   'contestWinner' : [] | [[Key__1, User__1]],
   'mvps' : [] | [[Key__1, MVPSPlayers__1]],
   'time' : bigint,
   'seasonId' : Key__1,
   'matchId' : Key__1,
   'homeScore' : bigint,
-  'awayTeam' : [Key__1, [] | [Team__1]],
+  'awayTeam' : [Key__1, [] | [Team]],
   'awayScore' : bigint,
   'providerId' : MonkeyId,
   'location' : string,
@@ -462,11 +494,11 @@ export interface RawPlayerSquad {
 export type RawPlayerSquads = Array<[Key__1, RawPlayerSquad]>;
 export interface RefinedMatch {
   'status' : MatchStatus__1,
-  'homeTeam' : [Key__1, [] | [Team__1]],
+  'homeTeam' : [Key__1, [] | [Team]],
   'time' : bigint,
   'seasonId' : Key__1,
   'homeScore' : bigint,
-  'awayTeam' : [Key__1, [] | [Team__1]],
+  'awayTeam' : [Key__1, [] | [Team]],
   'awayScore' : bigint,
   'providerId' : MonkeyId,
   'location' : string,
@@ -525,14 +557,20 @@ export type Result_1 = {
   { 'err' : string };
 export type Result_2 = { 'ok' : string } |
   { 'err' : string };
-export type Result_3 = { 'ok' : [Players, PlayerCount] } |
+export type Result_3 = { 'ok' : [Teams, bigint] } |
   { 'err' : string };
-export type Result_4 = { 'ok' : Players } |
+export type Result_4 = { 'ok' : [Players, PlayerCount] } |
   { 'err' : string };
-export type Result_5 = { 'ok' : [string, Match] } |
+export type Result_5 = { 'ok' : Players } |
+  { 'err' : string };
+export type Result_6 = { 'ok' : [string, Match] } |
   { 'err' : [string, boolean] };
 export type ReturnAddParticipant = { 'ok' : string } |
   { 'err' : TransferFromError };
+export interface ReturnAdminSettings {
+  'total' : bigint,
+  'settings' : AdminSettings,
+}
 export interface ReturnContests { 'total' : bigint, 'contests' : MatchContests }
 export interface ReturnDetailedMatchContests {
   'total' : bigint,
@@ -585,6 +623,7 @@ export interface Team__1 {
   'shortName' : string,
   'providerId' : MonkeyId,
 }
+export type Teams = Array<[Key__1, Team]>;
 export interface TopPlayer {
   'name' : string,
   'role' : Role,
@@ -620,6 +659,10 @@ export interface User {
   'email' : string,
 }
 export interface UserAssets { 'participated' : bigint, 'contestWon' : bigint }
+export interface UserAssets__1 {
+  'participated' : bigint,
+  'contestWon' : bigint,
+}
 export interface User__1 {
   'name' : string,
   'role' : Role,
@@ -629,12 +672,14 @@ export interface User__1 {
 export type Users = Array<[Key__1, User__1]>;
 export interface _anon_class_22_1 {
   '_updatePlayersStats' : ActorMethod<[Array<IPlayerStats>], Array<boolean>>,
+  'addAdminSetting' : ActorMethod<[IAdminSetting], boolean>,
   'addContest' : ActorMethod<[IContest], Result_2>,
+  'addDefaultContestsOnMatches' : ActorMethod<[], Result_2>,
   'addLeague' : ActorMethod<
     [Tournament__1, Season__1, Array<ITeamWithPlayers>],
     undefined
   >,
-  'addMatch' : ActorMethod<[InputMatch], Result_5>,
+  'addMatch' : ActorMethod<[InputMatch], Result_6>,
   'addMatchToMvpsAdmin' : ActorMethod<[Key], undefined>,
   'addMatches' : ActorMethod<
     [Array<InputMatch>],
@@ -649,9 +694,12 @@ export interface _anon_class_22_1 {
   'addPlayerSquad' : ActorMethod<[IPlayerSquad], Result_2>,
   'addPlayerStats' : ActorMethod<[IPlayerStats], boolean>,
   'addUser' : ActorMethod<[IUser], Result>,
+  'deleteAdminSetting' : ActorMethod<[string], [] | [AdminSetting__1]>,
   'finishMatch' : ActorMethod<[MatchScore], Result_2>,
+  'getAdminSettings' : ActorMethod<[GetProps], ReturnAdminSettings>,
   'getAdmins' : ActorMethod<[], Users>,
   'getAllParticipants' : ActorMethod<[], Participants>,
+  'getAssetsOfUser' : ActorMethod<[string], UserAssets__1>,
   'getBudget' : ActorMethod<[], [] | [string]>,
   'getContest' : ActorMethod<[Key], [] | [Contest]>,
   'getContestNames' : ActorMethod<[Array<Key>], Array<[string, string]>>,
@@ -698,9 +746,9 @@ export interface _anon_class_22_1 {
     [Key],
     Array<[Key, PlayerStatsWithName]>
   >,
-  'getPlayersByPosition' : ActorMethod<[Position__1], Result_4>,
-  'getPlayersByTeamId' : ActorMethod<[Key], Result_3>,
-  'getPlayersByTeamIds' : ActorMethod<[Array<Key>], Result_3>,
+  'getPlayersByPosition' : ActorMethod<[Position__1], Result_5>,
+  'getPlayersByTeamId' : ActorMethod<[Key], Result_4>,
+  'getPlayersByTeamIds' : ActorMethod<[Array<Key>], Result_4>,
   'getRawPlayerSquadsByMatch' : ActorMethod<
     [[] | [Key], [] | [Key]],
     PlayerSquads
@@ -708,8 +756,10 @@ export interface _anon_class_22_1 {
   'getSeasonByProvider' : ActorMethod<[MonkeyId, MonkeyId], [] | [ISeason]>,
   'getSeasons' : ActorMethod<[Key], Seasons>,
   'getSquadWithPoints' : ActorMethod<[Key], [] | [RefinedPlayerSquad]>,
-  'getTeamById' : ActorMethod<[Key], [] | [Team]>,
-  'getTeamByName' : ActorMethod<[string], [] | [[Key, Team]]>,
+  'getStatsSystem' : ActorMethod<[], Points>,
+  'getTeamById' : ActorMethod<[Key], [] | [Team__1]>,
+  'getTeamByName' : ActorMethod<[string], [] | [[Key, Team__1]]>,
+  'getTeamsByTournament' : ActorMethod<[Key], Result_3>,
   'getTopPlayers' : ActorMethod<
     [{ 'page' : bigint, 'search' : string, 'limit' : bigint }],
     { 'total' : bigint, 'players' : TopPlayers }
@@ -733,12 +783,18 @@ export interface _anon_class_22_1 {
   'reScheduleMatch' : ActorMethod<[Key, MatchStatus], boolean>,
   'removeContest' : ActorMethod<[Key], [] | [Contest]>,
   'testingStartMatch' : ActorMethod<[Key, bigint], [] | [Match]>,
+  'updateAdminSetting' : ActorMethod<[IAdminSetting], boolean>,
   'updateContest' : ActorMethod<[IContest, Key], Result_2>,
   'updateMatchScore' : ActorMethod<[MatchScore], boolean>,
   'updateMatchStatus' : ActorMethod<[MatchStatus, Key], boolean>,
+  'updatePlayerPrices' : ActorMethod<
+    [Array<{ 'id' : Key, 'fantasyPrice' : bigint }>],
+    boolean
+  >,
   'updatePlayerSquad' : ActorMethod<[Key, IPlayerSquad], Result_1>,
   'updatePlayersStats' : ActorMethod<[Array<IPlayerStats>], Array<boolean>>,
   'updateRanking' : ActorMethod<[Key], undefined>,
+  'updateStatsSysteam' : ActorMethod<[Points], boolean>,
   'updateUser' : ActorMethod<[IUser], Result>,
 }
 export interface _SERVICE extends _anon_class_22_1 {}
