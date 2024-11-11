@@ -659,6 +659,10 @@ export interface User {
   'email' : string,
 }
 export interface UserAssets { 'participated' : bigint, 'contestWon' : bigint }
+export interface UserAssets__1 {
+  'participated' : bigint,
+  'contestWon' : bigint,
+}
 export interface User__1 {
   'name' : string,
   'role' : Role,
@@ -695,6 +699,7 @@ export interface _anon_class_22_1 {
   'getAdminSettings' : ActorMethod<[GetProps], ReturnAdminSettings>,
   'getAdmins' : ActorMethod<[], Users>,
   'getAllParticipants' : ActorMethod<[], Participants>,
+  'getAssetsOfUser' : ActorMethod<[string], UserAssets__1>,
   'getBudget' : ActorMethod<[], [] | [string]>,
   'getContest' : ActorMethod<[Key], [] | [Contest]>,
   'getContestNames' : ActorMethod<[Array<Key>], Array<[string, string]>>,

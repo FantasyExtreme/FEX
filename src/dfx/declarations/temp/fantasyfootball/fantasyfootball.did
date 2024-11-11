@@ -39,6 +39,7 @@ type _anon_class_22_1 =
    getAdminSettings: (GetProps) -> (ReturnAdminSettings) query;
    getAdmins: () -> (Users) query;
    getAllParticipants: () -> (Participants) query;
+   getAssetsOfUser: (text) -> (UserAssets__1) query;
    getBudget: () -> (opt text) query;
    getContest: (Key) -> (opt Contest) query;
    /// getContestNames use to get list of contest names og given ids
@@ -162,6 +163,11 @@ type User__1 =
    joiningDate: int;
    name: text;
    role: Role;
+ };
+type UserAssets__1 = 
+ record {
+   contestWon: nat;
+   participated: nat;
  };
 type UserAssets = 
  record {

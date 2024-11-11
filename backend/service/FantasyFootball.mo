@@ -2718,6 +2718,33 @@ shared ({ caller = initializer }) actor class () {
     };
   };
     /*
+    getAssetsOfUser use to get assets of user by id
+    @param userId
+    @return userAssets:UserAssets
+  */
+  public query ({ caller }) func getAssetsOfUser(id : Text) : async UserAssets {
+    assert not Principal.isAnonymous(caller);
+    let userId = Principal.toText(caller);
+    if (userId != id) {
+      onlyAdmin(caller);
+    };
+    let assets = userStatsStorage.get(id);
+
+    switch (assets) {
+      case (?isassets) {
+        return isassets;
+      };
+      case (null) {
+        let tempAsset : UserAssets = {
+          participated = 0;
+          contestWon = 0;
+
+        };
+        return tempAsset;
+      };
+    };
+  };
+    /*
     getAssetsOfUser private  to this canister use to get assets of user by id
     @param userId
     @return userAssets:UserAssets
@@ -2733,8 +2760,7 @@ shared ({ caller = initializer }) actor class () {
         let tempAsset : UserAssets = {
           participated = 0;
           contestWon = 0;
-          rewardsWon = 0;
-          totalEarning = 0;
+  
         };
         return tempAsset;
       };
@@ -2768,8 +2794,7 @@ shared ({ caller = initializer }) actor class () {
             let tempAsset : UserAssets = {
               participated = 0;
               contestWon = tempContestWon;
-              rewardsWon = 0;
-              totalEarning = 0;
+          
             };
             userStatsStorage.put(id, tempAsset);
 

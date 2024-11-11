@@ -244,6 +244,10 @@ export const idlFactory = ({ IDL }) => {
     'squadId' : Key__1,
   });
   const Participants = IDL.Vec(IDL.Tuple(Key__1, Participant));
+  const UserAssets__1 = IDL.Record({
+    'participated' : IDL.Nat,
+    'contestWon' : IDL.Nat,
+  });
   const Contest = IDL.Record({
     'teamsPerUser' : IDL.Nat,
     'name' : IDL.Text,
@@ -742,6 +746,7 @@ export const idlFactory = ({ IDL }) => {
     'getAdminSettings' : IDL.Func([GetProps], [ReturnAdminSettings], ['query']),
     'getAdmins' : IDL.Func([], [Users], ['query']),
     'getAllParticipants' : IDL.Func([], [Participants], ['query']),
+    'getAssetsOfUser' : IDL.Func([IDL.Text], [UserAssets__1], ['query']),
     'getBudget' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
     'getContest' : IDL.Func([Key], [IDL.Opt(Contest)], ['query']),
     'getContestNames' : IDL.Func(
