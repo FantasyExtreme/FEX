@@ -1,157 +1,3 @@
-type _anon_class_22_1 = 
- service {
-   _updatePlayersStats: (vec IPlayerStats) -> (vec bool);
-   addAdminSetting: (IAdminSetting) -> (bool);
-   addContest: (IContest) -> (Result_2);
-   addDefaultContestsOnMatches: () -> (Result_2);
-   addLeague: (Tournament__1, Season__1, vec ITeamWithPlayers) -> () oneway;
-   addMatch: (InputMatch) -> (Result_6);
-   addMatchToMvpsAdmin: (Key) -> () oneway;
-   addMatches: (vec InputMatch) ->
-    (record {
-       err: vec record {
-                  bool;
-                  text;
-                };
-       succ: vec record {
-                   bool;
-                   Match;
-                 };
-     });
-   addNewMatches: (vec InputMatch, Key) ->
-    (record {
-       err: vec record {
-                  bool;
-                  text;
-                };
-       succ: vec record {
-                   bool;
-                   Match;
-                 };
-     });
-   addParticipant: (Key, Key, int) -> (ReturnAddParticipant);
-   addPlayer: (Player__1) -> () oneway;
-   addPlayerSquad: (IPlayerSquad) -> (Result_2);
-   addPlayerStats: (IPlayerStats) -> (bool);
-   addUser: (IUser) -> (Result);
-   deleteAdminSetting: (text) -> (opt AdminSetting__1);
-   finishMatch: (MatchScore) -> (Result_2);
-   getAdminSettings: (GetProps) -> (ReturnAdminSettings) query;
-   getAdmins: () -> (Users) query;
-   getAllParticipants: () -> (Participants) query;
-   getAssetsOfUser: (text) -> (UserAssets__1) query;
-   getBudget: () -> (opt text) query;
-   getContest: (Key) -> (opt Contest) query;
-   /// getContestNames use to get list of contest names og given ids
-   ///    @param array of contestIds
-   ///    @return [(id, contestname)]
-   ///   *
-   getContestNames: (vec Key) -> (vec record {
-                                        text;
-                                        text;
-                                      }) query;
-   getContestWinnerOfMatch: (Key) -> (opt record {
-                                            Key;
-                                            User;
-                                          }) query;
-   /// getContestWithMatch use to get  contest with match with contest id
-   ///    @param array of contestId
-   ///    @return {contest:Contest;match:RefinedMatch}
-   ///   *
-   getContestWithMatch: (Key) ->
-    (opt record {
-           contest: Contest;
-           match: opt RefinedMatch;
-         }) query;
-   getContestsByMatchId: (Key) -> (Contests) query;
-   getContestsWinnerUserByMatchId: (Key) -> (opt record {
-                                                   Key;
-                                                   User;
-                                                 }) query;
-   getDetailedMatchesContests: (GetProps) ->
-    (ReturnDetailedMatchContests) query;
-   getFilterdContests: (GetProps) -> (ReturnContests) query;
-   getFilterdRawPlayerSquadsByMatch: (opt Key, opt Key, GetProps) ->
-    (ReturnTeams) query;
-   getListPlayerSquadsByMatch: (Key, opt Key) -> (ListPlayerSquads) query;
-   getMVPSMatches: (GetProps) -> (RMVPSTournamentMatchsList) query;
-   getMVPSOfmatch: (Key) -> (opt record {
-                                   Key;
-                                   MVPSPlayers;
-                                 }) query;
-   getMatch: (Key) -> (opt RefinedMatch) query;
-   getMatches: (GetProps, opt int) -> (ReturnMatches) query;
-   getMatchesByTeamId: (Key) -> (Matches) query;
-   getMatchesWithTournamentId: (GetProps, opt int, int, opt Key) ->
-    (ReturnMatches) query;
-   getPaginatedContestsByMatchId: (Key, GetProps) ->
-    (ReturnPagContests) query;
-   getParticipants: (Key) -> (Participants) query;
-   getPlayer: (Key) -> (opt Player__1) query;
-   getPlayerPoints: (Key, Key) -> (opt RPoints__1) query;
-   getPlayerSquad: (Key) -> (opt RankPlayerSquad) query;
-   getPlayerSquadsByMatch: (Key) -> (RefinedPlayerSquads) query;
-   getPlayerStats: (Key, Key) -> (opt PlayerStats) query;
-   getPlayerStatsByMatchId: (Key) ->
-    (vec record {
-           Key;
-           PlayerStatsWithName;
-         }) query;
-   getPlayersByPosition: (Position__1) -> (Result_5) query;
-   getPlayersByTeamId: (Key) -> (Result_4) query;
-   getPlayersByTeamIds: (vec Key) -> (Result_4) query;
-   getRawPlayerSquadsByMatch: (opt Key, opt Key) -> (PlayerSquads) query;
-   getSeasonByProvider: (MonkeyId, MonkeyId) -> (opt ISeason) query;
-   getSeasons: (Key) -> (Seasons) query;
-   getSquadWithPoints: (Key) -> (opt RefinedPlayerSquad) query;
-   getStatsSystem: () -> (Points);
-   getTeamById: (Key) -> (opt Team__1) query;
-   getTeamByName: (text) -> (opt record {
-                                   Key;
-                                   Team__1;
-                                 }) query;
-   getTeamsByTournament: (Key) -> (Result_3) query;
-   getTopPlayers: (record {
-                     limit: nat;
-                     page: nat;
-                     search: text;
-                   }) -> (record {
-                            players: TopPlayers;
-                            total: nat;
-                          }) query;
-   getTournaments: () -> (Tournaments) query;
-   getTournamentsN: (GetProps) -> (ReturnTournaments) query;
-   getUpcomingMatches: (GetProps, nat) -> (ReturnMatches) query;
-   getUser: (opt text) -> (opt User) query;
-   getUserRank: (Key) -> (opt MeAsTopPlayer) query;
-   increaseContestWon: (record {
-                          assetsVal: opt nat;
-                          id: Key;
-                        }) -> (bool);
-   increaseParticipant: (record {
-                           assetsVal: opt nat;
-                           id: Key;
-                         }) -> (bool);
-   makeAdmin: (principal) -> (bool);
-   nGetSquadRanking: (Key, GetProps) -> (ReturnRankings) query;
-   postponeMatch: (Key, MatchStatus) -> (bool);
-   reScheduleMatch: (Key, MatchStatus) -> (bool);
-   removeContest: (Key) -> (opt Contest);
-   testingStartMatch: (Key, nat) -> (opt Match);
-   updateAdminSetting: (IAdminSetting) -> (bool);
-   updateContest: (IContest, Key) -> (Result_2);
-   updateMatchScore: (MatchScore) -> (bool);
-   updateMatchStatus: (MatchStatus, Key) -> (bool);
-   updatePlayerPrices: (vec record {
-                              fantasyPrice: nat;
-                              id: Key;
-                            }) -> (bool);
-   updatePlayerSquad: (Key, IPlayerSquad) -> (Result_1);
-   updatePlayersStats: (vec IPlayerStats) -> (vec bool);
-   updateRanking: (Key) -> () oneway;
-   updateStatsSysteam: (Points) -> (bool);
-   updateUser: (IUser) -> (Result);
- };
 type Users = 
  vec record {
        Key__1;
@@ -168,11 +14,15 @@ type UserAssets__1 =
  record {
    contestWon: nat;
    participated: nat;
+   rewardsWon: nat;
+   totalEarning: nat;
  };
 type UserAssets = 
  record {
    contestWon: nat;
    participated: nat;
+   rewardsWon: nat;
+   totalEarning: nat;
  };
 type User = 
  record {
@@ -181,12 +31,46 @@ type User =
    name: text;
    role: Role;
  };
-type TransferFromError = variant {
-                           GenericError:
-                            record {
-                              error_code: nat;
-                              message: text;
-                            };};
+type TransformArgs = 
+ record {
+   context: blob;
+   response: HttpResponsePayload;
+ };
+type TransferFromResult = 
+ variant {
+   Err: TransferFromError;
+   Ok: Icrc1BlockIndex;
+ };
+type TransferFromError__1 = 
+ variant {
+   BadBurn: record {min_burn_amount: Icrc1Tokens;};
+   BadFee: record {expected_fee: Icrc1Tokens;};
+   CreatedInFuture: record {ledger_time: Icrc1Timestamp;};
+   Duplicate: record {duplicate_of: Icrc1BlockIndex;};
+   GenericError: record {
+                   error_code: nat;
+                   message: text;
+                 };
+   InsufficientAllowance: record {allowance: Icrc1Tokens;};
+   InsufficientFunds: record {balance: Icrc1Tokens;};
+   TemporarilyUnavailable;
+   TooOld;
+ };
+type TransferFromError = 
+ variant {
+   BadBurn: record {min_burn_amount: Icrc1Tokens;};
+   BadFee: record {expected_fee: Icrc1Tokens;};
+   CreatedInFuture: record {ledger_time: Icrc1Timestamp;};
+   Duplicate: record {duplicate_of: Icrc1BlockIndex;};
+   GenericError: record {
+                   error_code: nat;
+                   message: text;
+                 };
+   InsufficientAllowance: record {allowance: Icrc1Tokens;};
+   InsufficientFunds: record {balance: Icrc1Tokens;};
+   TemporarilyUnavailable;
+   TooOld;
+ };
 type Tournaments = 
  vec record {
        Key__1;
@@ -285,6 +169,22 @@ type ReturnTeams =
    teams: RawPlayerSquads;
    total: nat;
  };
+type ReturnRewards = 
+ record {
+   rewards: vec ReturnReward;
+   total: nat;
+ };
+type ReturnReward = 
+ record {
+   amount: nat;
+   claim_time: opt int;
+   contestId: Key__1;
+   creation_time: int;
+   id: Key__1;
+   isClaimed: bool;
+   transactionId: opt Key__1;
+   userId: Key__1;
+ };
 type ReturnRankings = 
  record {
    rankings: RefinedPlayerSquadRankings;
@@ -321,7 +221,7 @@ type ReturnAdminSettings =
  };
 type ReturnAddParticipant = 
  variant {
-   err: TransferFromError;
+   err: TransferFromError__1;
    ok: text;
  };
 type Result_6 = 
@@ -725,8 +625,10 @@ type Participants =
 type Participant = 
  record {
    contestId: Key__1;
+   isRewarded: bool;
    rank: nat;
    squadId: Key__1;
+   transactionId: Key__1;
    userId: Key__1;
  };
 type Other = 
@@ -795,14 +697,18 @@ type MatchContest =
    awayScore: nat;
    awayTeamName: text;
    creatorUserId: Key__1;
+   entryFee: nat;
    homeScore: nat;
    homeTeamName: text;
+   isDistributed: bool;
    matchId: Key__1;
    matchName: text;
    maxCap: nat;
    minCap: nat;
    name: text;
+   paymentMethod: Key__1;
    providerId: MonkeyId;
+   rewardDistribution: vec ContestRewardDistribution;
    rules: text;
    slots: nat;
    slotsUsed: nat;
@@ -867,6 +773,9 @@ type InputMatch =
    status: MatchStatus__1;
    time: int;
  };
+type Icrc1Tokens = nat;
+type Icrc1Timestamp = nat64;
+type Icrc1BlockIndex = nat;
 type IUser = 
  record {
    email: text;
@@ -934,11 +843,15 @@ type IPlayer =
  };
 type IContest = 
  record {
+   entryFee: nat;
+   isDistributed: bool;
    matchId: Key__1;
    maxCap: nat;
    minCap: nat;
    name: text;
+   paymentMethod: Key__1;
    providerId: MonkeyId;
+   rewardDistribution: vec ContestRewardDistribution;
    rules: text;
    slots: nat;
    teamsPerUser: nat;
@@ -948,6 +861,17 @@ type IAdminSetting =
    settingName: text;
    settingType: text;
    settingValue: text;
+ };
+type HttpResponsePayload = 
+ record {
+   body: vec nat8;
+   headers: vec HttpHeader;
+   status: nat;
+ };
+type HttpHeader = 
+ record {
+   name: text;
+   value: text;
  };
 type Goals = 
  record {
@@ -968,6 +892,195 @@ type Fouls =
  record {
    committed: int;
    drawn: int;
+ };
+type FantasyFootball = 
+ service {
+   _updatePlayersStats: (vec IPlayerStats) -> (vec bool);
+   addAdminSetting: (IAdminSetting) -> (bool);
+   addContest: (IContest) -> (Result_2);
+   addDefaultContestsOnMatches: () -> (Result_2);
+   addLeague: (Tournament__1, Season__1, vec ITeamWithPlayers) -> () oneway;
+   addMatch: (InputMatch) -> (Result_6);
+   addMatchToMvpsAdmin: (Key) -> () oneway;
+   addMatches: (vec InputMatch) ->
+    (record {
+       err: vec record {
+                  bool;
+                  text;
+                };
+       succ: vec record {
+                   bool;
+                   Match;
+                 };
+     });
+   addNewMatches: (vec InputMatch, Key) ->
+    (record {
+       err: vec record {
+                  bool;
+                  text;
+                };
+       succ: vec record {
+                   bool;
+                   Match;
+                 };
+     });
+   addParticipant: (Key, Key, int) -> (ReturnAddParticipant);
+   addPlayer: (Player__1) -> () oneway;
+   addPlayerSquad: (IPlayerSquad) -> (Result_2);
+   addPlayerStats: (IPlayerStats) -> (bool);
+   addUser: (IUser) -> (Result);
+   claimRewards: () -> (ReturnAddParticipant);
+   deleteAdminSetting: (text) -> (opt AdminSetting__1);
+   deleteRewardOfUser: (principal, Key) -> (Result_2);
+   distributeRewards: (Key, Key) -> (ReturnAddParticipant);
+   finishMatch: (MatchScore) -> (Result_2);
+   getAdminRewards: (Key) -> (nat) query;
+   getAdminSettings: (GetProps) -> (ReturnAdminSettings) query;
+   getAdmins: () -> (Users) query;
+   getAllParticipants: () -> (Participants) query;
+   getAssetsOfUser: (text) -> (UserAssets__1) query;
+   getBudget: () -> (opt text) query;
+   getContest: (Key) -> (opt Contest) query;
+   /// getContestNames use to get list of contest names og given ids
+   ///    @param array of contestIds
+   ///    @return [(id, contestname)]
+   ///   *
+   getContestNames: (vec Key) -> (vec record {
+                                        text;
+                                        text;
+                                      }) query;
+   getContestWinnerOfMatch: (Key) -> (opt record {
+                                            Key;
+                                            User;
+                                          }) query;
+   /// getContestWithMatch use to get  contest with match with contest id
+   ///    @param array of contestId
+   ///    @return {contest:Contest;match:RefinedMatch}
+   ///   *
+   getContestWithMatch: (Key) ->
+    (opt record {
+           contest: Contest;
+           match: opt RefinedMatch;
+         }) query;
+   getContestsByMatchId: (Key) -> (Contests) query;
+   getContestsWinnerUserByMatchId: (Key) -> (opt record {
+                                                   Key;
+                                                   User;
+                                                 }) query;
+   getDetailedMatchesContests: (GetProps) ->
+    (ReturnDetailedMatchContests) query;
+   getFilterdContests: (GetProps) -> (ReturnContests) query;
+   getFilterdRawPlayerSquadsByMatch: (opt Key, opt Key, GetProps) ->
+    (ReturnTeams) query;
+   getListPlayerSquadsByMatch: (Key, opt Key) -> (ListPlayerSquads) query;
+   getMVPSMatches: (GetProps) -> (RMVPSTournamentMatchsList) query;
+   getMVPSOfmatch: (Key) -> (opt record {
+                                   Key;
+                                   MVPSPlayers;
+                                 }) query;
+   getMatch: (Key) -> (opt RefinedMatch) query;
+   getMatches: (GetProps, opt int) -> (ReturnMatches) query;
+   getMatchesByTeamId: (Key) -> (Matches) query;
+   getMatchesWithTournamentId: (GetProps, opt int, int, opt Key) ->
+    (ReturnMatches) query;
+   getPaginatedContestsByMatchId: (Key, GetProps) ->
+    (ReturnPagContests) query;
+   getParticipants: (Key) -> (Participants) query;
+   getPlayer: (Key) -> (opt Player__1) query;
+   getPlayerPoints: (Key, Key) -> (opt RPoints__1) query;
+   getPlayerSquad: (Key) -> (opt RankPlayerSquad) query;
+   getPlayerSquadsByMatch: (Key) -> (RefinedPlayerSquads) query;
+   getPlayerStats: (Key, Key) -> (opt PlayerStats) query;
+   getPlayerStatsByMatchId: (Key) ->
+    (vec record {
+           Key;
+           PlayerStatsWithName;
+         }) query;
+   getPlayersByPosition: (Position__1) -> (Result_5) query;
+   getPlayersByTeamId: (Key) -> (Result_4) query;
+   getPlayersByTeamIds: (vec Key) -> (Result_4) query;
+   getRawPlayerSquadsByMatch: (opt Key, opt Key) -> (PlayerSquads) query;
+   getRewardList: (GetProps, opt bool) -> (ReturnRewards) query;
+   getRewards: () -> (nat) query;
+   getRewardsTable:
+    (record {
+       entryFee: nat;
+       props: GetProps;
+       slotsUsed: nat;
+     }) -> (record {
+              map: vec record {
+                         nat;
+                         nat;
+                       };
+              total: nat;
+            });
+   getSeasonByProvider: (MonkeyId, MonkeyId) -> (opt ISeason) query;
+   getSeasons: (Key) -> (Seasons) query;
+   getSquadWithPoints: (Key) -> (opt RefinedPlayerSquad) query;
+   getStatsSystem: () -> (Points);
+   getTeamById: (Key) -> (opt Team__1) query;
+   getTeamByName: (text) -> (opt record {
+                                   Key;
+                                   Team__1;
+                                 }) query;
+   getTeamsByTournament: (Key) -> (Result_3) query;
+   getTopPlayers: (record {
+                     limit: nat;
+                     page: nat;
+                     search: text;
+                   }) -> (record {
+                            players: TopPlayers;
+                            total: nat;
+                          }) query;
+   getTournaments: () -> (Tournaments) query;
+   getTournamentsN: (GetProps) -> (ReturnTournaments) query;
+   getUpcomingMatches: (GetProps, nat) -> (ReturnMatches) query;
+   getUser: (opt text) -> (opt User) query;
+   getUserRank: (Key) -> (opt MeAsTopPlayer) query;
+   increaseContestWon: (record {
+                          assetsVal: opt nat;
+                          id: Key;
+                        }) -> (bool);
+   increaseParticipant: (record {
+                           assetsVal: opt nat;
+                           id: Key;
+                         }) -> (bool);
+   increaseRewardsWon: (record {
+                          assetsVal: opt nat;
+                          id: Key;
+                        }) -> (bool);
+   increaseTotalEarning: (record {
+                            assetsVal: opt nat;
+                            id: Key;
+                          }) -> (bool);
+   makeAdmin: (principal) -> (bool);
+   manuallyDirectSendReward: (principal, nat) -> (Result_2);
+   nDistributeRewards: (Key, Key) -> (ReturnAddParticipant);
+   nGetSquadRanking: (Key, GetProps) -> (ReturnRankings) query;
+   postponeMatch: (Key, MatchStatus) -> (bool);
+   reScheduleMatch: (Key, MatchStatus) -> (bool);
+   removeContest: (Key) -> (opt Contest);
+   testingClaimTokens: () -> (TransferFromResult);
+   testingGetRewardPercentages: () ->
+    (record {
+       platformPercentage: nat;
+       rewardableUsersPercentage: nat;
+     });
+   testingStartMatch: (Key, nat) -> (opt Match);
+   transform: (TransformArgs) -> (CanisterHttpResponsePayload) query;
+   updateAdminSetting: (IAdminSetting) -> (bool);
+   updateContest: (IContest, Key) -> (Result_2);
+   updateMatchScore: (MatchScore) -> (bool);
+   updateMatchStatus: (MatchStatus, Key) -> (bool);
+   updatePlayerPrices: (vec record {
+                              fantasyPrice: nat;
+                              id: Key;
+                            }) -> (bool);
+   updatePlayerSquad: (Key, IPlayerSquad) -> (Result_1);
+   updatePlayersStats: (vec IPlayerStats) -> (vec bool);
+   updateRanking: (Key) -> () oneway;
+   updateStatsSysteam: (Points) -> (bool);
+   updateUser: (IUser) -> (Result);
  };
 type Duels = 
  record {
@@ -1001,11 +1114,15 @@ type DetailedMatchContest =
 type DetailedContest = 
  record {
    creatorUserId: Key__1;
+   entryFee: nat;
+   isDistributed: bool;
    matchId: Key__1;
    maxCap: nat;
    minCap: nat;
    name: text;
+   paymentMethod: Key__1;
    providerId: MonkeyId;
+   rewardDistribution: vec ContestRewardDistribution;
    rules: text;
    slots: nat;
    slotsUsed: nat;
@@ -1022,26 +1139,40 @@ type Contests =
 type Contest__1 = 
  record {
    creatorUserId: Key__1;
+   entryFee: nat;
+   isDistributed: bool;
    matchId: Key__1;
    maxCap: nat;
    minCap: nat;
    name: text;
+   paymentMethod: Key__1;
    providerId: MonkeyId;
+   rewardDistribution: vec ContestRewardDistribution;
    rules: text;
    slots: nat;
    slotsUsed: nat;
    teamsPerUser: nat;
    winner: opt Key__1;
  };
+type ContestRewardDistribution = 
+ record {
+   amount: int;
+   from: nat;
+   to: nat;
+ };
 type ContestArray = vec DetailedContest;
 type Contest = 
  record {
    creatorUserId: Key__1;
+   entryFee: nat;
+   isDistributed: bool;
    matchId: Key__1;
    maxCap: nat;
    minCap: nat;
    name: text;
+   paymentMethod: Key__1;
    providerId: MonkeyId;
+   rewardDistribution: vec ContestRewardDistribution;
    rules: text;
    slots: nat;
    slotsUsed: nat;
@@ -1053,6 +1184,12 @@ type Cards =
    redcards: int;
    yellowcards: int;
    yellowredcards: int;
+ };
+type CanisterHttpResponsePayload = 
+ record {
+   body: vec nat8;
+   headers: vec HttpHeader;
+   status: nat;
  };
 type AdminSettings = 
  vec record {
@@ -1077,4 +1214,7 @@ type AdminSetting =
    settingType: text;
    settingValue: text;
  };
-service : () -> _anon_class_22_1
+service : (record {
+             ledgerCanisterId: text;
+             transactionCanisterId: text;
+           }) -> FantasyFootball

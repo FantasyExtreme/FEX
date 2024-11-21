@@ -310,27 +310,36 @@ public type InputMatch = {
     other : Other;
   };
   public type PlayersStats = [(Key, PlayerStats)];
-
-
-   public type ContestCommon = {
+  public type ContestRewardDistribution = {
+    from : Nat;
+    to : Nat; // null if it's for a single user
+    amount : Int;
+  };
+  public type ContestCommon = {
     providerId : MonkeyId;
     matchId : Key;
     name : Text;
     slots : Nat;
+    rewardDistribution : [ContestRewardDistribution];
+    entryFee : Nat;
     minCap : Nat;
     maxCap : Nat;
     teamsPerUser : Nat;
+    isDistributed : Bool;
     rules : Text;
+    paymentMethod: Key;
   };
-  public type Contest = ContestCommon and {
+   public type Contest = ContestCommon and {
     creatorUserId : Key;
     slotsUsed : Nat;
-       winner : ?Key;
+    winner : ?Key;
   };
-    public type Participant = {
+  public type Participant = {
     contestId : Key;
     userId : Key;
     squadId : Key;
+    transactionId : Key;
+    isRewarded : Bool;
     rank : Nat;
   };
     public type Participants = [(Key, Participant)];
@@ -491,11 +500,146 @@ public type IPlayerSquad = {
     number : Int;
     photo : Text;
   };
+  
+  // --- reward
+    public type Reward = {
+    contestId : Key;
+    userId : Key;
+    amount : Nat;
+    transactionId : ?Key;
+    creation_time : Int;
+    claim_time : ?Int;
+    isClaimed : Bool;
+  };
+  public type ReturnReward = Reward and {
+    id : Key;
+  };
+ 
 
-  // --------------  join contest ------------
+    public type Rewards = [(Key, Reward)];
+
+//------------ transactions -----------
+  public type Timestamp = Nat64;
+ // Ledger types
+  public type SubAccount = Blob;
+  public type Icrc1Timestamp = Nat64;
+  public type Icrc1Tokens = Nat;
+  public type Icrc1BlockIndex = Nat;
+
+  public type Account = {
+    owner : Principal;
+    subaccount : ?SubAccount;
+  };
+  public type TransferFromArgs = {
+    spender_subaccount : ?SubAccount;
+    from : Account;
+    to : Account;
+    amount : Icrc1Tokens;
+    fee : ?Icrc1Tokens;
+    memo : ?Blob;
+    created_at_time : ?Icrc1Timestamp;
+  };
+  public type TransferFromResult = {
+    #Ok : Icrc1BlockIndex;
+    #Err : TransferFromError;
+  };
+
   public type TransferFromError = {
+    #BadFee : { expected_fee : Icrc1Tokens };
+    #BadBurn : { min_burn_amount : Icrc1Tokens };
+    #InsufficientFunds : { balance : Icrc1Tokens };
+    #InsufficientAllowance : { allowance : Icrc1Tokens };
+    #TooOld;
+    #CreatedInFuture : { ledger_time : Icrc1Timestamp };
+    #Duplicate : { duplicate_of : Icrc1BlockIndex };
+    #TemporarilyUnavailable;
     #GenericError : { error_code : Nat; message : Text };
   };
+
+  // Fantasy transection history
+  public type TransactionType = {
+    #send;
+    #receive;
+    #pending;
+    #rejected;
+  };
+  public type Transaction = {
+    user : Principal;
+    from : Principal;
+    to : Principal;
+    amount : Icrc1Tokens;
+    created_at_time : Int;
+    contestId : Text;
+    transaction_type : TransactionType;
+    title : Text;
+  };
+  public type GetAllTransactionProps = {
+    userId : ?Principal;
+    contestId : ?Text;
+    page : Nat;
+    limit : Nat;
+  };
+  public type Transactions = [(Key, Transaction)];
+  public type ReturnTransactions = { total : Nat; transaction : Transactions };
+
+  // ------ http call
+
+  //1. Type that describes the Request arguments for an HTTPS outcall
+  //See: /docs/current/references/ic-interface-spec#ic-http_request
+  public type HttpRequestArgs = {
+    url : Text;
+    max_response_bytes : ?Nat64;
+    headers : [HttpHeader];
+    body : ?[Nat8];
+    method : HttpMethod;
+    transform : ?TransformRawResponseFunction;
+  };
+
+  public type HttpHeader = {
+    name : Text;
+    value : Text;
+  };
+
+  public type HttpMethod = {
+    #get;
+    #post;
+    #head;
+  };
+
+  public type HttpResponsePayload = {
+    status : Nat;
+    headers : [HttpHeader];
+    body : [Nat8];
+  };
+  public type TransformRawResponseFunction = {
+    function : shared query TransformArgs -> async HttpResponsePayload;
+    context : Blob;
+  };
+
+  //2.2 These types describes the arguments the transform function needs
+  public type TransformArgs = {
+    response : HttpResponsePayload;
+    context : Blob;
+  };
+
+  public type CanisterHttpResponsePayload = {
+    status : Nat;
+    headers : [HttpHeader];
+    body : [Nat8];
+  };
+
+  public type TransformContext = {
+    function : shared query TransformArgs -> async HttpResponsePayload;
+    context : Blob;
+  };
+
+  //3. Declaring the management canister which you use to make the HTTPS outcall
+  public type IC = actor {
+    http_request : HttpRequestArgs -> async HttpResponsePayload;
+  };
+
+  // --------------  join contest ------------
+
     public type ContestType = {
     name : Text;
     color : Text;
@@ -510,15 +654,25 @@ public type IPlayerSquad = {
   public type UserAssets = {
     participated : Nat;
     contestWon : Nat;
+    rewardsWon : Nat;
+    totalEarning : Nat;
 
   };
     public type UsersAssets = [(Key, UserAssets)];
     public let MAX_PLAYER_PER_SQUAD = 15;
- public let AdminSettings = {
+
+  public let AdminSettings = {
     budget = "budget";
     platformPercentage = "platformPercentage";
+    contestWinnerReward = "contestWinnerReward";
+    rewardableUsersPercentage = "rewardableUsersPercentage";
 
 
+  };
+    public let DistributionAlgo = {
+    direct = 0;
+    completedTierWeighted = 1;
+    reducededTierWeighted = 2;
   };
   public let MatchStatuses = {
     finished = "Match Finished";
@@ -527,15 +681,21 @@ public type IPlayerSquad = {
   public let Default_Contest_free = {
     name = "Free";
     slots = 1000;
+    entryFee = 0;
     teamsPerUser = 3;
     minCap = 100;
     maxCap = 0;
     providerId = "0";
+    rewardDistribution : [ContestRewardDistribution] = [];
     rules = "No entry fee,
              Max limit for teams per user is 3";
+    paymentMethod = "ryjl3-tyaaa-aaaaa-aaaba-cai";
   };
 
- 
+   public let GAS_FEE = 10_000;
+  public let MASTER_WALLET = "ieimk-pwc2p-nhczw-65nay-bfrqo-l4igp-irrhf-v24ma-xletl-5xfhf-2qe";
+  public let ADMIN_WALLET = "ieimk-pwc2p-nhczw-65nay-bfrqo-l4igp-irrhf-v24ma-xletl-5xfhf-2qe";
+  public let ICP_LEDGER_CANISTER_ID = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 
   public let Default_Contests=[Default_Contest_free];
   public func generateNewRemoteObjectId() : Key {
