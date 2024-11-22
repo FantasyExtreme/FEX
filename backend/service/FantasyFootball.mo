@@ -18,8 +18,16 @@ import FantasyStoreHelper "../helper/FantasyStoreHelper";
 import Validation "../model/Validation";
 import Nat32 "mo:base/Nat32";
 import Char "mo:base/Char";
+import Blob "mo:base/Blob";
+import Cycles "mo:base/ExperimentalCycles";
+import Nat64 "mo:base/Nat64";
+import Float "mo:base/Float";
+import Error "mo:base/Error";
+import Int64 "mo:base/Int64";
+import List "mo:base/List";
+import Hash "mo:base/Hash";
 
-shared ({ caller = initializer }) actor class () {
+shared ({ caller = initializer }) actor class FantasyFootball(init : { ledgerCanisterId : Text; transactionCanisterId : Text }) = this {
 
   type Key = Types.Key;
   type User = Types.User;
@@ -58,6 +66,7 @@ shared ({ caller = initializer }) actor class () {
   type RMVPSTournamentMatch = Types.RMVPSTournamentMatch;
   type ContestArray = Types.ContestArray;
   type ReturnAdminSettings = { settings : AdminSettings; total : Nat };
+  type ReturnReward = Types.ReturnReward;
 
   type ReturnPagContests = {
     contests : Contests;
@@ -103,6 +112,19 @@ shared ({ caller = initializer }) actor class () {
   type ContestWinner = Types.ContestWinner;
   type RMVPSTournamentMatchs = Types.RMVPSTournamentMatchs;
   type MatchStatus = Types.MatchStatus;
+  // Ledger types
+
+  type Account = Types.Account;
+  type TransferFromArgs = Types.TransferFromArgs;
+  type TransferFromResult = Types.TransferFromResult;
+  type Transaction = Types.Transaction;
+
+  type Reward = Types.Reward;
+  
+  type ReturnRewards = { rewards : [ReturnReward]; total : Nat };
+
+
+  type Rewards = Types.Rewards;
 
   type ReturnMatches = { matches : RTournamentMatches; total : Nat };
   type ReturnTournaments = { tournaments : Tournaments; total : Nat };
@@ -136,7 +158,7 @@ shared ({ caller = initializer }) actor class () {
   stable var stable_userStats : UsersAssets = [];
   stable var stable_playersStats : PlayersStats = [];
   stable var mvps_matches_ids : [Key] = [];
-
+  stable var stable_rewards : Rewards = [];
   var playerStorage = Map.fromIter<Key, Player>(stable_players.vals(), 0, Text.equal, Text.hash);
   var seasonStorage = Map.fromIter<Key, Season>(stable_seasons.vals(), 0, Text.equal, Text.hash);
 
@@ -150,6 +172,12 @@ shared ({ caller = initializer }) actor class () {
   var playerSquadStorage = Map.fromIter<Key, PlayerSquad>(stable_playerSquads.vals(), 0, Text.equal, Text.hash);
   var userStatsStorage = Map.fromIter<Key, UserAssets>(stable_userStats.vals(), 0, Text.equal, Text.hash);
   var playersStatsStorage = Map.fromIter<Key, PlayerStats>(stable_playersStats.vals(), 0, Text.equal, Text.hash);
+  var rewardStorage = Map.fromIter<Key, Reward>(stable_rewards.vals(), 0, Text.equal, Text.hash);
+
+
+  let adminPrincipal = Principal.fromText(Types.MASTER_WALLET);
+
+  stable var rewardPercentage = 80;
   stable var stable_points : Points = {
     shots = { shots_total = 1; shots_on_goal = 2 };
     goals = {
@@ -1938,13 +1966,13 @@ shared ({ caller = initializer }) actor class () {
               case (null) {};
             };
 
-            // let r = verifyBudget(newSquad.players);
-            // switch (r) {
-            //   case (#err(error)) {
-            //     return #err(error);
-            //   };
-            //   case (#ok(_)) {};
-            // };
+            let r = verifyBudget(newSquad.players);
+            switch (r) {
+              case (#err(error)) {
+                return #err(error);
+              };
+              case (#ok(_)) {};
+            };
 
             thisUser(Principal.toText(caller), isSquad.userId);
             let teamFormatiopnValidate = Validation.validateTeamFormation(newSquad.players, newSquad.formation, playerStorage);
@@ -2011,6 +2039,7 @@ shared ({ caller = initializer }) actor class () {
   };
 
   // Contests
+
   public shared ({ caller }) func addContest(inputContest : IContest) : async Result.Result<Text, Text> {
     onlyAdmin(caller);
     let maybeMatch = matchStorage.get(inputContest.matchId);
@@ -2026,14 +2055,18 @@ shared ({ caller = initializer }) actor class () {
           creatorUserId = Principal.toText(caller);
           name = inputContest.name;
           matchId = inputContest.matchId;
+          entryFee = inputContest.entryFee;
           slots = inputContest.slots;
           slotsUsed = 0;
+          rewardDistribution = inputContest.rewardDistribution;
           minCap = inputContest.minCap;
           maxCap = inputContest.maxCap;
           providerId = inputContest.providerId;
           teamsPerUser = inputContest.teamsPerUser;
           rules = inputContest.rules;
           winner = null;
+          isDistributed = false;
+          paymentMethod = inputContest.paymentMethod;
         };
         // using the matchId as the contestId because a match can only have one contest
         contestStorage.put(
@@ -2064,18 +2097,23 @@ shared ({ caller = initializer }) actor class () {
             };
             case (?isContest) {
 
+              // if (inputContest.slots < isContest.slotsUsed) return #err("Slots overflow");
               let newContest : Contest = {
                 creatorUserId = Principal.toText(caller);
                 name = inputContest.name;
                 matchId = inputContest.matchId;
+                entryFee = inputContest.entryFee;
                 slots = inputContest.slots;
                 slotsUsed = isContest.slotsUsed;
+                rewardDistribution = inputContest.rewardDistribution;
                 minCap = inputContest.minCap;
                 maxCap = inputContest.maxCap;
                 providerId = inputContest.providerId;
                 teamsPerUser = inputContest.teamsPerUser;
+                winner = isContest.winner;
+                isDistributed = isContest.isDistributed;
                 rules = inputContest.rules;
-                 winner = isContest.winner;
+                paymentMethod = isContest.paymentMethod;
 
               };
               let _t = contestStorage.replace(
@@ -2312,7 +2350,7 @@ shared ({ caller = initializer }) actor class () {
     // PlayerSquads
   public shared ({ caller }) func addPlayerSquad(inputSquad : IPlayerSquad) : async Result.Result<Text, Text> {
     onlyUser(caller);
-    // let r = verifyBudget(inputSquad.players);
+    let r = verifyBudget(inputSquad.players);
     let maybeMatch = matchStorage.get(inputSquad.matchId);
     switch (maybeMatch) {
       case (?isMatch) {
@@ -2326,12 +2364,12 @@ shared ({ caller = initializer }) actor class () {
         return #err("Match does not exist");
       };
     };
-    // switch (r) {
-    //   case (#err(error)) {
-    //     return #err(error);
-    //   };
-    //   case (#ok(_)) {};
-    // };
+    switch (r) {
+      case (#err(error)) {
+        return #err(error);
+      };
+      case (#ok(_)) {};
+    };
 
     // Count the number of players and substitutes
     let playersCount = Validation.playersCount(inputSquad.players);
@@ -2546,27 +2584,33 @@ shared ({ caller = initializer }) actor class () {
     return stable_points;
   };
 
-  // public query func getRankingOfSquads
-  // Participant
-  public shared ({ caller }) func addParticipant(iContestId : Key, squadId : Key,offset:Int) : async ReturnAddParticipant {
+ public shared ({ caller }) func addParticipant(iContestId : Key, squadId : Key,offset:Int) : async ReturnAddParticipant {
     onlyUser(caller);
     let contest = contestStorage.get(iContestId);
+            let userId = Principal.toText(caller);
     switch (contest) {
       case (?isContest) {
+        
+  
+
         let maybeMatch = matchStorage.get(isContest.matchId);
         switch (maybeMatch) {
           case (?isMatch) {
-            let userId = Principal.toText(caller);
             if (not isInFuture(isMatch.time)) {
               // onlyAdmin(caller);
 
               return #err(#GenericError { error_code = 0; message = "Time limit exceeded" });
             };
-        
+        //        if(not isWithIn24H(isMatch.time)){
+        //        return #err(#GenericError {error_code = 0; message="Hold tight! Team setup opens 24 hours before the match."});
+
+        // };
             let newParticipant : Participant = {
               userId;
               squadId = squadId;
               contestId = iContestId;
+              transactionId = "";
+              isRewarded = false;
               rank = 0;
             };
 
@@ -2594,7 +2638,16 @@ shared ({ caller = initializer }) actor class () {
             };
             let maybeSquad = playerSquadStorage.get(squadId);
             if (Option.isNull(maybeSquad)) return #err(#GenericError { error_code = 0; message = "Error joining contest please refresh the page and try again" });
-
+            let isPaid = isContest.entryFee != 0;
+            if (isPaid) {
+              let transfer = await transferToAdmin(caller, isContest.entryFee);
+              switch (transfer) {
+                case (#Err(error)) {
+                  return #err(error);
+                };
+                case (#Ok(_)) {};
+              };
+            };
 
             switch (maybeSquad) {
               // there isContest no way that this will be null because of the check above
@@ -2615,29 +2668,54 @@ shared ({ caller = initializer }) actor class () {
               creatorUserId = isContest.creatorUserId;
               name = isContest.name;
               matchId = isContest.matchId;
+              entryFee = isContest.entryFee;
               slots = isContest.slots;
               slotsUsed = newSlotsUsed;
-          
+              rewardDistribution = isContest.rewardDistribution;
               minCap = isContest.minCap;
               maxCap = isContest.maxCap;
               providerId = isContest.providerId;
               teamsPerUser = isContest.teamsPerUser;
               winner = isContest.winner;
-             
+              isDistributed = isContest.isDistributed;
               rules = isContest.rules;
-             
+              paymentMethod = isContest.paymentMethod;
             };
             let _t = contestStorage.replace(iContestId, newContest);
             let _res = pIncreaseParticipant({
               id = userId;
               assetsVal = null;
             });
-          
+            let transactionCanister = actor (init.transactionCanisterId) : actor {
+              addTransaction : (Transaction, ?Text) -> async Result.Result<(Text), (Text, Bool)>;
+            };
+            let adminPrincipal = Principal.fromText(Types.MASTER_WALLET);
+            let currentTime = getTime();
+
+            var tempTrans : Transaction = {
+              user = caller;
+              from = caller;
+              to = adminPrincipal;
+              amount = isContest.entryFee;
+              created_at_time = currentTime;
+              contestId = iContestId;
+              transaction_type = #send;
+              title = "Entry Fee";
+            };
+            var transactionId = "";
+            if (isPaid) {
+              transactionId := Types.generateNewRemoteObjectId();
+              let isId = await transactionCanister.addTransaction(tempTrans, null);
+              switch (isId) {
+                case (#ok(id)) { transactionId := id };
+                case (#err(_)) {};
+              };
+            };
             participantStorage.put(
               squadId # iContestId,
-             newParticipant 
+              { newParticipant with transactionId },
             );
-
+          
             return #ok("Participated successfully");
           };
           case (null) {
@@ -2717,56 +2795,8 @@ shared ({ caller = initializer }) actor class () {
       };
     };
   };
-    /*
-    getAssetsOfUser use to get assets of user by id
-    @param userId
-    @return userAssets:UserAssets
-  */
-  public query ({ caller }) func getAssetsOfUser(id : Text) : async UserAssets {
-    assert not Principal.isAnonymous(caller);
-    let userId = Principal.toText(caller);
-    if (userId != id) {
-      onlyAdmin(caller);
-    };
-    let assets = userStatsStorage.get(id);
 
-    switch (assets) {
-      case (?isassets) {
-        return isassets;
-      };
-      case (null) {
-        let tempAsset : UserAssets = {
-          participated = 0;
-          contestWon = 0;
-
-        };
-        return tempAsset;
-      };
-    };
-  };
-    /*
-    getAssetsOfUser private  to this canister use to get assets of user by id
-    @param userId
-    @return userAssets:UserAssets
-  */
-  func getAssetsOfUserPrivate(id : Text) : UserAssets {
-    let assets = userStatsStorage.get(id);
-
-    switch (assets) {
-      case (?isassets) {
-        return isassets;
-      };
-      case (null) {
-        let tempAsset : UserAssets = {
-          participated = 0;
-          contestWon = 0;
-  
-        };
-        return tempAsset;
-      };
-    };
-  };
-    /*
+  /*
     increaseContestWon use to increaseContestWon assets
     @params id and assets to increase
     @return Boolean
@@ -2794,7 +2824,8 @@ shared ({ caller = initializer }) actor class () {
             let tempAsset : UserAssets = {
               participated = 0;
               contestWon = tempContestWon;
-          
+              rewardsWon = 0;
+              totalEarning = 0;
             };
             userStatsStorage.put(id, tempAsset);
 
@@ -2830,7 +2861,7 @@ shared ({ caller = initializer }) actor class () {
     pIncreaseParticipant(props);
 
   };
-  func pIncreaseParticipant({
+   func pIncreaseParticipant({
     id : Key;
     assetsVal : ?Nat;
   }) : Bool {
@@ -2853,6 +2884,8 @@ shared ({ caller = initializer }) actor class () {
             let tempAsset : UserAssets = {
               participated = tempperticipentCount;
               contestWon = 0;
+              rewardsWon = 0;
+              totalEarning = 0;
             };
             userStatsStorage.put(id, tempAsset);
 
@@ -2863,6 +2896,161 @@ shared ({ caller = initializer }) actor class () {
 
             let tempAsset : UserAssets = {
               assets with participated = tempperticipentCount + assets.participated
+            };
+            let _res = userStatsStorage.replace(id, tempAsset);
+            return true;
+          };
+        };
+
+      };
+    };
+
+  };
+ /*
+    getAssetsOfUser use to get assets of user by id
+    @param userId
+    @return userAssets:UserAssets
+  */
+  public query ({ caller }) func getAssetsOfUser(id : Text) : async UserAssets {
+    assert not Principal.isAnonymous(caller);
+    let userId = Principal.toText(caller);
+    if (userId != id) {
+      onlyAdmin(caller);
+    };
+    let assets = userStatsStorage.get(id);
+
+    switch (assets) {
+      case (?isassets) {
+        return isassets;
+      };
+      case (null) {
+        let tempAsset : UserAssets = {
+          participated = 0;
+          contestWon = 0;
+          rewardsWon = 0;
+          totalEarning = 0;
+        };
+        return tempAsset;
+      };
+    };
+  };
+  /*
+    getAssetsOfUser private  to this canister use to get assets of user by id
+    @param userId
+    @return userAssets:UserAssets
+  */
+  func getAssetsOfUserPrivate(id : Text) : UserAssets {
+    let assets = userStatsStorage.get(id);
+
+    switch (assets) {
+      case (?isassets) {
+        return isassets;
+      };
+      case (null) {
+        let tempAsset : UserAssets = {
+          participated = 0;
+          contestWon = 0;
+          rewardsWon = 0;
+          totalEarning = 0;
+        };
+        return tempAsset;
+      };
+    };
+  };
+
+ 
+  private func pIncreaseRewardsWon({
+    id : Key;
+    assetsVal : ?Nat;
+  }) : Bool {
+    let isUser = userStorage.get(id);
+    switch (isUser) {
+      case (null) return false;
+      case (?user) {
+        let getAssets = userStatsStorage.get(id);
+        var tempRewardsWon = 0;
+
+        switch (assetsVal) {
+          case (null) { tempRewardsWon := 1 };
+          case (?isVal) { tempRewardsWon := isVal };
+        };
+        switch (getAssets) {
+          case (null) {
+
+            let tempAsset : UserAssets = {
+              participated = 0;
+              contestWon = 0;
+              rewardsWon = tempRewardsWon;
+              totalEarning = 0;
+            };
+            userStatsStorage.put(id, tempAsset);
+
+            return true;
+
+          };
+          case (?assets) {
+
+            let tempAsset : UserAssets = {
+              assets with rewardsWon = tempRewardsWon +assets.rewardsWon;
+            };
+            let _res = userStatsStorage.replace(id, tempAsset);
+            return true;
+          };
+        };
+
+      };
+    };
+
+  };
+  /*
+    increaseRewardsWon use to increaseRewardsWon assets
+    @params id and assets to increase
+    @return Boolean
+  */
+  public shared ({ caller }) func increaseRewardsWon({
+    id : Key;
+    assetsVal : ?Nat;
+  }) : async Bool {
+    assert Principal.isController(caller);
+    pIncreaseRewardsWon({ id; assetsVal });
+  };
+  /*
+    increaseTotalEarning use to increaseTotalEarning assets
+    @params id and assets to increase
+    @return Boolean
+  */
+  public shared ({ caller }) func increaseTotalEarning({
+    id : Key;
+    assetsVal : ?Nat;
+  }) : async Bool {
+    assert Principal.isController(caller);
+
+    let isUser = userStorage.get(id);
+    var tempTotalEarning : Nat = 0;
+
+    switch (assetsVal) {
+      case (null) { tempTotalEarning := 1 };
+      case (?isVal) { tempTotalEarning := isVal };
+    };
+    switch (isUser) {
+      case (null) return false;
+      case (?user) {
+        let getAssets = userStatsStorage.get(id);
+        switch (getAssets) {
+          case (null) {
+
+            let tempAsset : UserAssets = {
+              participated = 0;
+              contestWon = 0;
+              rewardsWon = 0;
+              totalEarning = tempTotalEarning;
+            };
+            userStatsStorage.put(id, tempAsset);
+            return true;
+          };
+          case (?assets) {
+            let tempAsset : UserAssets = {
+              assets with totalEarning = tempTotalEarning + assets.totalEarning;
             };
             let _res = userStatsStorage.replace(id, tempAsset);
             return true;
@@ -3064,7 +3252,8 @@ shared ({ caller = initializer }) actor class () {
                       squadId = participant.squadId;
                       contestId = participant.contestId;
                       userId = participant.userId;
-            
+                      transactionId = participant.transactionId;
+                      isRewarded = participant.isRewarded;
                     },
                   );
                 };
@@ -3696,6 +3885,1289 @@ var isContestCreated:Bool=false;
     adminSettingStorage.put(setting.settingName, newSetting);
     return true;
   };
+    private func getRewardPercentages() : {
+    platformPercentage : Nat;
+    rewardableUsersPercentage : Nat;
+  } {
+    let maybePlatformPercentage = adminSettingStorage.get(Types.AdminSettings.platformPercentage);
+    let maybeRewardableUsersPercentage = adminSettingStorage.get(Types.AdminSettings.rewardableUsersPercentage);
+    var platformPercentage = rewardPercentage;
+    var rewardableUsersPercentage = 0;
+    switch (maybePlatformPercentage, maybeRewardableUsersPercentage) {
+      case (?isPlatformPercentage, ?isRewardableUsersPercentage) {
+        platformPercentage := textToNat(isPlatformPercentage.settingValue);
+        rewardableUsersPercentage := textToNat(isRewardableUsersPercentage.settingValue);
+      };
+      case (?isPlatformPercentage, null) {
+        platformPercentage := textToNat(isPlatformPercentage.settingValue);
+      };
+      case (null, ?isRewardableUsersPercentage) {
+        rewardableUsersPercentage := textToNat(isRewardableUsersPercentage.settingValue);
+      };
+      case (null, null) {};
+    };
+    return { rewardableUsersPercentage; platformPercentage };
+  };
+  public func testingGetRewardPercentages() : async {
+    platformPercentage : Nat;
+    rewardableUsersPercentage : Nat;
+  } {
+    let maybePlatformPercentage = adminSettingStorage.get(Types.AdminSettings.platformPercentage);
+    let maybeRewardableUsersPercentage = adminSettingStorage.get(Types.AdminSettings.rewardableUsersPercentage);
+    var platformPercentage = rewardPercentage;
+    var rewardableUsersPercentage = 0;
+    switch (maybePlatformPercentage, maybeRewardableUsersPercentage) {
+      case (?isPlatformPercentage, ?isRewardableUsersPercentage) {
+        platformPercentage := textToNat(isPlatformPercentage.settingValue);
+        rewardableUsersPercentage := textToNat(isRewardableUsersPercentage.settingValue);
+      };
+      case (?isPlatformPercentage, null) {
+        platformPercentage := textToNat(isPlatformPercentage.settingValue);
+      };
+      case (null, ?isRewardableUsersPercentage) {
+        rewardableUsersPercentage := textToNat(isRewardableUsersPercentage.settingValue);
+      };
+      case (null, null) {};
+    };
+    return { rewardableUsersPercentage; platformPercentage };
+  };
+ //7. CREATE TRANSFORM FUNCTION
+  public query func transform(raw : Types.TransformArgs) : async Types.CanisterHttpResponsePayload {
+    let transformed : Types.CanisterHttpResponsePayload = {
+      status = raw.response.status;
+      body = raw.response.body;
+      headers = [
+        {
+          name = "Content-Security-Policy";
+          value = "default-src 'self'";
+        },
+        { name = "Referrer-Policy"; value = "strict-origin" },
+        { name = "Permissions-Policy"; value = "geolocation=(self)" },
+        {
+          name = "Strict-Transport-Security";
+          value = "max-age=63072000";
+        },
+        { name = "X-Frame-Options"; value = "DENY" },
+        { name = "X-Content-Type-Options"; value = "nosniff" },
+      ];
+    };
+    transformed;
+  };
+  // Rewards
+  public query ({ caller }) func getRewards() : async Nat {
+    onlyUser(caller);
+    let userId = Principal.toText(caller);
+    var claimableAmount = 0;
+    // let claimableUserRewards = Buffer.Buffer<(Key, Reward)>(0);
+    for ((key, reward) in rewardStorage.entries()) {
+      if (reward.userId == userId and not reward.isClaimed) {
+        // claimableUserRewards.add(key, reward);
+        claimableAmount += reward.amount;
+      };
+    };
+    return claimableAmount;
+  };
+  public shared ({ caller }) func testingClaimTokens() : async TransferFromResult {
+    assert (init.ledgerCanisterId != Types.ICP_LEDGER_CANISTER_ID);
+    return await transferFromAdmin(caller, 3_000_000_000);
+  };
+  public query ({ caller }) func getAdminRewards(userId : Key) : async Nat {
+    onlyAdmin(caller);
+    // let userId = Principal.toText(caller);
+    var claimableAmount = 0;
+    // let claimableUserRewards = Buffer.Buffer<(Key, Reward)>(0);
+    for ((key, reward) in rewardStorage.entries()) {
+      if (reward.userId == userId and not reward.isClaimed) {
+        // claimableUserRewards.add(key, reward);
+        claimableAmount += reward.amount;
+      };
+    };
+    return claimableAmount;
+  };
+
+  func textToFloat(t : Text) : ?Float {
+
+    var i : Float = 1;
+    var f : Float = 0;
+    var isDecimal : Bool = false;
+
+    for (c in t.chars()) {
+      if (Char.isDigit(c)) {
+        let charToNat : Nat64 = Nat64.fromNat(Nat32.toNat(Char.toNat32(c) -48));
+        let natToFloat : Float = Float.fromInt64(Int64.fromNat64(charToNat));
+        if (isDecimal) {
+          let n : Float = natToFloat / Float.pow(10, i);
+          f := f + n;
+        } else {
+          f := f * 10 + natToFloat;
+        };
+        i := i + 1;
+      } else {
+        if (Char.equal(c, '.') or Char.equal(c, ',')) {
+          f := f / Float.pow(10, i); // Force decimal
+          f := f * Float.pow(10, i); // Correction
+          isDecimal := true;
+          i := 1;
+        } else {
+          return null;
+        };
+      };
+    };
+
+    return ?f;
+  };
+  func extractUSD(input : Text) : ?Float {
+    let chars = input.chars();
+    var usdFound = false;
+    var collectingNumber = false;
+    var numberStr = "";
+    var buffer = "";
+
+    for (char in chars) {
+
+      if (usdFound and collectingNumber) {
+        if (Char.isDigit(char) or char == '.') {
+          numberStr := numberStr # Text.fromChar(char);
+        } else if (char == '}' or char == ',' or char == ' ') {
+          return textToFloat(numberStr);
+        };
+      } else if (usdFound and char == ':') {
+        collectingNumber := true;
+      } else {
+        buffer := buffer # Text.fromChar(char);
+        if (Text.equal(buffer, "usd")) {
+          usdFound := true;
+          buffer := ""; // Reset buffer to stop adding characters
+        } else if (char != 'u' and char != 's') {
+          buffer := ""; // Reset buffer if it grows too large
+        };
+      };
+    };
+    return null;
+  };
+
+  private func getIcpusdExchange() : async ?Float {
+
+    //1. DECLARE MANAGEMENT CANISTER
+    //You need this so you can use it to make the HTTP request
+    let ic : Types.IC = actor ("aaaaa-aa");
+
+    //2. SETUP ARGUMENTS FOR HTTP GET request
+
+    // 2.1 Setup the URL and its query parameters
+    let ONE_MINUTE : Nat64 = 60;
+    let start_timestamp : Types.Timestamp = 1682978460; //May 1, 2023 22:01:00 GMT
+    let end_timestamp : Types.Timestamp = 1682978520; //May 1, 2023 22:02:00 GMT
+    let host : Text = "api.coingecko.com";
+    let url = "https://" # host # "/api/v3/simple/price?ids=internet-computer&vs_currencies=usd";
+
+    // 2.2 prepare headers for the system http_request call
+    // let request_headers = [
+    //     { name = "Host"; value = host # ":443" },
+    //     { name = "User-Agent"; value = "exchange_rate_canister" },
+    // ];
+
+    // 2.2.1 Transform context
+    let transform_context : Types.TransformContext = {
+      function = transform;
+      context = Blob.fromArray([]);
+    };
+
+    // 2.3 The HTTP request
+    let http_request : Types.HttpRequestArgs = {
+      url = url;
+      max_response_bytes = null; //optional for request
+      headers = [];
+      body = null; //optional for request
+      method = #get;
+      transform = ?transform_context;
+    };
+
+    //3. ADD CYCLES TO PAY FOR HTTP REQUEST
+
+    //The IC specification spec says, "Cycles to pay for the call must be explicitly transferred with the call"
+    //The management canister will make the HTTP request so it needs cycles
+    //See: /docs/current/motoko/main/canister-maintenance/cycles
+
+    //The way Cycles.add() works is that it adds those cycles to the next asynchronous call
+    //"Function add(amount) indicates the additional amount of cycles to be transferred in the next remote call"
+    //See: /docs/current/references/ic-interface-spec#ic-http_request
+    Cycles.add(20_949_972_000);
+
+    //4. MAKE HTTP REQUEST AND WAIT FOR RESPONSE
+    //Since the cycles were added above, you can just call the management canister with HTTPS outcalls below
+    let http_response : Types.HttpResponsePayload = await ic.http_request(http_request);
+
+    //5. DECODE THE RESPONSE
+
+    //As per the type declarations in `src/Types.mo`, the BODY in the HTTP response
+    //comes back as [Nat8s] (e.g. [2, 5, 12, 11, 23]). Type signature:
+
+    //public type HttpResponsePayload = {
+    //     status : Nat;
+    //     headers : [HttpHeader];
+    //     body : [Nat8];
+    // };
+
+    //You need to decode that [Nat8] array that is the body into readable text.
+    //To do this, you:
+    //  1. Convert the [Nat8] into a Blob
+    //  2. Use Blob.decodeUtf8() method to convert the Blob to a ?Text optional
+    //  3. You use a switch to explicitly call out both cases of decoding the Blob into ?Text
+    let response_body : Blob = Blob.fromArray(http_response.body);
+    let decoded_text : Text = switch (Text.decodeUtf8(response_body)) {
+      case (null) { "No value returned" };
+      case (?y) { y };
+    };
+    let usd = extractUSD(decoded_text);
+    Debug.print(debug_show (usd));
+
+    //6. RETURN RESPONSE OF THE BODY
+    //The API response will looks like this:
+
+    // ("[[1682978460,5.714,5.718,5.714,5.714,243.5678]]")
+
+    //Which can be formatted as this
+    //  [
+    //     [
+    //         1682978460, <-- start/timestamp
+    //         5.714, <-- low
+    //         5.718, <-- high
+    //         5.714, <-- open
+    //         5.714, <-- close
+    //         243.5678 <-- volume
+    //     ],
+    // ]
+    usd;
+  };
+  public shared ({ caller }) func claimRewards() : async ReturnAddParticipant {
+    onlyUser(caller);
+    let transactionCanister = actor (init.transactionCanisterId) : actor {
+      addTransaction : (Transaction, ?Text) -> async Result.Result<(Text), (Text, Bool)>;
+    };
+    let userId = Principal.toText(caller);
+    let claimableUserRewards = Buffer.Buffer<(Key, Reward)>(0);
+    var claimableAmount = 0;
+    var contestId = "";
+    for ((key, reward) in rewardStorage.entries()) {
+      if (reward.userId == userId and not reward.isClaimed) {
+        claimableUserRewards.add(key, reward);
+        claimableAmount += reward.amount;
+        contestId := reward.contestId;
+      };
+    };
+    let isIcpRate = await getIcpusdExchange();
+    switch (isIcpRate) {
+      case (null) {
+        return #err(#GenericError { error_code = 0; message = "Unable to fetch ICP rate, please try again in a while or contact support" });
+      };
+      case (?icpRate) {
+        let claimableIcpFloat = Float.fromInt(claimableAmount) / icpRate;
+        let claimableICPInt = Float.toInt(claimableIcpFloat * 1e8);
+        if (claimableICPInt < 0) return #err(#GenericError { error_code = 0; message = "Faulty value for icp or reward" });
+        let claimableICP = Int.abs(claimableICPInt);
+        // let claimableICPInt = Float.toInt(claimableIcpFloat);
+        let transfer = await transferICPFromAdmin(caller, claimableICP);
+        switch (transfer) {
+          case (#Ok(_)) {
+            var tempTrans : Transaction = {
+              user = caller;
+              from = adminPrincipal;
+              to = caller;
+              amount = claimableICP;
+              created_at_time = getTime();
+              contestId = contestId;
+              transaction_type = #receive;
+              title = "Winnings";
+            };
+            // Add transaction
+            var transactionId : ?Key = null;
+            let isId = await transactionCanister.addTransaction(tempTrans, null);
+            switch (isId) {
+              case (#ok(id)) { transactionId := ?id };
+              case (#err(_)) {};
+            };
+            for ((key, reward) in claimableUserRewards.vals()) {
+              let newReward : Reward = {
+                contestId = reward.contestId;
+                userId = reward.userId;
+                amount = reward.amount;
+                creation_time = reward.creation_time;
+                transactionId = transactionId;
+                isClaimed = true;
+                claim_time = ?getTime();
+              };
+              let _ = rewardStorage.replace(key, newReward);
+            };
+            return #ok("Rewards Claimed");
+          };
+          case (#Err(error)) {
+            return #err(error);
+          };
+        };
+      };
+    };
+  };
+    public shared ({ caller }) func distributeRewards(matchId : Key, contestId : Key) : async ReturnAddParticipant {
+    onlyAdmin(caller);
+    let maybeMatch = matchStorage.get(matchId);
+    switch (maybeMatch) {
+      case (null) {
+        return #err(#GenericError { error_code = 0; message = "Match not found" });
+      };
+      case (?match) {
+        if (isInFuture(match.time)) return #err(#GenericError { error_code = 0; message = "Match not finished" });
+        if (match.status != Types.MatchStatuses.finished) {
+          return #err(#GenericError { error_code = 0; message = "Match not finished" });
+        };
+        let maybeContest = contestStorage.get(contestId);
+        switch (maybeContest) {
+          case (null) {
+            return #err(#GenericError { error_code = 0; message = "Contest not found" });
+          };
+          case (?contest) {
+            if (contest.isDistributed) return #err(#GenericError { error_code = 0; message = "Already distributed" });
+            if (contest.entryFee == 0) return #err(#GenericError { error_code = 0; message = "Error while distribution" });
+            // Initiate canister actor to call methods afterwards
+            let transactionCanister = actor (init.transactionCanisterId) : actor {
+              getAllTransactions : (Types.GetAllTransactionProps) -> async Types.ReturnTransactions;
+              addTransaction : (Transaction, ?Text) -> async Result.Result<(Text), (Text, Bool)>;
+            };
+            let limit = 10;
+            var page = 0;
+            // Get all the transactions related to this contest and store them in a hashmap.
+            let initialTransactions = await transactionCanister.getAllTransactions({
+              page;
+              limit;
+              userId = null;
+              contestId = ?contestId;
+            });
+            let transactionMap = Map.fromIter<Key, Transaction>(initialTransactions.transaction.vals(), 0, Text.equal, Text.hash);
+            while (transactionMap.size() < initialTransactions.total) {
+              let newTransactions = await transactionCanister.getAllTransactions({
+                page;
+                limit;
+                userId = null;
+                contestId = ?contestId;
+              });
+              for ((key, transaction) in newTransactions.transaction.vals()) {
+                transactionMap.put(key, transaction);
+              };
+              if (transactionMap.size() < initialTransactions.total) page += 1;
+            };
+            let slotsUsed = contest.slotsUsed;
+            let rewardDistribution = contest.rewardDistribution;
+            let totalPrizePool = contest.entryFee * contest.slotsUsed;
+
+            let maybePlatformPercentage = adminSettingStorage.get(Types.AdminSettings.platformPercentage);
+            var platformPercentage = rewardPercentage;
+            switch (maybePlatformPercentage) {
+              case (?isPlatformPercentage) {
+                platformPercentage := textToNat(isPlatformPercentage.settingValue);
+              };
+              case (null) {};
+            };
+
+            let rewardablePrizePool = (totalPrizePool * platformPercentage) / 100;
+
+            // Calculate rewards per user and store in a map according to rank
+            let rewardMap = Map.HashMap<Nat, Nat>(0, Nat.equal, Hash.hash);
+
+            var totalDistributedPercentage : Int = 0;
+
+            var totalDistributedAmount : Nat = 0;
+
+            // First, distribute rewards as per the distribution structure
+            for (reward in rewardDistribution.vals()) {
+              var index = reward.from;
+              let rangeSize : Int = reward.to - reward.from + 1;
+              let totalAmount = (rewardablePrizePool * reward.amount) / 100;
+              let rewardPerUserInt = totalAmount / rangeSize;
+
+              // Return error if Int is negative
+              if (rewardPerUserInt < 0) return #err(#GenericError { error_code = 0; message = "Faulty value for reward Distribution" });
+
+              let rewardPerUser = Int.abs(rewardPerUserInt);
+              var actualDistributedAmount : Nat = 0;
+
+              label rewardLoop while (index <= reward.to) {
+                if (index > slotsUsed) break rewardLoop;
+                let existingReward = switch (rewardMap.get(index)) {
+                  case (?value) value;
+                  case null 0;
+                };
+                rewardMap.put(index, existingReward + rewardPerUser);
+                actualDistributedAmount += rewardPerUser;
+                index += 1;
+              };
+
+              totalDistributedAmount += actualDistributedAmount;
+            };
+
+            // Calculate remaining rewards
+            let remainingRewards : Int = rewardablePrizePool - totalDistributedAmount;
+            Debug.print(debug_show ("mapp before", { rewardMap = Iter.toArray(rewardMap.entries()) }));
+            Debug.print(debug_show ("remainingsss", { remainingRewards; totalDistributedAmount; rewardablePrizePool }));
+
+            if (remainingRewards > 0 and slotsUsed > 0) {
+              let remainingRewardPerUserInt = remainingRewards / slotsUsed;
+              if (remainingRewardPerUserInt < 0) return #err(#GenericError { error_code = 0; message = "Faulty value for reward Distribution" });
+              let remainingRewardPerUser = Int.abs(remainingRewardPerUserInt);
+              var index = 1;
+              while (index <= slotsUsed) {
+                switch (rewardMap.get(index)) {
+                  case (?value) {
+                    let existingReward = value;
+                    rewardMap.put(index, existingReward + remainingRewardPerUser);
+                  };
+                  case null {};
+                };
+                index += 1;
+              };
+            };
+            Debug.print(debug_show ("rewardMap afterrrr", { rewardMap = Iter.toArray(rewardMap.entries()) }));
+
+            // check all the participant of this contest and get squad and reward them
+            var particpantIndex = 0;
+            label participantLoop for ((key, participant) in participantStorage.entries()) {
+              particpantIndex += 1;
+              if (participant.contestId == contestId) {
+                if (participant.isRewarded) return #err(#GenericError { error_code = 0; message = "Already rewarded participant" });
+                let userId = Principal.fromText(participant.userId);
+                let maybeSquad = playerSquadStorage.get(participant.squadId);
+                switch (maybeSquad) {
+                  case (null) {
+                    Debug.print(debug_show ("Squad not found", { matchId; squadId = participant.squadId }));
+                    return #err(#GenericError { error_code = 0; message = "Squad not found" });
+                  };
+                  case (?squad) {
+
+                    let maybeTransaction = transactionMap.get(participant.transactionId);
+                    switch (maybeTransaction) {
+                      case (?transaction) {
+                        // If amount in transaction and the fee of contest do not match return error
+                        if (transaction.amount != contest.entryFee) {
+                          Debug.print(debug_show ("Amount Difference", participant.transactionId, matchId, { amount = transaction.amount; fee = contest.entryFee }));
+                          return #err(#GenericError { error_code = 0; message = "Amount Difference" });
+                        };
+
+                        // Give reward from admin wallet to user wallet
+
+                        switch (rewardMap.get(squad.rank)) {
+                          case (?reward) {
+                            let transfer = await transferFromAdmin(userId, reward);
+                            switch (transfer) {
+                              case (#Ok(_)) {
+                                var tempTrans : Transaction = {
+                                  user = userId;
+                                  from = adminPrincipal;
+                                  to = userId;
+                                  amount = reward;
+                                  created_at_time = getTime();
+                                  contestId = contestId;
+                                  transaction_type = #receive;
+                                  title = "Contest Reward";
+                                };
+                                let _ = pIncreaseRewardsWon({
+                                  id = Principal.toText(userId);
+                                  assetsVal = ?reward;
+                                });
+
+                                // Add transaction
+                                let _res2 = transactionCanister.addTransaction(tempTrans, ?Nat.toText(particpantIndex));
+                              };
+                              case (#Err(error)) {
+                                return #err(error);
+                              };
+                            };
+                          };
+                          case (null) {};
+                        };
+                        // Change participant status to rewarded
+                        let _newSquad = participantStorage.replace(key, { participant with isRewarded = true });
+                      };
+                      case (null) {
+                        Debug.print(debug_show ("transaction not found", participant.transactionId, matchId));
+                        return #err(#GenericError { error_code = 0; message = "Transaction not found" });
+                      };
+                    };
+                  };
+                };
+              };
+            };
+            let _newContest = contestStorage.replace(contestId, { contest with isDistributed = true });
+            return #ok("Done");
+          };
+        };
+
+      };
+
+    };
+  };
+    public shared ({ caller }) func nDistributeRewards(matchId : Key, contestId : Key) : async ReturnAddParticipant {
+    onlyAdmin(caller);
+    Debug.print(debug_show ("we started distribution"));
+    let maybeMatch = matchStorage.get(matchId);
+    switch (maybeMatch) {
+      case (null) {
+        return #err(#GenericError { error_code = 0; message = "Match not found" });
+      };
+      case (?match) {
+        if (isInFuture(match.time)) return #err(#GenericError { error_code = 0; message = "Match not finished" });
+        if (match.status != Types.MatchStatuses.finished) {
+          return #err(#GenericError { error_code = 0; message = "Match not finished" });
+        };
+        let maybeContest = contestStorage.get(contestId);
+        switch (maybeContest) {
+          case (null) {
+            return #err(#GenericError { error_code = 0; message = "Contest not found" });
+          };
+          case (?contest) {
+            if (contest.isDistributed) return #err(#GenericError { error_code = 0; message = "Already distributed" });
+            if (contest.entryFee == 0) return #err(#GenericError { error_code = 0; message = "Error while distribution" });
+            // Initiate canister actor to call methods
+            let transactionCanister = actor (init.transactionCanisterId) : actor {
+              getAllTransactions : (Types.GetAllTransactionProps) -> async Types.ReturnTransactions;
+              addTransaction : (Transaction, ?Text) -> async Result.Result<(Text), (Text, Bool)>;
+            };
+            let limit = 10;
+            var page = 0;
+            // Get all the transactions related to this contest and store them in a hashmap.
+            let initialTransactions = await transactionCanister.getAllTransactions({
+              page;
+              limit;
+              userId = null;
+              contestId = ?contestId;
+            });
+            let transactionMap = Map.fromIter<Key, Transaction>(initialTransactions.transaction.vals(), 0, Text.equal, Text.hash);
+            while (transactionMap.size() < initialTransactions.total) {
+              let newTransactions = await transactionCanister.getAllTransactions({
+                page;
+                limit;
+                userId = null;
+                contestId = ?contestId;
+              });
+              for ((key, transaction) in newTransactions.transaction.vals()) {
+                transactionMap.put(key, transaction);
+              };
+              if (transactionMap.size() < initialTransactions.total) page += 1;
+            };
+
+            //
+            Debug.print(debug_show ("we got soo close though!!!", contest.slotsUsed, contest.entryFee));
+            let rewardMap = getRewardMap({
+              slotsUsed = contest.slotsUsed;
+              entryFee = contest.entryFee;
+            });
+            Debug.print(debug_show ("we did itttttt!!!", Iter.toArray(rewardMap.entries())));
+
+  
+            // check all the participant of this contest and get squad and reward them
+            var particpantIndex = 0;
+            label participantLoop for ((key, participant) in participantStorage.entries()) {
+              particpantIndex += 1;
+              if (participant.contestId == contestId) {
+                if (participant.isRewarded) return #err(#GenericError { error_code = 0; message = "Already rewarded participant" });
+                let userId = Principal.fromText(participant.userId);
+                let maybeSquad = playerSquadStorage.get(participant.squadId);
+                switch (maybeSquad) {
+                  case (null) {
+                    Debug.print(debug_show ("Squad not found", { matchId; squadId = participant.squadId }));
+                    return #err(#GenericError { error_code = 0; message = "Squad not found" });
+                  };
+                  case (?squad) {
+
+                    let maybeTransaction = transactionMap.get(participant.transactionId);
+                    switch (maybeTransaction) {
+                      case (?transaction) {
+                        // If amount in transaction and the fee of contest do not match return error
+                        if (transaction.amount != contest.entryFee) {
+                          Debug.print(debug_show ("Amount Difference", participant.transactionId, matchId, { amount = transaction.amount; fee = contest.entryFee }));
+                          return #err(#GenericError { error_code = 0; message = "Amount Difference" });
+                        };
+
+                        // Give reward from admin wallet to user wallet
+
+                        switch (rewardMap.get(participant.rank)) {
+                          case (?reward) {
+                            let transfer = await transferFromAdmin(userId, reward);
+                            switch (transfer) {
+                              case (#Ok(_)) {
+                                var tempTrans : Transaction = {
+                                  user = userId;
+                                  from = adminPrincipal;
+                                  to = userId;
+                                  amount = reward;
+                                  created_at_time = getTime();
+                                  contestId = contestId;
+                                  transaction_type = #receive;
+                                  title = "Contest Reward";
+                                };
+                                let _ = pIncreaseRewardsWon({
+                                  id = Principal.toText(userId);
+                                  assetsVal = ?reward;
+                                });
+
+                                // Add transaction
+                                let _res2 = transactionCanister.addTransaction(tempTrans, ?Nat.toText(particpantIndex));
+
+                               
+                              };
+                              case (#Err(error)) {
+                                return #err(error);
+                              };
+                            };
+                          };
+                          case (null) {};
+                        };
+                        // Change participant status to rewarded
+                        let _newSquad = participantStorage.replace(key, { participant with isRewarded = true });
+                      };
+                      case (null) {
+                        Debug.print(debug_show ("transaction not found", participant.transactionId, matchId));
+                        return #err(#GenericError { error_code = 0; message = "Transaction not found" });
+                      };
+                    };
+                  };
+                };
+              };
+            };
+            let _newContest = contestStorage.replace(contestId, { contest with isDistributed = true });
+            return #ok("Done");
+          };
+        };
+
+      };
+
+    };
+  };
+
+  // Ledger methods
+  private func transferToAdmin(user : Principal, amount : Nat) : async TransferFromResult {
+    let LEDGER = actor (init.ledgerCanisterId) : actor {
+      icrc2_transfer_from : (TransferFromArgs) -> async (TransferFromResult);
+    };
+    // let userPrincipal = Principal.fromText(userId);
+    let adminPrincipal = Principal.fromText(Types.MASTER_WALLET);
+    let result = await LEDGER.icrc2_transfer_from({
+      amount = amount;
+      created_at_time = null;
+      fee = null;
+      from = { owner = user; subaccount = null };
+      memo = null;
+      spender_subaccount = null;
+      to = { owner = adminPrincipal; subaccount = null };
+    });
+    return result;
+  };
+  // Ledger methods
+  private func transferFromAdmin(user : Principal, amount : Nat) : async TransferFromResult {
+    let LEDGER = actor (init.ledgerCanisterId) : actor {
+      icrc2_transfer_from : (TransferFromArgs) -> async (TransferFromResult);
+    };
+    // let userPrincipal = Principal.fromText(userId);
+    let adminPrincipal = Principal.fromText(Types.ADMIN_WALLET);
+    let result = await LEDGER.icrc2_transfer_from({
+      amount = amount;
+      created_at_time = null;
+      fee = null;
+      from = { owner = adminPrincipal; subaccount = null };
+      memo = null;
+      spender_subaccount = null;
+      to = { owner = user; subaccount = null };
+    });
+    return result;
+  };
+  // Ledger methods
+  private func transferICPFromAdmin(user : Principal, amount : Nat) : async TransferFromResult {
+    let LEDGER = actor (Types.ICP_LEDGER_CANISTER_ID) : actor {
+      icrc2_transfer_from : (TransferFromArgs) -> async (TransferFromResult);
+    };
+    // let userPrincipal = Principal.fromText(userId);
+    let adminPrincipal = Principal.fromText(Types.MASTER_WALLET);
+    let result = await LEDGER.icrc2_transfer_from({
+      amount = amount;
+      created_at_time = null;
+      fee = null;
+      from = { owner = adminPrincipal; subaccount = null };
+      memo = null;
+      spender_subaccount = null;
+      to = { owner = user; subaccount = null };
+    });
+    return result;
+  };
+  private func getTierBasedUsers(n : Nat) : (Nat, Nat) {
+    if (n < 7) {
+      return (1, 1);
+    };
+    let allTiers = n / 7;
+    let remainder = n % 7;
+    let lastTier = allTiers + remainder;
+    return (allTiers, lastTier);
+  };
+  private func getRewardMap({ entryFee; slotsUsed } : { entryFee : Nat; slotsUsed : Nat }) : Map.HashMap<Nat, Nat> {
+    var rewardPercentages = getRewardPercentages();
+    let totalPrizePool = entryFee * slotsUsed;
+
+    var platformPercentage = rewardPercentages.platformPercentage;
+    var rewardableUsersPercentage = rewardPercentages.rewardableUsersPercentage;
+    let rewardablePrizePool = (totalPrizePool * platformPercentage) / 100;
+    let leastRewardableUsersForCompletedDistribution = 10;
+    var strategy = Types.DistributionAlgo.completedTierWeighted;
+    // var rewardableUsersInt = (slotsUsed * rewardableUsersPercentage) / 100;
+    var rewardableUsersInt = slotsUsed;
+    if (slotsUsed > 3) {
+      rewardableUsersInt := (slotsUsed * rewardableUsersPercentage) / 100;
+    };
+    let rewardableUsers = Int.abs(rewardableUsersInt);
+    if (rewardableUsers < leastRewardableUsersForCompletedDistribution) {
+      strategy := Types.DistributionAlgo.reducededTierWeighted;
+    };
+    if (strategy == Types.DistributionAlgo.completedTierWeighted) {
+      let sevenTierUsers : Nat = (rewardableUsers - 3);
+      var rewardPerTier = rewardablePrizePool / 10;
+
+      let (allTierUsers, lastTierUsers) = getTierBasedUsers(sevenTierUsers);
+      let userTierRewardMap = Map.HashMap<Nat, { from : Nat; to : Nat; amount : ?Nat }>(0, Nat.equal, Hash.hash);
+      var currentUser = 1;
+      for (i in Iter.range(1, 10)) {
+        if (i <= 3) {
+          userTierRewardMap.put(i, { from = i; to = i; amount = null });
+          currentUser += 1;
+        } else if (i == 10) {
+          let from = currentUser;
+          let to = Int.abs(from + lastTierUsers - 1);
+          userTierRewardMap.put(i, { from; to; amount = null });
+          currentUser := to + 1;
+        } else {
+          let from = currentUser;
+          let to = from + allTierUsers - 1;
+          userTierRewardMap.put(i, { from; to; amount = null });
+          currentUser := to + 1;
+        };
+      };
+      var i = 1;
+      i := 10;
+      var residualValue = 0;
+      while (i > 0) {
+        if (i == 3 and allTierUsers > 1) {
+          var oldValue = userTierRewardMap.get(i);
+          switch (oldValue) {
+            case (?isValue) {
+              var rewardForTier = Int.abs((rewardPerTier + residualValue) / 3);
+              residualValue := rewardForTier * 2;
+              var range = Int.abs(isValue.to - isValue.from) +1;
+              var rewardPerUser : Nat = Int.abs(rewardForTier / range);
+              let _ = userTierRewardMap.replace(i, { isValue with amount = ?rewardPerUser });
+            };
+            case (null) {};
+          };
+        } else if (i == 1) {
+          var oldValue = userTierRewardMap.get(i);
+          switch (oldValue) {
+            case (?isValue) {
+              var rewardForTier = Int.abs((rewardPerTier + residualValue));
+              residualValue := 0;
+              var range = Int.abs(isValue.to - isValue.from) +1;
+              var rewardPerUser : Nat = Int.abs(rewardForTier / range);
+              let _ = userTierRewardMap.replace(i, { isValue with amount = ?rewardPerUser });
+            };
+            case (null) {};
+          };
+        } else {
+          var oldValue = userTierRewardMap.get(i);
+          switch (oldValue) {
+            case (?isValue) {
+              var rewardForTier = Int.abs((rewardPerTier + residualValue) / 2);
+              residualValue := rewardForTier;
+              var range = Int.abs(isValue.to - isValue.from) +1;
+              var rewardPerUser : Nat = Int.abs(rewardForTier / range);
+              let _ = userTierRewardMap.replace(i, { isValue with amount = ?rewardPerUser });
+            };
+            case (null) {};
+          };
+        };
+        i -= 1;
+      };
+      let rewardMap = Map.HashMap<Nat, Nat>(0, Nat.equal, Hash.hash);
+      for ((key, userReward) in userTierRewardMap.entries()) {
+        for (i in Iter.range(userReward.from, userReward.to)) {
+          switch (userReward.amount) {
+            case (?isAmount) {
+              rewardMap.put(i, isAmount);
+            };
+            case (null) {};
+          };
+        };
+      };
+      return rewardMap;
+      // return ?{
+      //   rewards = Iter.toArray(userTierRewardMap.entries());
+      //   prizePool = rewardablePrizePool;
+      //   RewardPerTier = rewardPerTier;
+      // };
+    } else {
+      var remainingTierUsers : Nat = 0;
+      if (rewardableUsers > 3) {
+        remainingTierUsers := (rewardableUsers - 3);
+      };
+      // let remainingTierUsers : Nat = (rewardableUsers - 3);
+      var tiers = rewardableUsers;
+      var rewardPerTier = rewardablePrizePool / tiers;
+      let (allTierUsers, lastTierUsers) = getTierBasedUsers(remainingTierUsers);
+      let userTierRewardMap = Map.HashMap<Nat, { from : Nat; to : Nat; amount : ?Nat }>(0, Nat.equal, Hash.hash);
+      var currentUser = 1;
+      for (i in Iter.range(1, tiers)) {
+        if (i <= 3) {
+          userTierRewardMap.put(i, { from = i; to = i; amount = null });
+          currentUser += 1;
+        } else if (i == tiers) {
+          let from = currentUser;
+          let to = Int.abs(from + lastTierUsers - 1);
+          userTierRewardMap.put(i, { from; to; amount = null });
+          currentUser := to + 1;
+        } else {
+          let from = currentUser;
+          let to = Int.abs(from + allTierUsers - 1);
+          userTierRewardMap.put(i, { from; to; amount = null });
+          currentUser := to + 1;
+        };
+      };
+      var i = tiers;
+      var residualValue = 0;
+      while (i > 0) {
+        if (i == 3 and allTierUsers > 1) {
+          var oldValue = userTierRewardMap.get(i);
+          switch (oldValue) {
+            case (?isValue) {
+              var rewardForTier = Int.abs((rewardPerTier + residualValue) / 3);
+              residualValue := rewardForTier * 2;
+              var range = Int.abs(isValue.to - isValue.from) +1;
+              var rewardPerUser : Nat = Int.abs(rewardForTier / range);
+              let _ = userTierRewardMap.replace(i, { isValue with amount = ?rewardPerUser });
+            };
+            case (null) {};
+          };
+        } else if (i == 1) {
+          var oldValue = userTierRewardMap.get(i);
+          switch (oldValue) {
+            case (?isValue) {
+              var rewardForTier = Int.abs((rewardPerTier + residualValue));
+              residualValue := 0;
+              var range = Int.abs(isValue.to - isValue.from) +1;
+              var rewardPerUser : Nat = Int.abs(rewardForTier / range);
+              let _ = userTierRewardMap.replace(i, { isValue with amount = ?rewardPerUser });
+            };
+            case (null) {};
+          };
+        } else {
+          var oldValue = userTierRewardMap.get(i);
+          switch (oldValue) {
+            case (?isValue) {
+              var rewardForTier = Int.abs((rewardPerTier + residualValue) / 2);
+              residualValue := rewardForTier;
+              var range = Int.abs(isValue.to - isValue.from) +1;
+              var rewardPerUser : Nat = Int.abs(rewardForTier / range);
+              let _ = userTierRewardMap.replace(i, { isValue with amount = ?rewardPerUser });
+            };
+            case (null) {};
+          };
+        };
+        i -= 1;
+      };
+      let rewardMap = Map.HashMap<Nat, Nat>(0, Nat.equal, Hash.hash);
+      for ((key, userReward) in userTierRewardMap.entries()) {
+        for (i in Iter.range(userReward.from, userReward.to)) {
+          switch (userReward.amount) {
+            case (?isAmount) {
+              rewardMap.put(i, isAmount);
+            };
+            case (null) {};
+          };
+        };
+      };
+      return rewardMap;
+      // return ?{
+      //   rewards = Iter.toArray(userTierRewardMap.entries());
+      //   prizePool = rewardablePrizePool;
+      //   RewardPerTier = rewardPerTier;
+      // };
+    };
+  };
+  private func sortRankMap(a : (Nat, Nat), b : (Nat, Nat)) : Order.Order {
+    let (a1, a2) = a;
+    let (b1, b2) = b;
+    if (a1 < b1) return #less;
+    if (a1 > b1) return #greater;
+    return #equal;
+  };
+  public func getRewardsTable({ entryFee; slotsUsed; props } : { entryFee : Nat; slotsUsed : Nat; props : GetProps }) : async {
+    total : Nat;
+    map : [(Nat, Nat)];
+  } {
+    if (slotsUsed > 1_000_000) {
+      throw Error.reject("Large value for slots used");
+    };
+    var rewardPercentages = getRewardPercentages();
+    let totalPrizePool = entryFee * slotsUsed;
+
+    var platformPercentage = rewardPercentages.platformPercentage;
+    var rewardableUsersPercentage = rewardPercentages.rewardableUsersPercentage;
+    let rewardablePrizePool = (totalPrizePool * platformPercentage) / 100;
+    let leastRewardableUsersForCompletedDistribution = 10;
+    var strategy = Types.DistributionAlgo.completedTierWeighted;
+    // var rewardableUsersInt = (slotsUsed * rewardableUsersPercentage) / 100;
+    var rewardableUsersInt = slotsUsed;
+    if (slotsUsed > 3) {
+      rewardableUsersInt := (slotsUsed * rewardableUsersPercentage) / 100;
+    };
+    let rewardableUsers = Int.abs(rewardableUsersInt);
+    if (rewardableUsers < leastRewardableUsersForCompletedDistribution) {
+      strategy := Types.DistributionAlgo.reducededTierWeighted;
+    };
+    if (strategy == Types.DistributionAlgo.completedTierWeighted) {
+      let sevenTierUsers : Nat = (rewardableUsers - 3);
+      var rewardPerTier = rewardablePrizePool / 10;
+
+      let (allTierUsers, lastTierUsers) = getTierBasedUsers(sevenTierUsers);
+      let userTierRewardMap = Map.HashMap<Nat, { from : Nat; to : Nat; amount : ?Nat }>(0, Nat.equal, Hash.hash);
+      var currentUser = 1;
+      for (i in Iter.range(1, 10)) {
+        if (i <= 3) {
+          userTierRewardMap.put(i, { from = i; to = i; amount = null });
+          currentUser += 1;
+        } else if (i == 10) {
+          let from = currentUser;
+          let to = Int.abs(from + lastTierUsers - 1);
+          userTierRewardMap.put(i, { from; to; amount = null });
+          currentUser := to + 1;
+        } else {
+          let from = currentUser;
+          let to = from + allTierUsers - 1;
+          userTierRewardMap.put(i, { from; to; amount = null });
+          currentUser := to + 1;
+        };
+      };
+      var i = 1;
+      i := 10;
+      var residualValue = 0;
+      while (i > 0) {
+        if (i == 3 and allTierUsers > 1) {
+          var oldValue = userTierRewardMap.get(i);
+          switch (oldValue) {
+            case (?isValue) {
+              var rewardForTier = Int.abs((rewardPerTier + residualValue) / 3);
+              residualValue := rewardForTier * 2;
+              var range = Int.abs(isValue.to - isValue.from) +1;
+              var rewardPerUser : Nat = Int.abs(rewardForTier / range);
+              let _ = userTierRewardMap.replace(i, { isValue with amount = ?rewardPerUser });
+            };
+            case (null) {};
+          };
+        } else if (i == 1) {
+          var oldValue = userTierRewardMap.get(i);
+          switch (oldValue) {
+            case (?isValue) {
+              var rewardForTier = Int.abs((rewardPerTier + residualValue));
+              residualValue := 0;
+              var range = Int.abs(isValue.to - isValue.from) +1;
+              var rewardPerUser : Nat = Int.abs(rewardForTier / range);
+              let _ = userTierRewardMap.replace(i, { isValue with amount = ?rewardPerUser });
+            };
+            case (null) {};
+          };
+        } else {
+          var oldValue = userTierRewardMap.get(i);
+          switch (oldValue) {
+            case (?isValue) {
+              var rewardForTier = Int.abs((rewardPerTier + residualValue) / 2);
+              residualValue := rewardForTier;
+              var range = Int.abs(isValue.to - isValue.from) +1;
+              var rewardPerUser : Nat = Int.abs(rewardForTier / range);
+              let _ = userTierRewardMap.replace(i, { isValue with amount = ?rewardPerUser });
+            };
+            case (null) {};
+          };
+        };
+        i -= 1;
+      };
+      let rewardMap = Map.HashMap<Nat, Nat>(0, Nat.equal, Hash.hash);
+
+      for ((key, userReward) in userTierRewardMap.entries()) {
+        for (i in Iter.range(userReward.from, userReward.to)) {
+          switch (userReward.amount) {
+            case (?isAmount) {
+              if (search({ compare = Nat.toText(i); s = (props.search) })) rewardMap.put(i, isAmount);
+            };
+            case (null) {};
+          };
+        };
+      };
+      let arr : [(Nat, Nat)] = Iter.toArray(rewardMap.entries());
+      let sortedArray = Array.sort(arr, sortRankMap);
+      let limit = getLimit(props.limit);
+      let startIndex : Nat = props.page * limit;
+      let total = sortedArray.size();
+      if (startIndex >= total) {
+        return { total = total; map = [] };
+      };
+      var endIndex : Nat = startIndex + limit;
+      if (endIndex > total) {
+        endIndex := total;
+      };
+      return {
+        total;
+        map = Iter.toArray(Array.slice((sortedArray), startIndex, endIndex));
+      };
+      // return ?{
+      //   rewards = Iter.toArray(userTierRewardMap.entries());
+      //   prizePool = rewardablePrizePool;
+      //   RewardPerTier = rewardPerTier;
+      // };
+    } else {
+      var remainingTierUsers : Nat = 0;
+      if (rewardableUsers > 3) {
+        remainingTierUsers := (rewardableUsers - 3);
+      };
+      // let remainingTierUsers : Nat = (rewardableUsers - 3);
+      var tiers = rewardableUsers;
+      var rewardPerTier = rewardablePrizePool / tiers;
+      let (allTierUsers, lastTierUsers) = getTierBasedUsers(remainingTierUsers);
+      let userTierRewardMap = Map.HashMap<Nat, { from : Nat; to : Nat; amount : ?Nat }>(0, Nat.equal, Hash.hash);
+      var currentUser = 1;
+      for (i in Iter.range(1, tiers)) {
+        if (i <= 3) {
+          userTierRewardMap.put(i, { from = i; to = i; amount = null });
+          currentUser += 1;
+        } else if (i == tiers) {
+          let from = currentUser;
+          let to = Int.abs(from + lastTierUsers - 1);
+          userTierRewardMap.put(i, { from; to; amount = null });
+          currentUser := to + 1;
+        } else {
+          let from = currentUser;
+          let to = Int.abs(from + allTierUsers - 1);
+          userTierRewardMap.put(i, { from; to; amount = null });
+          currentUser := to + 1;
+        };
+      };
+      var i = tiers;
+      var residualValue = 0;
+      while (i > 0) {
+        if (i == 3 and allTierUsers > 1) {
+          var oldValue = userTierRewardMap.get(i);
+          switch (oldValue) {
+            case (?isValue) {
+              var rewardForTier = Int.abs((rewardPerTier + residualValue) / 3);
+              residualValue := rewardForTier * 2;
+              var range = Int.abs(isValue.to - isValue.from) +1;
+              var rewardPerUser : Nat = Int.abs(rewardForTier / range);
+              let _ = userTierRewardMap.replace(i, { isValue with amount = ?rewardPerUser });
+            };
+            case (null) {};
+          };
+        } else if (i == 1) {
+          var oldValue = userTierRewardMap.get(i);
+          switch (oldValue) {
+            case (?isValue) {
+              var rewardForTier = Int.abs((rewardPerTier + residualValue));
+              residualValue := 0;
+              var range = Int.abs(isValue.to - isValue.from) +1;
+              var rewardPerUser : Nat = Int.abs(rewardForTier / range);
+              let _ = userTierRewardMap.replace(i, { isValue with amount = ?rewardPerUser });
+            };
+            case (null) {};
+          };
+        } else {
+          var oldValue = userTierRewardMap.get(i);
+          switch (oldValue) {
+            case (?isValue) {
+              var rewardForTier = Int.abs((rewardPerTier + residualValue) / 2);
+              residualValue := rewardForTier;
+              var range = Int.abs(isValue.to - isValue.from) +1;
+              var rewardPerUser : Nat = Int.abs(rewardForTier / range);
+              let _ = userTierRewardMap.replace(i, { isValue with amount = ?rewardPerUser });
+            };
+            case (null) {};
+          };
+        };
+        i -= 1;
+      };
+      let rewardMap = Map.HashMap<Nat, Nat>(0, Nat.equal, Hash.hash);
+      for ((key, userReward) in userTierRewardMap.entries()) {
+        for (i in Iter.range(userReward.from, userReward.to)) {
+          switch (userReward.amount) {
+            case (?isAmount) {
+              if (search({ compare = Nat.toText(i); s = (props.search) })) rewardMap.put(i, isAmount);
+            };
+            case (null) {};
+          };
+        };
+      };
+      let arr : [(Nat, Nat)] = Iter.toArray(rewardMap.entries());
+      let sortedArray = Array.sort(arr, sortRankMap);
+      let limit = getLimit(props.limit);
+      let startIndex : Nat = props.page * limit;
+      let total = sortedArray.size();
+      if (startIndex >= total) {
+        return { total = total; map = [] };
+      };
+      var endIndex : Nat = startIndex + limit;
+      if (endIndex > total) {
+        endIndex := total;
+      };
+      return {
+        total;
+        map = Iter.toArray(Array.slice((sortedArray), startIndex, endIndex));
+      };
+    };
+  };
+private func isUserJoinedTheMatch(contestId : Key, matchId : Key, userId : Key) : Result.Result<Text, Text> {
+    var isJoined : Bool = false;
+    var isWinner : Bool = false;
+    label squadLoop for ((key, squad) in playerSquadStorage.entries()) {
+      if (squad.matchId == matchId and squad.userId == userId) {
+
+        let maybeParticipant = participantStorage.get(key # contestId);
+        switch (maybeParticipant) {
+          case (?participant) {
+            isJoined := true;
+            if (participant.rank == 1) {
+              isWinner := true;
+
+              break squadLoop;
+            };
+          };
+          case (null) {
+
+          };
+        };
+
+      };
+
+    };
+
+    if (not isJoined) {
+      return #err("User has not joined the Contest.");
+    };
+    if (not isWinner) {
+      return #err("User is not winner of Contest.");
+
+    };
+    return #ok("User has joined the contest");
+
+  };
+
+  
+  // randome reward send
+   public shared ({ caller }) func manuallyDirectSendReward(userPrincipal : Principal,amount:Nat) : async Result.Result<Text, Text> {
+
+    onlyAdmin(caller);
+     let userId = Principal.toText(userPrincipal);
+
+    let user = userStorage.get(userId);
+
+    switch (user) {
+      case (null) {
+        return #err("User not found.");
+      };
+      case (?isUser) {
+                      
+                    let newReward : Reward = {
+                      contestId = "";
+                      userId = userId;
+                      amount = amount;
+                      transactionId = null;
+                      creation_time = getTime();
+                      isClaimed = false;
+                      claim_time = null;
+                    };
+                    rewardStorage.put(Types.generateNewRemoteObjectId(), newReward);
+                    return #ok("Reward sended to user.")
+      };
+    };
+  };
+      //revert reward of user 
+    public shared ({ caller }) func deleteRewardOfUser(userPrincipal : Principal,rewardId:Key) : async Result.Result<Text, Text> {
+
+    onlyAdmin(caller);
+     let userId = Principal.toText(userPrincipal);
+
+    let reward = rewardStorage.get(rewardId);
+
+    switch (reward) {
+      case (null) {
+        return #err("Reward not found.");
+      };
+      case (?isReward) {
+        if(isReward.isClaimed){
+           return #err("User has claimed the reward.");
+        }else{         
+              
+          rewardStorage.delete(rewardId);
+          return #ok("Reward deleted successfully.");
+
+      };
+      };
+    };
+  };
+public query ({caller}) func getRewardList(props : GetProps,claimed:?Bool) : async ReturnRewards {
+   onlyAdmin(caller);
+
+    var limit = getLimit(props.limit);
+    let refinedRewards = Buffer.Buffer<ReturnReward>(rewardStorage.size());
+  for ((key, reward) in rewardStorage.entries()) {
+     switch(claimed){
+      case(null){
+        refinedRewards.add({reward with id=key})
+
+      };
+      case(?isClaimed){
+        if(isClaimed and reward.isClaimed ){
+        refinedRewards.add({reward with id=key})
+
+        };
+     if(not isClaimed and not reward.isClaimed ){
+        refinedRewards.add({reward with id=key})
+
+        };
+
+
+
+      };
+     };
+  };
+    let usersRewards = Buffer.toArray(refinedRewards);
+
+
+    let compareFunc = func((a : ReturnReward), (b : ReturnReward)) : Order.Order {
+      if (a.creation_time < b.creation_time) {
+      return #greater;
+      } else if (a.creation_time > b.creation_time) {
+         return #less;
+      } else {
+        return #equal;
+      };
+    };
+    let sortedRewards = Array.sort(usersRewards, compareFunc);
+
+    let totalRewards = Array.size(sortedRewards);
+    let startIndex : Nat = props.page * limit;
+    if (startIndex >= totalRewards) {
+      return { total = totalRewards; rewards = [] };
+    };
+
+    var endIndex : Nat = startIndex + limit;
+    if (endIndex > totalRewards) {
+      endIndex := totalRewards;
+    };
+
+    let slicedRewards = Iter.toArray(Array.slice<ReturnReward>(sortedRewards, startIndex, endIndex));
+    return {
+      total = totalRewards;
+      rewards = slicedRewards;
+    };
+};
 
   system func preupgrade() {
     Debug.print("Starting pre-upgrade hook...");
@@ -3711,6 +5183,7 @@ var isContestCreated:Bool=false;
     stable_userStats := Iter.toArray(userStatsStorage.entries());
     stable_playersStats := Iter.toArray(playersStatsStorage.entries());
     stable_playerSquads := Iter.toArray(playerSquadStorage.entries());
+    stable_rewards := Iter.toArray(rewardStorage.entries());
 
 
     Debug.print("pre-upgrade finished.");
@@ -3731,6 +5204,7 @@ var isContestCreated:Bool=false;
     playersStatsStorage := Map.fromIter<Key, PlayerStats>(stable_playersStats.vals(), stable_playersStats.size(), Text.equal, Text.hash);
     playerSquadStorage := Map.fromIter<Key, PlayerSquad>(stable_playerSquads.vals(), stable_playerSquads.size(), Text.equal, Text.hash);
 
+    rewardStorage := Map.fromIter<Key, Reward>(stable_rewards.vals(), stable_rewards.size(), Text.equal, Text.hash);
 
     stable_users := [];
     stable_players := [];
@@ -3744,6 +5218,7 @@ var isContestCreated:Bool=false;
     stable_userStats:=[];
     stable_playersStats:=[];
     stable_playerSquads:=[];
+    stable_rewards:=[];
     Debug.print("post-upgrade finished.");
   };
 };

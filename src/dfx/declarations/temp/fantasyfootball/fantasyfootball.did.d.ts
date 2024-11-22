@@ -19,50 +19,72 @@ export interface AdminSetting__1 {
   'creation_date' : bigint,
 }
 export type AdminSettings = Array<[Key__1, AdminSetting]>;
+export interface CanisterHttpResponsePayload {
+  'status' : bigint,
+  'body' : Uint8Array | number[],
+  'headers' : Array<HttpHeader>,
+}
 export interface Cards {
   'redcards' : bigint,
   'yellowredcards' : bigint,
   'yellowcards' : bigint,
 }
 export interface Contest {
+  'paymentMethod' : Key__1,
+  'isDistributed' : boolean,
   'teamsPerUser' : bigint,
   'name' : string,
   'creatorUserId' : Key__1,
   'winner' : [] | [Key__1],
   'minCap' : bigint,
   'slots' : bigint,
+  'rewardDistribution' : Array<ContestRewardDistribution>,
   'matchId' : Key__1,
   'slotsUsed' : bigint,
   'maxCap' : bigint,
+  'entryFee' : bigint,
   'providerId' : MonkeyId,
   'rules' : string,
 }
 export type ContestArray = Array<DetailedContest>;
+export interface ContestRewardDistribution {
+  'to' : bigint,
+  'from' : bigint,
+  'amount' : bigint,
+}
 export interface Contest__1 {
+  'paymentMethod' : Key__1,
+  'isDistributed' : boolean,
   'teamsPerUser' : bigint,
   'name' : string,
   'creatorUserId' : Key__1,
   'winner' : [] | [Key__1],
   'minCap' : bigint,
   'slots' : bigint,
+  'rewardDistribution' : Array<ContestRewardDistribution>,
   'matchId' : Key__1,
   'slotsUsed' : bigint,
   'maxCap' : bigint,
+  'entryFee' : bigint,
   'providerId' : MonkeyId,
   'rules' : string,
 }
 export type Contests = Array<[Key__1, Contest__1]>;
 export interface DetailedContest {
+  'paymentMethod' : Key__1,
+  'isDistributed' : boolean,
   'teamsPerUser' : bigint,
   'name' : string,
   'creatorUserId' : Key__1,
   'winner' : [] | [Key__1],
   'minCap' : bigint,
   'slots' : bigint,
+  'rewardDistribution' : Array<ContestRewardDistribution>,
   'teamsCreatedOnContest' : bigint,
   'matchId' : Key__1,
   'slotsUsed' : bigint,
   'maxCap' : bigint,
+  'entryFee' : bigint,
   'providerId' : MonkeyId,
   'rules' : string,
   'teamsJoinedContest' : bigint,
@@ -90,6 +112,159 @@ export interface Dribbles {
   'success' : bigint,
 }
 export interface Duels { 'won' : bigint, 'total' : bigint }
+export interface FantasyFootball {
+  '_updatePlayersStats' : ActorMethod<[Array<IPlayerStats>], Array<boolean>>,
+  'addAdminSetting' : ActorMethod<[IAdminSetting], boolean>,
+  'addContest' : ActorMethod<[IContest], Result_2>,
+  'addDefaultContestsOnMatches' : ActorMethod<[], Result_2>,
+  'addLeague' : ActorMethod<
+    [Tournament__1, Season__1, Array<ITeamWithPlayers>],
+    undefined
+  >,
+  'addMatch' : ActorMethod<[InputMatch], Result_6>,
+  'addMatchToMvpsAdmin' : ActorMethod<[Key], undefined>,
+  'addMatches' : ActorMethod<
+    [Array<InputMatch>],
+    { 'err' : Array<[boolean, string]>, 'succ' : Array<[boolean, Match]> }
+  >,
+  'addNewMatches' : ActorMethod<
+    [Array<InputMatch>, Key],
+    { 'err' : Array<[boolean, string]>, 'succ' : Array<[boolean, Match]> }
+  >,
+  'addParticipant' : ActorMethod<[Key, Key, bigint], ReturnAddParticipant>,
+  'addPlayer' : ActorMethod<[Player__1], undefined>,
+  'addPlayerSquad' : ActorMethod<[IPlayerSquad], Result_2>,
+  'addPlayerStats' : ActorMethod<[IPlayerStats], boolean>,
+  'addUser' : ActorMethod<[IUser], Result>,
+  'claimRewards' : ActorMethod<[], ReturnAddParticipant>,
+  'deleteAdminSetting' : ActorMethod<[string], [] | [AdminSetting__1]>,
+  'deleteRewardOfUser' : ActorMethod<[Principal, Key], Result_2>,
+  'distributeRewards' : ActorMethod<[Key, Key], ReturnAddParticipant>,
+  'finishMatch' : ActorMethod<[MatchScore], Result_2>,
+  'getAdminRewards' : ActorMethod<[Key], bigint>,
+  'getAdminSettings' : ActorMethod<[GetProps], ReturnAdminSettings>,
+  'getAdmins' : ActorMethod<[], Users>,
+  'getAllParticipants' : ActorMethod<[], Participants>,
+  'getAssetsOfUser' : ActorMethod<[string], UserAssets__1>,
+  'getBudget' : ActorMethod<[], [] | [string]>,
+  'getContest' : ActorMethod<[Key], [] | [Contest]>,
+  'getContestNames' : ActorMethod<[Array<Key>], Array<[string, string]>>,
+  'getContestWinnerOfMatch' : ActorMethod<[Key], [] | [[Key, User]]>,
+  'getContestWithMatch' : ActorMethod<
+    [Key],
+    [] | [{ 'match' : [] | [RefinedMatch], 'contest' : Contest }]
+  >,
+  'getContestsByMatchId' : ActorMethod<[Key], Contests>,
+  'getContestsWinnerUserByMatchId' : ActorMethod<[Key], [] | [[Key, User]]>,
+  'getDetailedMatchesContests' : ActorMethod<
+    [GetProps],
+    ReturnDetailedMatchContests
+  >,
+  'getFilterdContests' : ActorMethod<[GetProps], ReturnContests>,
+  'getFilterdRawPlayerSquadsByMatch' : ActorMethod<
+    [[] | [Key], [] | [Key], GetProps],
+    ReturnTeams
+  >,
+  'getListPlayerSquadsByMatch' : ActorMethod<
+    [Key, [] | [Key]],
+    ListPlayerSquads
+  >,
+  'getMVPSMatches' : ActorMethod<[GetProps], RMVPSTournamentMatchsList>,
+  'getMVPSOfmatch' : ActorMethod<[Key], [] | [[Key, MVPSPlayers]]>,
+  'getMatch' : ActorMethod<[Key], [] | [RefinedMatch]>,
+  'getMatches' : ActorMethod<[GetProps, [] | [bigint]], ReturnMatches>,
+  'getMatchesByTeamId' : ActorMethod<[Key], Matches>,
+  'getMatchesWithTournamentId' : ActorMethod<
+    [GetProps, [] | [bigint], bigint, [] | [Key]],
+    ReturnMatches
+  >,
+  'getPaginatedContestsByMatchId' : ActorMethod<
+    [Key, GetProps],
+    ReturnPagContests
+  >,
+  'getParticipants' : ActorMethod<[Key], Participants>,
+  'getPlayer' : ActorMethod<[Key], [] | [Player__1]>,
+  'getPlayerPoints' : ActorMethod<[Key, Key], [] | [RPoints__1]>,
+  'getPlayerSquad' : ActorMethod<[Key], [] | [RankPlayerSquad]>,
+  'getPlayerSquadsByMatch' : ActorMethod<[Key], RefinedPlayerSquads>,
+  'getPlayerStats' : ActorMethod<[Key, Key], [] | [PlayerStats]>,
+  'getPlayerStatsByMatchId' : ActorMethod<
+    [Key],
+    Array<[Key, PlayerStatsWithName]>
+  >,
+  'getPlayersByPosition' : ActorMethod<[Position__1], Result_5>,
+  'getPlayersByTeamId' : ActorMethod<[Key], Result_4>,
+  'getPlayersByTeamIds' : ActorMethod<[Array<Key>], Result_4>,
+  'getRawPlayerSquadsByMatch' : ActorMethod<
+    [[] | [Key], [] | [Key]],
+    PlayerSquads
+  >,
+  'getRewardList' : ActorMethod<[GetProps, [] | [boolean]], ReturnRewards>,
+  'getRewards' : ActorMethod<[], bigint>,
+  'getRewardsTable' : ActorMethod<
+    [{ 'slotsUsed' : bigint, 'entryFee' : bigint, 'props' : GetProps }],
+    { 'map' : Array<[bigint, bigint]>, 'total' : bigint }
+  >,
+  'getSeasonByProvider' : ActorMethod<[MonkeyId, MonkeyId], [] | [ISeason]>,
+  'getSeasons' : ActorMethod<[Key], Seasons>,
+  'getSquadWithPoints' : ActorMethod<[Key], [] | [RefinedPlayerSquad]>,
+  'getStatsSystem' : ActorMethod<[], Points>,
+  'getTeamById' : ActorMethod<[Key], [] | [Team__1]>,
+  'getTeamByName' : ActorMethod<[string], [] | [[Key, Team__1]]>,
+  'getTeamsByTournament' : ActorMethod<[Key], Result_3>,
+  'getTopPlayers' : ActorMethod<
+    [{ 'page' : bigint, 'search' : string, 'limit' : bigint }],
+    { 'total' : bigint, 'players' : TopPlayers }
+  >,
+  'getTournaments' : ActorMethod<[], Tournaments>,
+  'getTournamentsN' : ActorMethod<[GetProps], ReturnTournaments>,
+  'getUpcomingMatches' : ActorMethod<[GetProps, bigint], ReturnMatches>,
+  'getUser' : ActorMethod<[[] | [string]], [] | [User]>,
+  'getUserRank' : ActorMethod<[Key], [] | [MeAsTopPlayer]>,
+  'increaseContestWon' : ActorMethod<
+    [{ 'id' : Key, 'assetsVal' : [] | [bigint] }],
+    boolean
+  >,
+  'increaseParticipant' : ActorMethod<
+    [{ 'id' : Key, 'assetsVal' : [] | [bigint] }],
+    boolean
+  >,
+  'increaseRewardsWon' : ActorMethod<
+    [{ 'id' : Key, 'assetsVal' : [] | [bigint] }],
+    boolean
+  >,
+  'increaseTotalEarning' : ActorMethod<
+    [{ 'id' : Key, 'assetsVal' : [] | [bigint] }],
+    boolean
+  >,
+  'makeAdmin' : ActorMethod<[Principal], boolean>,
+  'manuallyDirectSendReward' : ActorMethod<[Principal, bigint], Result_2>,
+  'nDistributeRewards' : ActorMethod<[Key, Key], ReturnAddParticipant>,
+  'nGetSquadRanking' : ActorMethod<[Key, GetProps], ReturnRankings>,
+  'postponeMatch' : ActorMethod<[Key, MatchStatus], boolean>,
+  'reScheduleMatch' : ActorMethod<[Key, MatchStatus], boolean>,
+  'removeContest' : ActorMethod<[Key], [] | [Contest]>,
+  'testingClaimTokens' : ActorMethod<[], TransferFromResult>,
+  'testingGetRewardPercentages' : ActorMethod<
+    [],
+    { 'platformPercentage' : bigint, 'rewardableUsersPercentage' : bigint }
+  >,
+  'testingStartMatch' : ActorMethod<[Key, bigint], [] | [Match]>,
+  'transform' : ActorMethod<[TransformArgs], CanisterHttpResponsePayload>,
+  'updateAdminSetting' : ActorMethod<[IAdminSetting], boolean>,
+  'updateContest' : ActorMethod<[IContest, Key], Result_2>,
+  'updateMatchScore' : ActorMethod<[MatchScore], boolean>,
+  'updateMatchStatus' : ActorMethod<[MatchStatus, Key], boolean>,
+  'updatePlayerPrices' : ActorMethod<
+    [Array<{ 'id' : Key, 'fantasyPrice' : bigint }>],
+    boolean
+  >,
+  'updatePlayerSquad' : ActorMethod<[Key, IPlayerSquad], Result_1>,
+  'updatePlayersStats' : ActorMethod<[Array<IPlayerStats>], Array<boolean>>,
+  'updateRanking' : ActorMethod<[Key], undefined>,
+  'updateStatsSysteam' : ActorMethod<[Points], boolean>,
+  'updateUser' : ActorMethod<[IUser], Result>,
+}
 export interface Fouls { 'committed' : bigint, 'drawn' : bigint }
 export interface GetProps {
   'status' : string,
@@ -104,18 +279,28 @@ export interface Goals {
   'owngoals' : bigint,
   'team_conceded' : bigint,
 }
+export interface HttpHeader { 'value' : string, 'name' : string }
+export interface HttpResponsePayload {
+  'status' : bigint,
+  'body' : Uint8Array | number[],
+  'headers' : Array<HttpHeader>,
+}
 export interface IAdminSetting {
   'settingValue' : string,
   'settingName' : string,
   'settingType' : string,
 }
 export interface IContest {
+  'paymentMethod' : Key__1,
+  'isDistributed' : boolean,
   'teamsPerUser' : bigint,
   'name' : string,
   'minCap' : bigint,
   'slots' : bigint,
+  'rewardDistribution' : Array<ContestRewardDistribution>,
   'matchId' : Key__1,
   'maxCap' : bigint,
+  'entryFee' : bigint,
   'providerId' : MonkeyId,
   'rules' : string,
 }
@@ -171,6 +356,9 @@ export interface ITeamWithPlayers {
   'providerId' : MonkeyId,
 }
 export interface IUser { 'name' : string, 'email' : string }
+export type Icrc1BlockIndex = bigint;
+export type Icrc1Timestamp = bigint;
+export type Icrc1Tokens = bigint;
 export interface InputMatch {
   'id' : string,
   'status' : MatchStatus__1,
@@ -221,6 +409,8 @@ export interface Match {
   'location' : string,
 }
 export interface MatchContest {
+  'paymentMethod' : Key__1,
+  'isDistributed' : boolean,
   'teamsPerUser' : bigint,
   'name' : string,
   'awayTeamName' : string,
@@ -228,12 +418,14 @@ export interface MatchContest {
   'winner' : [] | [Key__1],
   'minCap' : bigint,
   'slots' : bigint,
+  'rewardDistribution' : Array<ContestRewardDistribution>,
   'matchId' : Key__1,
   'homeTeamName' : string,
   'homeScore' : bigint,
   'awayScore' : bigint,
   'slotsUsed' : bigint,
   'maxCap' : bigint,
+  'entryFee' : bigint,
   'providerId' : MonkeyId,
   'rules' : string,
   'matchName' : string,
@@ -289,9 +481,11 @@ export interface Other {
 }
 export interface Participant {
   'contestId' : Key__1,
+  'isRewarded' : boolean,
   'userId' : Key__1,
   'rank' : bigint,
   'squadId' : Key__1,
+  'transactionId' : Key__1,
 }
 export type Participants = Array<[Key__1, Participant]>;
 export interface Passing {
@@ -566,7 +760,7 @@ export type Result_5 = { 'ok' : Players } |
 export type Result_6 = { 'ok' : [string, Match] } |
   { 'err' : [string, boolean] };
 export type ReturnAddParticipant = { 'ok' : string } |
-  { 'err' : TransferFromError };
+  { 'err' : TransferFromError__1 };
 export interface ReturnAdminSettings {
   'total' : bigint,
   'settings' : AdminSettings,
@@ -585,6 +779,20 @@ export interface ReturnRankings {
   'userRank' : [] | [[Key, RefinedPlayerSquadRanking__1]],
   'total' : bigint,
   'rankings' : RefinedPlayerSquadRankings,
+}
+export interface ReturnReward {
+  'id' : Key__1,
+  'creation_time' : bigint,
+  'contestId' : Key__1,
+  'userId' : Key__1,
+  'isClaimed' : boolean,
+  'claim_time' : [] | [bigint],
+  'amount' : bigint,
+  'transactionId' : [] | [Key__1],
+}
+export interface ReturnRewards {
+  'total' : bigint,
+  'rewards' : Array<ReturnReward>,
 }
 export interface ReturnTeams { 'teams' : RawPlayerSquads, 'total' : bigint }
 export interface ReturnTournaments {
@@ -651,17 +859,49 @@ export interface Tournament__1 {
 export type Tournaments = Array<[Key__1, Tournament]>;
 export type TransferFromError = {
     'GenericError' : { 'message' : string, 'error_code' : bigint }
-  };
+  } |
+  { 'TemporarilyUnavailable' : null } |
+  { 'InsufficientAllowance' : { 'allowance' : Icrc1Tokens } } |
+  { 'BadBurn' : { 'min_burn_amount' : Icrc1Tokens } } |
+  { 'Duplicate' : { 'duplicate_of' : Icrc1BlockIndex } } |
+  { 'BadFee' : { 'expected_fee' : Icrc1Tokens } } |
+  { 'CreatedInFuture' : { 'ledger_time' : Icrc1Timestamp } } |
+  { 'TooOld' : null } |
+  { 'InsufficientFunds' : { 'balance' : Icrc1Tokens } };
+export type TransferFromError__1 = {
+    'GenericError' : { 'message' : string, 'error_code' : bigint }
+  } |
+  { 'TemporarilyUnavailable' : null } |
+  { 'InsufficientAllowance' : { 'allowance' : Icrc1Tokens } } |
+  { 'BadBurn' : { 'min_burn_amount' : Icrc1Tokens } } |
+  { 'Duplicate' : { 'duplicate_of' : Icrc1BlockIndex } } |
+  { 'BadFee' : { 'expected_fee' : Icrc1Tokens } } |
+  { 'CreatedInFuture' : { 'ledger_time' : Icrc1Timestamp } } |
+  { 'TooOld' : null } |
+  { 'InsufficientFunds' : { 'balance' : Icrc1Tokens } };
+export type TransferFromResult = { 'Ok' : Icrc1BlockIndex } |
+  { 'Err' : TransferFromError };
+export interface TransformArgs {
+  'context' : Uint8Array | number[],
+  'response' : HttpResponsePayload,
+}
 export interface User {
   'name' : string,
   'role' : Role,
   'joiningDate' : bigint,
   'email' : string,
 }
-export interface UserAssets { 'participated' : bigint, 'contestWon' : bigint }
+export interface UserAssets {
+  'participated' : bigint,
+  'contestWon' : bigint,
+  'rewardsWon' : bigint,
+  'totalEarning' : bigint,
+}
 export interface UserAssets__1 {
   'participated' : bigint,
   'contestWon' : bigint,
+  'rewardsWon' : bigint,
+  'totalEarning' : bigint,
 }
 export interface User__1 {
   'name' : string,
@@ -670,133 +910,6 @@ export interface User__1 {
   'email' : string,
 }
 export type Users = Array<[Key__1, User__1]>;
-export interface _anon_class_22_1 {
-  '_updatePlayersStats' : ActorMethod<[Array<IPlayerStats>], Array<boolean>>,
-  'addAdminSetting' : ActorMethod<[IAdminSetting], boolean>,
-  'addContest' : ActorMethod<[IContest], Result_2>,
-  'addDefaultContestsOnMatches' : ActorMethod<[], Result_2>,
-  'addLeague' : ActorMethod<
-    [Tournament__1, Season__1, Array<ITeamWithPlayers>],
-    undefined
-  >,
-  'addMatch' : ActorMethod<[InputMatch], Result_6>,
-  'addMatchToMvpsAdmin' : ActorMethod<[Key], undefined>,
-  'addMatches' : ActorMethod<
-    [Array<InputMatch>],
-    { 'err' : Array<[boolean, string]>, 'succ' : Array<[boolean, Match]> }
-  >,
-  'addNewMatches' : ActorMethod<
-    [Array<InputMatch>, Key],
-    { 'err' : Array<[boolean, string]>, 'succ' : Array<[boolean, Match]> }
-  >,
-  'addParticipant' : ActorMethod<[Key, Key, bigint], ReturnAddParticipant>,
-  'addPlayer' : ActorMethod<[Player__1], undefined>,
-  'addPlayerSquad' : ActorMethod<[IPlayerSquad], Result_2>,
-  'addPlayerStats' : ActorMethod<[IPlayerStats], boolean>,
-  'addUser' : ActorMethod<[IUser], Result>,
-  'deleteAdminSetting' : ActorMethod<[string], [] | [AdminSetting__1]>,
-  'finishMatch' : ActorMethod<[MatchScore], Result_2>,
-  'getAdminSettings' : ActorMethod<[GetProps], ReturnAdminSettings>,
-  'getAdmins' : ActorMethod<[], Users>,
-  'getAllParticipants' : ActorMethod<[], Participants>,
-  'getAssetsOfUser' : ActorMethod<[string], UserAssets__1>,
-  'getBudget' : ActorMethod<[], [] | [string]>,
-  'getContest' : ActorMethod<[Key], [] | [Contest]>,
-  'getContestNames' : ActorMethod<[Array<Key>], Array<[string, string]>>,
-  'getContestWinnerOfMatch' : ActorMethod<[Key], [] | [[Key, User]]>,
-  'getContestWithMatch' : ActorMethod<
-    [Key],
-    [] | [{ 'match' : [] | [RefinedMatch], 'contest' : Contest }]
-  >,
-  'getContestsByMatchId' : ActorMethod<[Key], Contests>,
-  'getContestsWinnerUserByMatchId' : ActorMethod<[Key], [] | [[Key, User]]>,
-  'getDetailedMatchesContests' : ActorMethod<
-    [GetProps],
-    ReturnDetailedMatchContests
-  >,
-  'getFilterdContests' : ActorMethod<[GetProps], ReturnContests>,
-  'getFilterdRawPlayerSquadsByMatch' : ActorMethod<
-    [[] | [Key], [] | [Key], GetProps],
-    ReturnTeams
-  >,
-  'getListPlayerSquadsByMatch' : ActorMethod<
-    [Key, [] | [Key]],
-    ListPlayerSquads
-  >,
-  'getMVPSMatches' : ActorMethod<[GetProps], RMVPSTournamentMatchsList>,
-  'getMVPSOfmatch' : ActorMethod<[Key], [] | [[Key, MVPSPlayers]]>,
-  'getMatch' : ActorMethod<[Key], [] | [RefinedMatch]>,
-  'getMatches' : ActorMethod<[GetProps, [] | [bigint]], ReturnMatches>,
-  'getMatchesByTeamId' : ActorMethod<[Key], Matches>,
-  'getMatchesWithTournamentId' : ActorMethod<
-    [GetProps, [] | [bigint], bigint, [] | [Key]],
-    ReturnMatches
-  >,
-  'getPaginatedContestsByMatchId' : ActorMethod<
-    [Key, GetProps],
-    ReturnPagContests
-  >,
-  'getParticipants' : ActorMethod<[Key], Participants>,
-  'getPlayer' : ActorMethod<[Key], [] | [Player__1]>,
-  'getPlayerPoints' : ActorMethod<[Key, Key], [] | [RPoints__1]>,
-  'getPlayerSquad' : ActorMethod<[Key], [] | [RankPlayerSquad]>,
-  'getPlayerSquadsByMatch' : ActorMethod<[Key], RefinedPlayerSquads>,
-  'getPlayerStats' : ActorMethod<[Key, Key], [] | [PlayerStats]>,
-  'getPlayerStatsByMatchId' : ActorMethod<
-    [Key],
-    Array<[Key, PlayerStatsWithName]>
-  >,
-  'getPlayersByPosition' : ActorMethod<[Position__1], Result_5>,
-  'getPlayersByTeamId' : ActorMethod<[Key], Result_4>,
-  'getPlayersByTeamIds' : ActorMethod<[Array<Key>], Result_4>,
-  'getRawPlayerSquadsByMatch' : ActorMethod<
-    [[] | [Key], [] | [Key]],
-    PlayerSquads
-  >,
-  'getSeasonByProvider' : ActorMethod<[MonkeyId, MonkeyId], [] | [ISeason]>,
-  'getSeasons' : ActorMethod<[Key], Seasons>,
-  'getSquadWithPoints' : ActorMethod<[Key], [] | [RefinedPlayerSquad]>,
-  'getStatsSystem' : ActorMethod<[], Points>,
-  'getTeamById' : ActorMethod<[Key], [] | [Team__1]>,
-  'getTeamByName' : ActorMethod<[string], [] | [[Key, Team__1]]>,
-  'getTeamsByTournament' : ActorMethod<[Key], Result_3>,
-  'getTopPlayers' : ActorMethod<
-    [{ 'page' : bigint, 'search' : string, 'limit' : bigint }],
-    { 'total' : bigint, 'players' : TopPlayers }
-  >,
-  'getTournaments' : ActorMethod<[], Tournaments>,
-  'getTournamentsN' : ActorMethod<[GetProps], ReturnTournaments>,
-  'getUpcomingMatches' : ActorMethod<[GetProps, bigint], ReturnMatches>,
-  'getUser' : ActorMethod<[[] | [string]], [] | [User]>,
-  'getUserRank' : ActorMethod<[Key], [] | [MeAsTopPlayer]>,
-  'increaseContestWon' : ActorMethod<
-    [{ 'id' : Key, 'assetsVal' : [] | [bigint] }],
-    boolean
-  >,
-  'increaseParticipant' : ActorMethod<
-    [{ 'id' : Key, 'assetsVal' : [] | [bigint] }],
-    boolean
-  >,
-  'makeAdmin' : ActorMethod<[Principal], boolean>,
-  'nGetSquadRanking' : ActorMethod<[Key, GetProps], ReturnRankings>,
-  'postponeMatch' : ActorMethod<[Key, MatchStatus], boolean>,
-  'reScheduleMatch' : ActorMethod<[Key, MatchStatus], boolean>,
-  'removeContest' : ActorMethod<[Key], [] | [Contest]>,
-  'testingStartMatch' : ActorMethod<[Key, bigint], [] | [Match]>,
-  'updateAdminSetting' : ActorMethod<[IAdminSetting], boolean>,
-  'updateContest' : ActorMethod<[IContest, Key], Result_2>,
-  'updateMatchScore' : ActorMethod<[MatchScore], boolean>,
-  'updateMatchStatus' : ActorMethod<[MatchStatus, Key], boolean>,
-  'updatePlayerPrices' : ActorMethod<
-    [Array<{ 'id' : Key, 'fantasyPrice' : bigint }>],
-    boolean
-  >,
-  'updatePlayerSquad' : ActorMethod<[Key, IPlayerSquad], Result_1>,
-  'updatePlayersStats' : ActorMethod<[Array<IPlayerStats>], Array<boolean>>,
-  'updateRanking' : ActorMethod<[Key], undefined>,
-  'updateStatsSysteam' : ActorMethod<[Points], boolean>,
-  'updateUser' : ActorMethod<[IUser], Result>,
-}
-export interface _SERVICE extends _anon_class_22_1 {}
+export interface _SERVICE extends FantasyFootball {}
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

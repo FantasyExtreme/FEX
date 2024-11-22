@@ -70,14 +70,23 @@ export const idlFactory = ({ IDL }) => {
     'settingName' : IDL.Text,
     'settingType' : IDL.Text,
   });
+  const ContestRewardDistribution = IDL.Record({
+    'to' : IDL.Nat,
+    'from' : IDL.Nat,
+    'amount' : IDL.Int,
+  });
   const MonkeyId = IDL.Text;
   const IContest = IDL.Record({
+    'paymentMethod' : Key__1,
+    'isDistributed' : IDL.Bool,
     'teamsPerUser' : IDL.Nat,
     'name' : IDL.Text,
     'minCap' : IDL.Nat,
     'slots' : IDL.Nat,
+    'rewardDistribution' : IDL.Vec(ContestRewardDistribution),
     'matchId' : Key__1,
     'maxCap' : IDL.Nat,
+    'entryFee' : IDL.Nat,
     'providerId' : MonkeyId,
     'rules' : IDL.Text,
   });
@@ -152,15 +161,26 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Tuple(IDL.Text, IDL.Bool),
   });
   const Key = IDL.Text;
-  const TransferFromError = IDL.Variant({
+  const Icrc1Tokens = IDL.Nat;
+  const Icrc1BlockIndex = IDL.Nat;
+  const Icrc1Timestamp = IDL.Nat64;
+  const TransferFromError__1 = IDL.Variant({
     'GenericError' : IDL.Record({
       'message' : IDL.Text,
       'error_code' : IDL.Nat,
     }),
+    'TemporarilyUnavailable' : IDL.Null,
+    'InsufficientAllowance' : IDL.Record({ 'allowance' : Icrc1Tokens }),
+    'BadBurn' : IDL.Record({ 'min_burn_amount' : Icrc1Tokens }),
+    'Duplicate' : IDL.Record({ 'duplicate_of' : Icrc1BlockIndex }),
+    'BadFee' : IDL.Record({ 'expected_fee' : Icrc1Tokens }),
+    'CreatedInFuture' : IDL.Record({ 'ledger_time' : Icrc1Timestamp }),
+    'TooOld' : IDL.Null,
+    'InsufficientFunds' : IDL.Record({ 'balance' : Icrc1Tokens }),
   });
   const ReturnAddParticipant = IDL.Variant({
     'ok' : IDL.Text,
-    'err' : TransferFromError,
+    'err' : TransferFromError__1,
   });
   const RPoints = IDL.Int;
   const Player__1 = IDL.Record({
@@ -239,25 +259,33 @@ export const idlFactory = ({ IDL }) => {
   const Users = IDL.Vec(IDL.Tuple(Key__1, User__1));
   const Participant = IDL.Record({
     'contestId' : Key__1,
+    'isRewarded' : IDL.Bool,
     'userId' : Key__1,
     'rank' : IDL.Nat,
     'squadId' : Key__1,
+    'transactionId' : Key__1,
   });
   const Participants = IDL.Vec(IDL.Tuple(Key__1, Participant));
   const UserAssets__1 = IDL.Record({
     'participated' : IDL.Nat,
     'contestWon' : IDL.Nat,
+    'rewardsWon' : IDL.Nat,
+    'totalEarning' : IDL.Nat,
   });
   const Contest = IDL.Record({
+    'paymentMethod' : Key__1,
+    'isDistributed' : IDL.Bool,
     'teamsPerUser' : IDL.Nat,
     'name' : IDL.Text,
     'creatorUserId' : Key__1,
     'winner' : IDL.Opt(Key__1),
     'minCap' : IDL.Nat,
     'slots' : IDL.Nat,
+    'rewardDistribution' : IDL.Vec(ContestRewardDistribution),
     'matchId' : Key__1,
     'slotsUsed' : IDL.Nat,
     'maxCap' : IDL.Nat,
+    'entryFee' : IDL.Nat,
     'providerId' : MonkeyId,
     'rules' : IDL.Text,
   });
@@ -280,30 +308,38 @@ export const idlFactory = ({ IDL }) => {
     'location' : IDL.Text,
   });
   const Contest__1 = IDL.Record({
+    'paymentMethod' : Key__1,
+    'isDistributed' : IDL.Bool,
     'teamsPerUser' : IDL.Nat,
     'name' : IDL.Text,
     'creatorUserId' : Key__1,
     'winner' : IDL.Opt(Key__1),
     'minCap' : IDL.Nat,
     'slots' : IDL.Nat,
+    'rewardDistribution' : IDL.Vec(ContestRewardDistribution),
     'matchId' : Key__1,
     'slotsUsed' : IDL.Nat,
     'maxCap' : IDL.Nat,
+    'entryFee' : IDL.Nat,
     'providerId' : MonkeyId,
     'rules' : IDL.Text,
   });
   const Contests = IDL.Vec(IDL.Tuple(Key__1, Contest__1));
   const DetailedContest = IDL.Record({
+    'paymentMethod' : Key__1,
+    'isDistributed' : IDL.Bool,
     'teamsPerUser' : IDL.Nat,
     'name' : IDL.Text,
     'creatorUserId' : Key__1,
     'winner' : IDL.Opt(Key__1),
     'minCap' : IDL.Nat,
     'slots' : IDL.Nat,
+    'rewardDistribution' : IDL.Vec(ContestRewardDistribution),
     'teamsCreatedOnContest' : IDL.Nat,
     'matchId' : Key__1,
     'slotsUsed' : IDL.Nat,
     'maxCap' : IDL.Nat,
+    'entryFee' : IDL.Nat,
     'providerId' : MonkeyId,
     'rules' : IDL.Text,
     'teamsJoinedContest' : IDL.Nat,
@@ -331,6 +367,8 @@ export const idlFactory = ({ IDL }) => {
     'matches' : DetailedMatchContests,
   });
   const MatchContest = IDL.Record({
+    'paymentMethod' : Key__1,
+    'isDistributed' : IDL.Bool,
     'teamsPerUser' : IDL.Nat,
     'name' : IDL.Text,
     'awayTeamName' : IDL.Text,
@@ -338,12 +376,14 @@ export const idlFactory = ({ IDL }) => {
     'winner' : IDL.Opt(Key__1),
     'minCap' : IDL.Nat,
     'slots' : IDL.Nat,
+    'rewardDistribution' : IDL.Vec(ContestRewardDistribution),
     'matchId' : Key__1,
     'homeTeamName' : IDL.Text,
     'homeScore' : IDL.Nat,
     'awayScore' : IDL.Nat,
     'slotsUsed' : IDL.Nat,
     'maxCap' : IDL.Nat,
+    'entryFee' : IDL.Nat,
     'providerId' : MonkeyId,
     'rules' : IDL.Text,
     'matchName' : IDL.Text,
@@ -570,6 +610,20 @@ export const idlFactory = ({ IDL }) => {
     'points' : RPoints,
   });
   const PlayerSquads = IDL.Vec(IDL.Tuple(Key__1, PlayerSquad__1));
+  const ReturnReward = IDL.Record({
+    'id' : Key__1,
+    'creation_time' : IDL.Int,
+    'contestId' : Key__1,
+    'userId' : Key__1,
+    'isClaimed' : IDL.Bool,
+    'claim_time' : IDL.Opt(IDL.Int),
+    'amount' : IDL.Nat,
+    'transactionId' : IDL.Opt(Key__1),
+  });
+  const ReturnRewards = IDL.Record({
+    'total' : IDL.Nat,
+    'rewards' : IDL.Vec(ReturnReward),
+  });
   const ISeason = IDL.Record({
     'id' : Key__1,
     'endDate' : IDL.Int,
@@ -624,6 +678,8 @@ export const idlFactory = ({ IDL }) => {
   const UserAssets = IDL.Record({
     'participated' : IDL.Nat,
     'contestWon' : IDL.Nat,
+    'rewardsWon' : IDL.Nat,
+    'totalEarning' : IDL.Nat,
   });
   const TopPlayer = IDL.Record({
     'name' : IDL.Text,
@@ -679,6 +735,39 @@ export const idlFactory = ({ IDL }) => {
     'rankings' : RefinedPlayerSquadRankings,
   });
   const MatchStatus = IDL.Text;
+  const TransferFromError = IDL.Variant({
+    'GenericError' : IDL.Record({
+      'message' : IDL.Text,
+      'error_code' : IDL.Nat,
+    }),
+    'TemporarilyUnavailable' : IDL.Null,
+    'InsufficientAllowance' : IDL.Record({ 'allowance' : Icrc1Tokens }),
+    'BadBurn' : IDL.Record({ 'min_burn_amount' : Icrc1Tokens }),
+    'Duplicate' : IDL.Record({ 'duplicate_of' : Icrc1BlockIndex }),
+    'BadFee' : IDL.Record({ 'expected_fee' : Icrc1Tokens }),
+    'CreatedInFuture' : IDL.Record({ 'ledger_time' : Icrc1Timestamp }),
+    'TooOld' : IDL.Null,
+    'InsufficientFunds' : IDL.Record({ 'balance' : Icrc1Tokens }),
+  });
+  const TransferFromResult = IDL.Variant({
+    'Ok' : Icrc1BlockIndex,
+    'Err' : TransferFromError,
+  });
+  const HttpHeader = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const HttpResponsePayload = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(HttpHeader),
+  });
+  const TransformArgs = IDL.Record({
+    'context' : IDL.Vec(IDL.Nat8),
+    'response' : HttpResponsePayload,
+  });
+  const CanisterHttpResponsePayload = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(HttpHeader),
+  });
   const PlayerSquad = IDL.Record({
     'cap' : Key__1,
     'creation_time' : IDL.Int,
@@ -696,7 +785,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Record({ 'squad' : IDL.Opt(PlayerSquad), 'message' : IDL.Text }),
     'err' : IDL.Text,
   });
-  const _anon_class_22_1 = IDL.Service({
+  const FantasyFootball = IDL.Service({
     '_updatePlayersStats' : IDL.Func(
         [IDL.Vec(IPlayerStats)],
         [IDL.Vec(IDL.Bool)],
@@ -741,8 +830,12 @@ export const idlFactory = ({ IDL }) => {
     'addPlayerSquad' : IDL.Func([IPlayerSquad], [Result_2], []),
     'addPlayerStats' : IDL.Func([IPlayerStats], [IDL.Bool], []),
     'addUser' : IDL.Func([IUser], [Result], []),
+    'claimRewards' : IDL.Func([], [ReturnAddParticipant], []),
     'deleteAdminSetting' : IDL.Func([IDL.Text], [IDL.Opt(AdminSetting__1)], []),
+    'deleteRewardOfUser' : IDL.Func([IDL.Principal, Key], [Result_2], []),
+    'distributeRewards' : IDL.Func([Key, Key], [ReturnAddParticipant], []),
     'finishMatch' : IDL.Func([MatchScore], [Result_2], []),
+    'getAdminRewards' : IDL.Func([Key], [IDL.Nat], ['query']),
     'getAdminSettings' : IDL.Func([GetProps], [ReturnAdminSettings], ['query']),
     'getAdmins' : IDL.Func([], [Users], ['query']),
     'getAllParticipants' : IDL.Func([], [Participants], ['query']),
@@ -840,6 +933,28 @@ export const idlFactory = ({ IDL }) => {
         [PlayerSquads],
         ['query'],
       ),
+    'getRewardList' : IDL.Func(
+        [GetProps, IDL.Opt(IDL.Bool)],
+        [ReturnRewards],
+        ['query'],
+      ),
+    'getRewards' : IDL.Func([], [IDL.Nat], ['query']),
+    'getRewardsTable' : IDL.Func(
+        [
+          IDL.Record({
+            'slotsUsed' : IDL.Nat,
+            'entryFee' : IDL.Nat,
+            'props' : GetProps,
+          }),
+        ],
+        [
+          IDL.Record({
+            'map' : IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Nat)),
+            'total' : IDL.Nat,
+          }),
+        ],
+        [],
+      ),
     'getSeasonByProvider' : IDL.Func(
         [MonkeyId, MonkeyId],
         [IDL.Opt(ISeason)],
@@ -889,12 +1004,44 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'increaseRewardsWon' : IDL.Func(
+        [IDL.Record({ 'id' : Key, 'assetsVal' : IDL.Opt(IDL.Nat) })],
+        [IDL.Bool],
+        [],
+      ),
+    'increaseTotalEarning' : IDL.Func(
+        [IDL.Record({ 'id' : Key, 'assetsVal' : IDL.Opt(IDL.Nat) })],
+        [IDL.Bool],
+        [],
+      ),
     'makeAdmin' : IDL.Func([IDL.Principal], [IDL.Bool], []),
+    'manuallyDirectSendReward' : IDL.Func(
+        [IDL.Principal, IDL.Nat],
+        [Result_2],
+        [],
+      ),
+    'nDistributeRewards' : IDL.Func([Key, Key], [ReturnAddParticipant], []),
     'nGetSquadRanking' : IDL.Func([Key, GetProps], [ReturnRankings], ['query']),
     'postponeMatch' : IDL.Func([Key, MatchStatus], [IDL.Bool], []),
     'reScheduleMatch' : IDL.Func([Key, MatchStatus], [IDL.Bool], []),
     'removeContest' : IDL.Func([Key], [IDL.Opt(Contest)], []),
+    'testingClaimTokens' : IDL.Func([], [TransferFromResult], []),
+    'testingGetRewardPercentages' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'platformPercentage' : IDL.Nat,
+            'rewardableUsersPercentage' : IDL.Nat,
+          }),
+        ],
+        [],
+      ),
     'testingStartMatch' : IDL.Func([Key, IDL.Nat], [IDL.Opt(Match)], []),
+    'transform' : IDL.Func(
+        [TransformArgs],
+        [CanisterHttpResponsePayload],
+        ['query'],
+      ),
     'updateAdminSetting' : IDL.Func([IAdminSetting], [IDL.Bool], []),
     'updateContest' : IDL.Func([IContest, Key], [Result_2], []),
     'updateMatchScore' : IDL.Func([MatchScore], [IDL.Bool], []),
@@ -914,6 +1061,13 @@ export const idlFactory = ({ IDL }) => {
     'updateStatsSysteam' : IDL.Func([Points], [IDL.Bool], []),
     'updateUser' : IDL.Func([IUser], [Result], []),
   });
-  return _anon_class_22_1;
+  return FantasyFootball;
 };
-export const init = ({ IDL }) => { return []; };
+export const init = ({ IDL }) => {
+  return [
+    IDL.Record({
+      'ledgerCanisterId' : IDL.Text,
+      'transactionCanisterId' : IDL.Text,
+    }),
+  ];
+};
