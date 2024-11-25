@@ -1,6 +1,7 @@
 export const ONLY_ALPHABET = /^[a-zA-Z\s]+$/;
-export const MAX_NAME_CHARACTERS = 30;
+export const MAX_NAME_CHARACTERS = 40;
 export const MIN_NAME_CHARACTERS = 3;
+
 export const EMAIL_VALIDATION =
   /^[-a-zA-Z0-9._]+@([a-zA-Z0-9-]+?\.)+[A-Za-z]+$/;
 
@@ -16,6 +17,12 @@ export const Validations = {
       max: 40,
     },
     slots: {
+      min: 1,
+    },
+    entryFee: {
+      min: 0,
+    },
+    rewardDistribution: {
       min: 1,
     },
     minCap: {
@@ -41,6 +48,10 @@ export const Messages = {
       req: `Slots are required`,
       min: `Slots ${messageTemplate.min} ${Validations.contests.slots.min}`,
     },
+    entryFee: {
+      req: `Entry Fee ${messageTemplate.req}`,
+      min: `Entry Fee can not be less than ${Validations.contests.entryFee.min}`,
+    },
     minCap: {
       req: `Min Cap ${messageTemplate.req}`,
       min: `Min Cap can not be less than ${Validations.contests.minCap.min}`,
@@ -58,3 +69,5 @@ export const Messages = {
     },
   },
 };
+
+export const MAX_PARTICIPANTS = 1_000_000;

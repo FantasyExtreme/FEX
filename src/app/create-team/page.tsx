@@ -53,6 +53,7 @@ import {
   generateRandomName,
   generateTeamName,
   getBudget,
+  getPlayerStatus,
   getPlayers,
   isConnected,
   requireAuth,
@@ -62,16 +63,22 @@ import {
   DefaultTeam,
   EnvironmentEnum,
   PlayerPositions,
+  PlayerStatuses,
+  PositionText,
   QURIES,
   QueryParamType,
 } from '@/constant/variables';
 import moment from 'moment';
+import {
+  CONTESTS_ROUTE,
+  MATCH_CONTEST_ROUTE,
+  TEAMS_ROUTE,
+} from '@/constant/routes';
 import PlayerTabs from '@/components/Components/PlayerTabs';
 import { smoothScrollTo } from '@/lib/helper';
 import ConnectModal from '@/components/Components/ConnectModal';
 import authMethods from '@/lib/auth';
 import Tippy from '@tippyjs/react';
-import { MATCH_CONTEST_ROUTE, MATCHES_ROUTE } from '@/constant/routes';
 
 export default function PlayerSelection() {
   const urlparama = useSearchParamsHook();
@@ -91,9 +98,8 @@ export default function PlayerSelection() {
   const [showModal, setShowModal] = useState(false);
   const [squad, setSquad] = useState<any>();
   const [saving, setSaving] = useState(false);
-  const [budget, setBudget] = useState<number | null>(200);
+  const [budget, setBudget] = useState<number | null>(null);
   const [selectedformation, setSelectedformation] = useState<string>('0');
-  const [teamNameSize, setTeamNameSize] = useState<number>(0);
 
   const [showConnect, setShowConnect] = useState(false);
   const [isSubstituteSelection, setIsSubstituteSelection] =
@@ -137,7 +143,7 @@ export default function PlayerSelection() {
   const sqSchema = object().shape({
     name: string()
       .required('Name is required')
-      .min(MIN_NAME_CHARACTERS, 'Name can not be less than 3 characters').max(MAX_NAME_CHARACTERS, 'Name can not be more than 30 characters'),
+      .min(MIN_NAME_CHARACTERS, 'Name can not be less than 3 characters'),
   });
 
   const handleShowModal = () => {
@@ -173,8 +179,8 @@ export default function PlayerSelection() {
       ? teamformation.substitution
       : substitution;
 
-    logger(player, 'fdsfsdfd:::::');
-    // if (teamBalance == null || budget == null) return;
+    logger(teamFormation, 'fdsfsdfd:::::');
+    if (teamBalance == null || budget == null) return;
 
     if (
       [...selectedSubstitudePlayers.all, ...selectedPlayers.all]?.find((p) => {
@@ -314,11 +320,11 @@ export default function PlayerSelection() {
       ) {
         return toast.warning("You can't select more than 15 players");
       }
-      // if (teamBalance - player.fantasyPrice < 0) {
-      //   return toast.warning(
-      //     "You don't have enough balance to add this player",
-      //   );
-      // }
+      if (teamBalance - player.fantasyPrice < 0) {
+        return toast.warning(
+          "You don't have enough balance to add this player",
+        );
+      }
       const newAllPlayers = selectedPlayers.all;
       const newSubAllPlayers = selectedSubstitudePlayers.all;
       if (!(isSubstituteSelection || (isInitalSet && isPlayersSub))) {
@@ -527,9 +533,7 @@ export default function PlayerSelection() {
    *  @param {FormikValuesf} values Formik values object with name as the value
    */
   async function saveTeam(values: FormikValues) {
-
     setSaving(true);
-  
     let allPlayers = [...selectedPlayers.all, ...selectedSubstitudePlayers.all];
     let goalKepersPlayers = [
       ...selectedPlayers.goalKeeper,
@@ -613,6 +617,11 @@ export default function PlayerSelection() {
         } else if (addedSquad?.err) {
           toast.error(addedSquad?.err);
         }
+        // toast.success('Team Updated');
+        // router.push(
+        //   `${TEAMS_ROUTE}?matchId=${matchId}&type=${QueryParamType.simple}`,
+        // );
+        // resetPlayers(true);
 
         logger(addedSquad, 'sSquad updated');
       } else {
@@ -1044,13 +1053,13 @@ export default function PlayerSelection() {
                 <Col xl='12' lg='12' md='12'>
                   <div className='gray-panel creatTeam'>
                     <Row>
-                      <Col xl='5' lg='4'>
+                    <Col xl='12' lg='12'>
+                    <div className='flex-div-sm align-items-center'>
                         <h4 className='animeleft tablet-view-none whitecolor Nasalization fw-normal'>
                           {isSubstituteSelection ? 'Substitute ' : 'Player'}{' '}
                           <span>Selection</span>
                         </h4>
-                      </Col>
-                      <Col xl='7' lg='8'>
+                    
                         <div className='flexooo jus-end animeright'>
                           <Form.Select
                             className='button-select select-select Z_ind'
@@ -1144,6 +1153,7 @@ export default function PlayerSelection() {
                               {'add default team'}
                             </Button>
                           )}
+                        </div>
                         </div>
                       </Col>
                     </Row>
@@ -1277,7 +1287,7 @@ export default function PlayerSelection() {
       <Modal show={showModal} onHide={handleCloseModal} centered>
         <Modal.Body>
           <h5 className='text-center'> {saveButtonText}</h5>
-          <p>Team Name <small>Max({teamNameSize ?? 0}/30)</small></p>
+          <p>Team Name</p>
           <Formik
             initialValues={sqValues}
             validationSchema={sqSchema}
@@ -1296,8 +1306,7 @@ export default function PlayerSelection() {
                           type='text'
                           placeholder='Team Name'
                           value={field.value}
-                          onChange={(e)=>{handleChange(e);setTeamNameSize(e.target.value.length);
-                          }}
+                          onChange={handleChange}
                           onInput={handleBlur}
                           name='name'
                         />

@@ -24,14 +24,20 @@ import { ConnectPlugWalletSlice } from '@/types/store';
 import {
   Contest,
   ContestType,
+  GroupedContest,
+  GroupedContests,
   LoadingState,
   Match,
   MatchesCountType,
+  MatchesType,
 } from '@/types/fantasy';
 import {
+  getAllParticipants,
   fetchMatch,
+  // getContests,
   getFilterdContests,
   isConnected,
+  isInPast,
   getIcpRate,
 } from '@/components/utils/fantasy';
 
@@ -44,6 +50,13 @@ import {
   QURIES,
   QueryParamType,
 } from '@/constant/variables';
+import ContestRow from '@/components/Components/ContestRow';
+import logger from '@/lib/logger';
+import JoinContest from '@/components/Components/JoinContest';
+import RankingModal from '@/components/Components/Ranking';
+import MatchesPagination from '@/components/Components/MatchesPagination';
+import { match } from 'assert';
+import ContestGroupedRow from '@/components/Components/ConstestGroupedRow';
 import ContestItem from '@/components/Components/ContestItem';
 import Countdown from 'react-countdown';
 import CountdownRender from '@/components/Components/CountdownRenderer';
@@ -397,6 +410,14 @@ export default function Contests() {
           </Container>
         </Row>
       </Container>
+      {selectedContest && (
+        <RankingModal
+          handleCloseModal={handleCloseRanking}
+          showModal={showRanking}
+          contestId={selectedContest?.id}
+          match={match}
+        />
+      )}
       <ConnectModal
         show={showConnect}
         hideModal={handleHideConnect}

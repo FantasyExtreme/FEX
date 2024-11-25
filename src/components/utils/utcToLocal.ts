@@ -15,17 +15,7 @@ const commentTime = (creatDate: any) => {
   let tempCreation = moment(stillUtc).local().fromNow();
   return tempCreation;
 };
-function formatLikesCount(likes: any) {
-  if (likes >= 1000000000) {
-    return numeral(likes).format('0.0a').toUpperCase();
-  } else if (likes >= 1000000 && likes < 1000000000) {
-    return numeral(likes).format('0.0a').toUpperCase();
-  } else if (likes >= 1000 && likes < 1000000) {
-    return numeral(likes).format('0.0a').toUpperCase();
-  } else {
-    return likes.toString();
-  }
-}
+
 /**
  * Formats a number into a human-readable format (e.g., "100M", "10K").
  *
@@ -37,6 +27,4 @@ function formatNumber(value: number): string {
     ? numeral(value).format('0a').toUpperCase()
     : numeral(value).format('0.0a').toUpperCase();
 }
-
-
-export { utcToLocal, formatLikesCount, commentTime,formatNumber };
+export { utcToLocal, commentTime, formatNumber };

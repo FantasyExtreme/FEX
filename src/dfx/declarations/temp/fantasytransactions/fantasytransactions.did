@@ -1,0 +1,77 @@
+type anon_class_13_1 = 
+ service {
+   addTransaction: (Transaction, opt text) -> (Result);
+   getAllTransactions: (GetAllTransactionProps) -> (ReturnTransactions) query;
+   getMyTransactions: (record {
+                         contestId: opt text;
+                         limit: nat;
+                         page: nat;
+                       }) ->
+    (record {
+       total: nat;
+       transaction: Transactions;
+     }) query;
+   getTransaction: (text) -> (opt Transaction) query;
+ };
+type Transactions__1 = 
+ vec record {
+       Key;
+       Transaction__1;
+     };
+type Transactions = 
+ vec record {
+       Key;
+       Transaction__1;
+     };
+type Transaction__1 = 
+ record {
+   amount: Icrc1Tokens;
+   contestId: text;
+   created_at_time: int;
+   from: principal;
+   title: text;
+   to: principal;
+   transaction_type: TransactionType;
+   user: principal;
+ };
+type TransactionType = 
+ variant {
+   pending;
+   receive;
+   rejected;
+   send;
+ };
+type Transaction = 
+ record {
+   amount: Icrc1Tokens;
+   contestId: text;
+   created_at_time: int;
+   from: principal;
+   title: text;
+   to: principal;
+   transaction_type: TransactionType;
+   user: principal;
+ };
+type ReturnTransactions = 
+ record {
+   total: nat;
+   transaction: Transactions__1;
+ };
+type Result = 
+ variant {
+   err: record {
+          text;
+          bool;
+        };
+   ok: text;
+ };
+type Key = text;
+type Icrc1Tokens = nat;
+type GetAllTransactionProps = 
+ record {
+   contestId: opt text;
+   limit: nat;
+   page: nat;
+   userId: opt principal;
+ };
+service : () -> anon_class_13_1

@@ -1,4 +1,4 @@
-
+import { TEAM_CREATION_ROUTE, TEAMS_ROUTE } from '@/constant/routes';
 import {
   JoinContestText,
   MatchStatusNames,
@@ -15,11 +15,14 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { Button, Table } from 'react-bootstrap';
 import BeatLoader from 'react-spinners/BeatLoader';
-import { getTimeZone,  isInPast } from '../utils/fantasy';
+import { handleTransferError, isInPast } from '../utils/fantasy';
+import ConfirmTransaction from './ConfirmTransaction';
 import logger from '@/lib/logger';
+import { approveTokens, getBalance, toE8S } from '@/lib/ledger';
 import { GAS_FEE } from '@/constant/fantasticonst';
 import { Auth } from '@/types/store';
 import { toast } from 'react-toastify';
+import { TransferFromError } from '@/dfx/declarations/temp/fantasyfootball/fantasyfootball.did';
 import TeamRow from './TeamRow';
 import useAuth from '@/lib/auth';
 
@@ -32,6 +35,7 @@ const DashboardTable = ({
   setParticipants,
   setSquads,
   auth,
+  entryFee,
   teamsPerUser,
   decreaseSlots,
   contestId,
@@ -48,6 +52,7 @@ const DashboardTable = ({
   decreaseSlots: () => void;
   participants: number | null;
   auth: Auth;
+  entryFee: number;
   teamsPerUser: number;
   contestId: string | null;
   isModal?: boolean;
@@ -58,6 +63,7 @@ const DashboardTable = ({
   const [selectedSquad, setSelectedSquad] = useState<null | string>(null);
   const [isParticipating, setIsParticipating] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
+  const { updateBalance } = useAuth();
 
   function toggleTeams() {
     setIsOpen((prev) => !prev);
@@ -68,20 +74,28 @@ const DashboardTable = ({
     if (!match?.id) return logger(match, 'no match id');
     setIsParticipating(true);
     try {
+      logger({ entry: entryFee, GAS_FEE }, 'apprinving');
+      if (entryFee !== 0) {
+        let approve = await approveTokens(
+          toE8S(entryFee) + GAS_FEE,
+          auth.identity,
+        );
+        if (!approve) {
+          return toast.error('Unexpected Error');
+        }
+      }
 
-
-      const added: { err?: any; ok?: string } =
-        await auth.actor.addParticipant(contestId, selectedSquad,getTimeZone());
+      const added: { err?: TransferFromError; ok?: string } =
+        await auth.actor.addParticipant(contestId, selectedSquad);
 
       if (added?.ok) {
         decreaseSlots();
         toast.success('Joined Successfully');
-        if ( participants  != null && participants + 1 >= teamsPerUser){
-
+        if (participants && participants + 1 >= teamsPerUser)
           setMaximumParticipated(true);
-        }
-        setParticipants((prev) => (prev!=null ? ++prev : prev));
+        setParticipants((prev) => (prev ? ++prev : prev));
         // match && match.teamsJoined++;
+
         // let newSquads = playerSquads.filter(());
         setSquads((prev: any) => {
           return prev.map((squad: any) => {
@@ -94,9 +108,10 @@ const DashboardTable = ({
             return squad;
           });
         });
+        updateBalance();
         handleHideConfirm();
       } else if (added?.err) {
-        toast.error("Unexpected Error");
+        toast.error(handleTransferError(added?.err));
       }
       logger(added);
     } catch (error) {
@@ -190,6 +205,13 @@ const DashboardTable = ({
             </div>
           </div>
         )}
+        <ConfirmTransaction
+          entryFee={entryFee}
+          show={showConfirm}
+          onConfirm={addParticipant}
+          loading={isParticipating}
+          hideModal={handleHideConfirm}
+        />
       </div>
       {/* </div> */}
     </>

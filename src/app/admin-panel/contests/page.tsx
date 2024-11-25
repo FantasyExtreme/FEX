@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import { ConnectPlugWalletSlice } from '@/types/store';
 import {
   Contest,
+  GroupedContest,
   GroupedContests,
   Match,
 } from '@/types/fantasy';
@@ -29,6 +30,8 @@ import {
 import {
   fetchMatch,
   getContests,
+  getIcpRate,
+  handleTransferError,
   isConnected,
   isDev,
 } from '@/components/utils/fantasy';
@@ -37,8 +40,10 @@ import {
   EnvironmentEnum,
   QueryParamType,
 } from '@/constant/variables';
+import ContestRow from '@/components/Components/ContestRow';
 import AddContest from '@/components/Components/AddContest';
 import JoinContest from '@/components/Components/JoinContest';
+import RankingModal from '@/components/Components/Ranking';
 import { toast } from 'react-toastify';
 import logger from '@/lib/logger';
 import ContestItem from '@/components/Components/ContestItem';
@@ -59,6 +64,7 @@ export default function Contests() {
   const [showModal, setShowModal] = useState(false);
   const [updateId, setUpdateId] = useState<null | string>(null);
   const navigation = useRouter();
+  const [icpRate, setIcpRate] = useState(0);
   const [showConnect, setShowConnect] = useState(false);
   const [path, setPath] = useState<string | null>(null);
   const router = useRouter();
@@ -145,7 +151,7 @@ export default function Contests() {
         toast.success('Reward Distrbuted');
       } else {
         logger(resp?.err);
-        toast.error("something went wronge");
+        toast.error(handleTransferError(resp?.err));
       }
     } catch (error) {
       logger(error);
@@ -168,7 +174,13 @@ export default function Contests() {
       setMatch,
     });
   }, [auth, matchId]);
- 
+  let getLatestIcpRate = async () => {
+    let rate = await getIcpRate();
+    setIcpRate(rate);
+  };
+  useEffect(() => {
+    getLatestIcpRate();
+  }, []);
   useEffect(() => {
     if (isConnected(auth.state)) {
       if (!userAuth.userPerms?.admin) {
@@ -208,6 +220,19 @@ export default function Contests() {
                             'Add Default Contest'
                           )}
                         </Button>{' '}
+                        <Button
+                          id='Add_Default_Contest'
+                          onClick={distributeReward}
+                          disabled={
+                            loading ||
+                            (contests && contests?.length > 0
+                              ? contests[0].isDistributed
+                              : false)
+                          }
+                          className='reg-btn  text-capitalize'
+                        >
+                          Distribute Reward
+                        </Button>
                         {isDev() && (
                           <Button
                             id='Add_Default_Contest'
@@ -219,7 +244,11 @@ export default function Contests() {
                               logger(matchStarted);
                             }}
                             disabled={
-                              loading   }
+                              loading ||
+                              (contests && contests?.length > 0
+                                ? contests[0].isDistributed
+                                : false)
+                            }
                             className='reg-btn  text-capitalize'
                           >
                             Start match
@@ -337,7 +366,14 @@ export default function Contests() {
                               <div className='package-contest-big'>
                                 {type == QueryParamType.simple
                                   ? contests?.map((contest) => (
-                                      
+                                      // <ContestRow
+                                      //   handleSelectSquad={handleSelectSquad}
+                                      //   handleShowRanking={handleShowRanking}
+                                      //   contest={contest}
+                                      //   handleShowUpdateModal={handleShowUpdateModal}
+                                      //   match={match}
+                                      //   isDashboard={true}
+                                      // />
                                       <ContestItem
                                         timeleft={timeLeft}
                                         handleSelectSquad={handleSelectSquad}
@@ -347,7 +383,7 @@ export default function Contests() {
                                         match={match}
                                         key={contest.id}
                                         setSelectedContest={setSelectedContest}
-                                       
+                                        icpRate={icpRate}
                                         isAdminPannel={true}
                                         handleShowUpdateModal={
                                           handleShowUpdateModal
@@ -375,7 +411,23 @@ export default function Contests() {
         handleShowModal={handleShowModal}
         matchId={matchId}
       />
-
+      {/* {selectedContest && (
+        <JoinContest
+          handleCloseModal={handleCloseSelect}
+          showModal={showSelect}
+          contestId={selectedContest?.id}
+          matchId={selectedContest?.matchId}
+          match={null}
+        />
+      )} */}
+      {selectedContest && (
+        <RankingModal
+          handleCloseModal={handleCloseRanking}
+          showModal={showRanking}
+          contestId={selectedContest?.id}
+          match={null}
+        />
+      )}
     </>
   );
 }

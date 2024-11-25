@@ -90,23 +90,23 @@
         color: $color;
       }
     }
-    // &:before {
-    //   position: absolute;
-    //   content: 'Alpha';
-    //   font-family: $Nasalization;
-    //   color: $white;
-    //   background-color: $color;
-    //   right: -12px;
-    //   top: 6px;
-    //   width: 60px;
-    //   display: flex;
-    //   justify-content: center;
-    //   align-items: center;
-    //   font-size: 10px;
-    //   transform: rotate(45deg);
-    //   padding-top: 1px;
-    //   padding-bottom: 0px;
-    // }
+    &:before {
+      position: absolute;
+      content: 'Alpha';
+      font-family: $Nasalization;
+      color: $white;
+      background-color: $color;
+      right: -12px;
+      top: 6px;
+      width: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 10px;
+      transform: rotate(45deg);
+      padding-top: 1px;
+      padding-bottom: 0px;
+    }
     .ribben2 {
       right: 0px;
       top: -4px;
@@ -204,7 +204,7 @@
     border-radius: 10px;
     a {
       color: $color;
-      padding: 7px 8px;
+      padding: 7px 10px;
       font-size: 14px;
       &:hover {
         background-color: $color;

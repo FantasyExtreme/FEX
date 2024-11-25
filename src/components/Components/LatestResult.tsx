@@ -7,6 +7,9 @@ import 'slick-carousel/slick/slick-theme.css';
 import Slider from 'react-slick';
 import {
   getMatches,
+  getMatchWinnerAndMVPS,
+  isConnected,
+  requireAuth,
 } from '@/components/utils/fantasy';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
@@ -27,7 +30,7 @@ import { MATCHES_RESULT_SIZES } from '@/constant/fantasticonst';
 import {
   MATCHES_CONTESTS_ROUTE,
   MATCHES_ROUTE,
-  
+  TEAMS_ROUTE,
 } from '@/constant/routes';
 import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
@@ -124,7 +127,7 @@ export default function LatestResult() {
             <ul key={index} className='latest-result-list'>
               <li>
                 <Link
-                  href={`#`}
+                  href={`${MATCHES_ROUTE + MATCHES_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
                 >
                   <div className='latest-post'>
                     <h6>{match.date}</h6>

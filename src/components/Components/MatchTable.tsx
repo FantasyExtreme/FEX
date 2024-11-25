@@ -1,9 +1,11 @@
 import { MATCHES_ICON_SIZES } from '@/constant/fantasticonst';
 import {
-  
   ADMIN_CONTESTS_ROUTE,
+  CONTESTS_ROUTE,
   MATCHES_CONTESTS_ROUTE,
   MATCHES_ROUTE,
+  PLAYERS_ROUTE,
+  TEAMS_ROUTE,
   TEAM_CREATION_ROUTE,
 } from '@/constant/routes';
 import {
@@ -22,7 +24,7 @@ import { Spinner, Table } from 'react-bootstrap';
 import ConnectModal from './ConnectModal';
 import React, { useEffect, useRef, useState } from 'react';
 import authMethods from '@/lib/auth';
-import { isConnected } from '../utils/fantasy';
+import { isConnected, sliceText } from '../utils/fantasy';
 import { useRouter } from 'next/navigation';
 import Tippy from '@tippyjs/react';
 import tethericon from '@/assets/images/icons/icon-paris.png';
@@ -35,8 +37,7 @@ export default function MatchTable({
   loading,
   tab,
   admin,
-  handleRewardableMatchUpdate,
-
+  handleRewardableMatchUpdate
 }: {
   groupMatches: null | [string, Match][];
   loading: boolean;
@@ -51,49 +52,20 @@ export default function MatchTable({
   }));
   const [path, setPath] = useState<string | null>(null);
   const [showConnect, setShowConnect] = useState(false);
-  const [makingRewardLoading, setMakingRewardLoading] = useState<boolean[]>(
-    Array(10).fill(false) 
+  //this loading will be used when we will disabled all match reward able button when any of them is being rewarded
+  const [rewardLoading, setRewardLoading] = useState<boolean>(false);
+  const [makingRewardLoading, setMakingRewardLoading] = useState<Record<string, boolean>>(
+    [].reduce((acc, id) => ({ ...acc, [id]: false }), {})
   );
+  
+  
 
   let router = useRouter();
 
   const handleNavigateToContest = (id: any) => {
-    // router.push(
-    //   `${MATCHES_ROUTE + MATCHES_CONTESTS_ROUTE}?matchId=${id}&type=${QueryParamType.simple}`,
-    // );
-  };
-  /**
-   * handleReward use to make a match rewardable
-   * @param id 
-   * @param rewardable 
-   * @param index 
-   * @returns 
-   */
-  const handleReward = async (id: string,rewardable:boolean,index:number) => {
-    try {
-      let matchId=id.trim()
-      if(!matchId || matchId=="") return toast.error("Match id not found.")
-        setMakingRewardLoading((pre) =>
-          pre.map((item, i) => (i === index ? !item : item))
-        );
-      const resp = await auth.actor.toggleRewardableMatch(matchId,rewardable);
-      if(resp.ok){
-        toast.success(resp.ok);
-        if(handleRewardableMatchUpdate) handleRewardableMatchUpdate(matchId,rewardable?false:true);
-
-      }else if(resp.err){
-        toast.error(resp.err);
-      }
-      setMakingRewardLoading((pre) =>
-        pre.map((item, i) => (i === index ? !item : item))
-      );
-    } catch (error) {
-      setMakingRewardLoading((pre) =>
-        pre.map((item, i) => (i === index ? !item : item))
-      );
-
-    }
-
+    router.push(
+      `${MATCHES_ROUTE + MATCHES_CONTESTS_ROUTE}?matchId=${id}&type=${QueryParamType.simple}`,
+    );
   };
   function handleShowConnect() {
     setShowConnect(true);
@@ -102,12 +74,55 @@ export default function MatchTable({
     setShowConnect(false);
   }
   /**
+ * use to handle loading of match
+ * @param {matchId}
+   */ 
+const toggleLoading = (id: string) => {
+  setMakingRewardLoading(prevState => ({
+    ...prevState,
+    [id]: !prevState[id], 
+  }));
+};
+
+  /**
    * clickRef use as a callback route user connection modal should route after connection
    */
   let clickRef = () => {
     if (path) {
       router.push(path);
     }
+  };
+  
+  /**
+   * handleReward use to make a match rewardable
+   * @param id 
+   * @param rewardable 
+   * @param index 
+   * @returns 
+   */
+  const handleReward = async (id: string,rewardable:boolean) => {
+    try {
+      let matchId=id.trim()
+      if(!matchId || matchId=="") return toast.error("Match id not found.")
+        toggleLoading(id)
+      setRewardLoading(true)
+      const resp = await auth.actor.toggleRewardableMatch(matchId,rewardable);
+      if(resp.ok){
+        toast.success(resp.ok);
+        if(handleRewardableMatchUpdate) handleRewardableMatchUpdate(matchId,rewardable?false:true);
+
+      }else if(resp.err){
+        toast.error(resp.err);
+      }
+      toggleLoading(id)
+    } catch (error) {
+      toggleLoading(id)
+
+    }finally{
+      setRewardLoading(false)
+
+    }
+
   };
 
   return (
@@ -189,7 +204,23 @@ export default function MatchTable({
                                 Create Team
                               </Link>
                             )}
-                        {admin && (
+                                 {admin && tab == MatchStatuses.upcoming && (
+    <Link
+    href={"#"}                              
+    onClick={(e)=>{
+      e.preventDefault();
+      if(rewardLoading) return
+      if(!makingRewardLoading[match.id]) {
+        handleReward(match.id,match.isRewardable);
+      }
+    }}
+      className={`reg-btn text-white reg-custom-btn empty text-capitalize ${rewardLoading && "cursernone"} `}
+    >
+     {makingRewardLoading[match.id] ? <BeatLoader color='white' size={3} />: match.isRewardable ? "Remove Reward":
+     "Add Reward"}
+    </Link>
+  )}
+                            {admin && (
                               <Link
                                 href={`${ADMIN_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
                                 className=' reg-btn text-white reg-custom-btn empty text-capitalize  '
@@ -197,13 +228,13 @@ export default function MatchTable({
                                 Create Contest
                               </Link>
                             )}
-                              <Link
+
+                            <Link
                               href={`${MATCHES_ROUTE + MATCHES_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
                               className=' reg-btn text-white reg-custom-btn empty text-capitalize  '
                             >
                               View Contests
                             </Link>
-                          
                           </div>
                         </td>
                         <td onClick={() => handleNavigateToContest(match.id)}>
@@ -231,13 +262,25 @@ export default function MatchTable({
                               <span className='d-flex flex-column'>
                                 <span className='w-80 text-center fs-6 color fw-bold'>{`${match?.homeScore}-${match?.awayScore}`}</span>
                                 <span className='w-80 text-center verses'>vs 
-                                 
+                                  {match?.isRewardable &&
+                                <Tippy content={'Winner will get reward.'}>
+                                 <span>
+                                  
+                                 <br/> <Dollericon/></span>
+                              </Tippy>
+                              }
                               </span>
                               </span>
                             ) : (
                               <span className='w-80 text-center verses'>vs 
-                          
-                              </span>  
+                              {match?.isRewardable &&
+                                <Tippy content={'Winner will get reward.'}>
+                                 <span>
+                                  
+                                 <br/> <Dollericon/></span>
+                              </Tippy>
+                              }
+                              </span>
                             )}
 
                             <span className='w-half text-left d-flex align-items-center justify-content-start'>
@@ -283,15 +326,7 @@ export default function MatchTable({
       </div>
 
       {/* Mobile View Match Posts */}
-      {loading ? (
-      <div className='d-flex justify-content-center hide-on-web'>
-       <Spinner className='hide-on-web mb-5' animation='border' />
-       </div>
-        ) : (!groupMatches || groupMatches.length === 0) ? (
-       <p className='text-center text-white hide-on-web'>Match Not Found</p>
-       ) : (
-       groupMatches?.map((matches: any, index: number) => (
-
+      { (!groupMatches || groupMatches.length ==0)?    <p className='text-center text-white  hide-on-web'>Match Not Found</p> : groupMatches?.map((matches: any, index: number) => (
         <React.Fragment key={`mobile-group-${index}`}>
           <h5 className='color Nasalization hide-on-web'>
             <span> {matches[1][0]?.tournamentName}</span>
@@ -317,13 +352,13 @@ export default function MatchTable({
                     className='color verses'
                     onClick={() => handleNavigateToContest(match.id)}
                   >
-                     {match?.isRewardable &&
-                             <Tippy content={'5$ Dollar Reward'}>
+                    {match?.isRewardable &&
+                                <Tippy content={'Winner will get reward.'}>
                                  <span>
                                   
                                  <br/> <Dollericon/></span>
                               </Tippy>
-                              } 
+                              }
                               <br/>
                               <br/>
                     {match?.date} <br/>   {match?.time}
@@ -373,7 +408,24 @@ export default function MatchTable({
                     Create Team
                   </Link>
                 )}
-               {admin && (
+
+  {admin && tab == MatchStatuses.upcoming &&(
+    <Link
+    href={"#"}
+    onClick={(e)=>{
+      e.preventDefault();
+      if(rewardLoading) return
+      if(!makingRewardLoading[match.id]) {
+        handleReward(match.id,match.isRewardable);
+      }
+    }}
+      className={` reg-btn text-white reg-custom-btn empty text-capitalize  ${rewardLoading && "cursernone"}`}
+    >
+     {makingRewardLoading[match.id] ? <BeatLoader color='white' size={3} />: match.isRewardable ? "Remove Reward":
+     "Add Reward"}
+    </Link>
+  )}
+                {admin && (
                   <Link
                     href={`${ADMIN_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
                     className=' reg-btn text-white reg-custom-btn empty text-capitalize  '
@@ -381,20 +433,18 @@ export default function MatchTable({
                     Create Contest
                   </Link>
                 )}
-                   <Link
+
+                <Link
                   href={`${MATCHES_ROUTE + MATCHES_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
                   className=' reg-btn text-white reg-custom-btn empty text-capitalize  '
                 >
                   View Contests
                 </Link>
-
-               
               </div>
             </div>
           ))}
         </React.Fragment>
-      ))
-    )}
+      ))}
 
       <ConnectModal
         show={showConnect}

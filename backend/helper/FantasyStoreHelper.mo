@@ -1,8 +1,44 @@
+import Trie "mo:base/Trie";
+import Text "mo:base/Text";
+import Map "mo:base/HashMap";
 
+import Time "mo:base/Time";
+import Array "mo:base/Array";
+import Prelude "mo:base/Prelude";
+import Order "mo:base/Order";
+import Iter "mo:base/Iter";
+import Debug "mo:base/Debug";
 import Int "mo:base/Int";
+import Principal "mo:base/Principal";
+import List "mo:base/List";
+import Option "mo:base/Option";
+import Result "mo:base/Result";
+import Prim "mo:prim";
+import Types "../model/Types";
 module FantasyStoreHelper {
 
- // Constants
+  type Key = Types.Key;
+  type User = Types.User;
+  type Team = Types.Team;
+  type Match = Types.Match;
+  type InputMatch = Types.InputMatch;
+  type Player = Types.Player;
+  type Tournament = Types.Tournament;
+  type Position = Types.Position;
+  type PlayerCount = Types.PlayerCount;
+  type PlayerSquad = Types.PlayerSquad;
+  type Contest = Types.Contest;
+  type Participant = Types.Participant;
+  type IPlayerSquad = Types.IPlayerSquad;
+  type Users = Types.Users;
+  type Matches = Types.Matches;
+  type Teams = Types.Teams;
+  type Players = Types.Players;
+  type Tournaments = Types.Tournaments;
+  type PlayerSquads = Types.PlayerSquads;
+  type Contests = Types.Contests;
+  type Participants = Types.Participants;
+  // Constants
   let millisecondsPerDay : Int = 86400000; //24 * 60 * 60 * 1000;
 
   // Function to extract year, month, and day from a timestamp in milliseconds
@@ -61,5 +97,67 @@ module FantasyStoreHelper {
     let (year2, month2, day2) = getDateParts(timestamp2+offset);
     return year2 == year1 and month2 == month1 and day2 == day1;
   };
+
+
+  // public func searchSortList(array : Map.HashMap<Key, Match>, search : Text, startIndex : Nat, length : Nat) : {
+  //     entries : RefinedMatches;
+  //     amount : Nat;
+  //   } {
+  //     let searchString = Text.map(search, Prim.charToLower);
+  //     var searchedMatches = Map.HashMap<Key, Match>(0, Text.equal, Text.hash);
+  //     for ((key, entry) in array.entries()) {
+  //       let title = Text.map(entry.title, Prim.charToLower);
+  //       let user = Text.map(entry.userName, Prim.charToLower);
+  //       var isTitleSearched = Text.contains(title, #text searchString);
+  //       var isUserSearched = Text.contains(user, #text searchString);
+  //       if (isTitleSearched or isUserSearched) {
+  //         searchedMatches.put(key, entry);
+  //       };
+  //     };
+  //     var searchedMatchesArray : [(Key, Match)] = Iter.toArray(searchedMatches.entries());
+  //     let compare = func((keyA : Key, a : Match), (keyB : Key, b : Match)) : Order.Order {
+  //       if (a.isPromoted and not b.isPromoted) {
+  //         return #less;
+  //       } else if (b.isPromoted and not a.isPromoted) {
+  //         return #greater;
+  //       } else {
+  //         if (a.creation_time > b.creation_time) {
+  //           return #less;
+  //         } else if (a.creation_time < b.creation_time) {
+  //           return #greater;
+  //         } else {
+  //           return #equal;
+  //         };
+  //       };
+  //     };
+  //     let sortedEntries = Array.sort(
+  //       searchedMatchesArray,
+  //       compare,
+  //     );
+  //     var paginatedArray : [(Key, Match)] = [];
+  //     let size = sortedEntries.size();
+  //     let amount : Nat = size - startIndex;
+  //     let itemsPerPage = 6;
+  //     if (size > startIndex and size > (length + startIndex) and length != 0) {
+  //       paginatedArray := Array.subArray<(Key, Match)>(sortedEntries, startIndex, length);
+  //     } else if (size > startIndex and size > (startIndex + itemsPerPage)) {
+  //       if (length != 0) {
+  //         paginatedArray := Array.subArray<(Key, Match)>(sortedEntries, startIndex, amount);
+  //       } else {
+  //         paginatedArray := Array.subArray<(Key, Match)>(sortedEntries, startIndex, itemsPerPage);
+
+  //       };
+
+  //     } else if (size > startIndex and size < (startIndex + itemsPerPage) and size > itemsPerPage) {
+  //       Debug.print(debug_show (size, startIndex, amount));
+  //       paginatedArray := Array.subArray<(Key, Match)>(sortedEntries, startIndex, amount);
+
+  //     } else if (size > itemsPerPage) {
+  //       paginatedArray := Array.subArray<(Key, Match)>(sortedEntries, 0, itemsPerPage);
+  //     } else {
+  //       paginatedArray := sortedEntries;
+  //     };
+  //     return { entries = paginatedArray; amount = sortedEntries.size() };
+  //   };
 
 };

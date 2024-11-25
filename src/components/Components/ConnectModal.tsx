@@ -1,4 +1,4 @@
-import {  LoginEnum } from '@/constant/fantasticonst';
+import { GAS_FEE, GAS_FEE_ICP, LoginEnum } from '@/constant/fantasticonst';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
 import React, { useEffect, useState } from 'react';

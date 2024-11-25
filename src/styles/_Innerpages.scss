@@ -675,7 +675,7 @@
     position: absolute;
     font-weight: 700;
     left: -2px;
-    top: -50px;
+    top: -56px;
     padding: 10px 15px 10px 15px;
     background-color: #3a3a3a;
     border-radius: 15px 15px 0px 0px;
@@ -814,7 +814,7 @@
     width: 100%;
     margin-top: 30px;
     margin-bottom: 30px;
-    min-height: 30px;
+    min-height: 99px;
     @media (max-width: 767px) {
       background-color: black;
       border-radius: 15px;
@@ -1216,7 +1216,7 @@
       );
     }
     .calculate-list {
-      min-height: 30px;
+      min-height: 99px;
       i {
         color: #e7ac18 !important;
       }
@@ -1601,20 +1601,9 @@ input {
   display: flex;
   padding: 25px;
   border-radius: 1.5rem;
-  @media(max-width:767px){flex-direction: column;padding:15px;}
-
-  .contactusform{width:calc(100% - 420px);padding-right: 30px;
-    @media(max-width:1200px){padding-right: 20px;width: calc(100% - 300px);}
-    @media(max-width:992px){width: calc(100% - 250px);}
-    @media(max-width:767px){width: 100%;order:2;padding-right:0;margin-right:0;}
-  }
+  .contactusform,
   .imagesec {
-    width: 420px;
-    img{border-radius: 15px;}
-    @media(max-width:1200px){width: 300px;}
-    @media(max-width:992px){width: 250px;}
-    @media(max-width:767px){width: 100%;height:500px;order:1;margin-bottom:20px;}
-    @media(max-width:575px){height:400px;}
+    width: 50%;
   }
   .contactusform {
     h4 {
@@ -1642,6 +1631,9 @@ input {
   }
   @media (max-width: 530px) {
     flex-direction: column;
+    .imagesec {
+      display: none;
+    }
     .contactusform,
     .imagesec {
       width: 100%;
@@ -1774,10 +1766,16 @@ input {
 }
 .contactusContainer {
   position: relative;
+  top: -750px;
   z-index: 1;
-  padding-top: 100px;
-  @media (max-width: 1200px) {
-    padding-top: 0px;
+  @media (min-width: 500px) {
+    top: -650px;
+  }
+  @media (min-width: 992px) {
+    top: -350px;
+  }
+  @media (min-width: 1400px) {
+    top: -90px;
   }
 }
 .flexooo {
@@ -1833,12 +1831,13 @@ input {
     
     .my-live-rank-head{
       position: relative;
-      h3{font-size: 20px;color: $color;font-family: $Nasalization;text-transform: uppercase;
-        @media(max-width:1500px){font-size: 18px;}
-        @media(max-width:1200px){font-size: 20px;}
-        @media(max-width:991px){font-size: 18px;}
-        @media(max-width:767px){font-size: 20px;}
-        @media(max-width:575px){font-size: 16px;}
+      h3{font-size: 18px;color: $color;font-family: $Nasalization;text-transform: uppercase;
+        padding-left: 70px;text-align: left;
+        @media(max-width:1500px){font-size: 16px;padding-left:60px;}
+        @media(max-width:1200px){font-size: 18px;padding-left:70px;}
+        @media(max-width:991px){font-size: 18px;padding-left:60px;}
+        @media(max-width:767px){font-size: 18px;padding-left:70px;}
+        @media(max-width:575px){font-size: 16px;padding-left:60px;}
       }
       span{position: absolute;top: 0;left:0;color: $color;z-index: 1;display: inline-block;
         border: 1px solid $color;font-size: 12px;text-transform: uppercase;

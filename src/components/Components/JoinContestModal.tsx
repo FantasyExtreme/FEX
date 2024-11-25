@@ -21,7 +21,6 @@ import { number, object, string } from 'yup';
 import { Principal } from '@dfinity/principal';
 import useAuth from '@/lib/auth';
 import { E8S, GAS_FEE, GAS_FEE_ICP } from '@/constant/fantasticonst';
-import { makeICPLedgerCanister } from '@/dfx/service/actor-locator';
 import { toast } from 'react-toastify';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
@@ -31,7 +30,6 @@ import JoinContest from './JoinContest';
 import { Match } from '@/types/fantasy';
 import {
   getRawPlayerSquads,
-  getTimeZone,
   handleTransferError,
   isConnected,
 } from '../utils/fantasy';
@@ -106,7 +104,8 @@ const JoinContestModal = ({
     }
   }
   async function addParticipant() {
-    
+    // logger(contestId,"hdsagfhgsadjhgfsadfsadfasd");
+    // return;
     if (!match?.id) return logger(match, 'no match id');
     setIsParticipating(true);
     try {
@@ -122,14 +121,14 @@ const JoinContestModal = ({
       }
       if (!selectTeam.teamId || !contestId) return;
       const added: { err?: TransferFromError; ok?: string } =
-        await auth.actor.addParticipant(contestId, selectTeam.teamId,getTimeZone());
+        await auth.actor.addParticipant(contestId, selectTeam.teamId);
 
       if (added?.ok) {
         decreaseSlots();
         toast.success('Joined Successfully');
-        if (participants !=null && participants + 1 >= teamsPerUser)
+        if (participants && participants + 1 >= teamsPerUser)
           setMaximumParticipated(true);
-        setParticipants((prev) => (prev!=null ? ++prev : prev));
+        setParticipants((prev) => (prev ? ++prev : prev));
         // match && match.teamsJoined++;
 
         // let newSquads = playerSquads.filter(())

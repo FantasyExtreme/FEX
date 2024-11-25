@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Link from 'next/link';
 import { Container, Row, Col, Tabs, Tab, Button, Form } from 'react-bootstrap';
@@ -27,7 +27,6 @@ import useSearchParamsHook from '@/components/utils/searchParamsHook';
 import { MATCHES_ROUTE } from '@/constant/routes';
 import calander from '@/assets/images/calender.png';
 import DatePicker from 'react-date-picker';
-import logger from '@/lib/logger';
 type ValuePiece = Date | null;
 
 type Value = ValuePiece | [ValuePiece, ValuePiece];
@@ -39,8 +38,6 @@ const SuperAdmin = () => {
   const [hasMounted, setHasMounted] = useState(true);
   const [tournamnets, setTournaments] = useState<TournamentType | null>(null);
   const [value, onChange] = useState<Value>(new Date());
-  const childRef = useRef<any>(null);
-  const [prevSelectedTime, setPrevSelectedTime] = useState<null | number>(null);
 
   // const [upcomingMatches, setUpcomingMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState<LoadingState>({
@@ -70,9 +67,7 @@ const SuperAdmin = () => {
     limit: 10,
   };
 
-  // const [tournamentId, selectTournamentId] = useState<string | null>(null);
-  const tournamentId = searchParams.get(QURIES.tournamentId);
-
+  const [tournamentId, selectTournamentId] = useState<string | null>(null);
   const { auth, userAuth } = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
     userAuth: (state as ConnectPlugWalletSlice).userAuth,
@@ -89,15 +84,11 @@ const SuperAdmin = () => {
       { ...matchProps, status, page: 0 },
       setLoading,
       setPageCount,
-       [],
+      selectedTime ? [selectedTime] : [],
       Id ? Id : null,
     );
   }
-  const callChildMethod = () => {
-    if (childRef.current) {
-      childRef.current.updateActiveIndex(); // Call the child method
-    } 
-  };
+
   /**
    * Select the tab and get matches according to status
    * @param tab The status of match (which is being used as the keys of tabs)
@@ -105,9 +96,6 @@ const SuperAdmin = () => {
    */
   function changeTab(tab: string | null) {
     if (!tab) return;
-    callChildMethod(); 
-    setSelectedTime(null);
-   
     const params = new URLSearchParams(searchParams.toString());
     params.set(QURIES.matchTab, tab);
     window.history.pushState(null, '', `?${params.toString()}`);
@@ -197,7 +185,29 @@ const SuperAdmin = () => {
       tournamentId ? tournamentId : null,
     );
   };
-
+   /**
+   * change reward able match status by match id
+   * @param {matchId, status}
+   */
+   let handleRewardableMatchUpdate = (matchId: string, status: boolean) => {
+    let filteredMatches: [string, Match][] | null = matches.upcoming
+      ? matches.upcoming.map(([tournament, matches]) => {
+          let updatedMatches = matches?.map((match:Match) => {
+            if (match.id === matchId) {
+              return { ...match, isRewardable: status }; // Update the isRewardable field
+            }
+            return match; // Return the original match if no changes
+          });
+          return [tournament, updatedMatches]; // Return the tuple [string, Match[]]
+        })
+      : null;
+  
+    setMatches((prev: MatchesType) => ({
+      ...prev,
+      upcoming: filteredMatches || prev.upcoming, // Ensure it’s either the filtered matches or the previous state
+    }));
+  };
+  
   /**
    * Fetches and sets the matches for the selected tournament.
    *
@@ -239,29 +249,6 @@ const SuperAdmin = () => {
     }
     onChange(date);
   };
-    /**
-   * change reward able match status by match id
-   * @param {matchId, status}
-   */
-    let handleRewardableMatchUpdate = (matchId: string, status: boolean) => {
-      let filteredMatches: [string, Match][] | null = matches.upcoming
-        ? matches.upcoming.map(([tournament, matches]) => {
-            let updatedMatches = matches?.map((match:Match) => {
-              if (match.id === matchId) {
-                return { ...match, isRewardable: status }; // Update the isRewardable field
-              }
-              return match; // Return the original match if no changes
-            });
-            return [tournament, updatedMatches]; // Return the tuple [string, Match[]]
-          })
-        : null;
-    
-      setMatches((prev: MatchesType) => ({
-        ...prev,
-        upcoming: filteredMatches || prev.upcoming, // Ensure it’s either the filtered matches or the previous state
-      }));
-    };
-    
   useEffect(() => {
     if (auth.actor) {
       let tempTab = searchParams.get(QURIES.matchTab);
@@ -280,7 +267,7 @@ const SuperAdmin = () => {
       );
       getTournaments(auth.actor, matchProps, setTournaments);
     }
-  }, [auth.actor]);
+  }, [auth.actor, tournamentId]);
 
   const navigation = useRouter();
   useEffect(() => {
@@ -316,11 +303,8 @@ const SuperAdmin = () => {
                         //   );
                         // }}
                         const selectedValue = e.target.value;
-
                         selectTournament(selectedValue);
-                        // router.push(
-                        //   `${MATCHES_ROUTE}?tournament=${selectedValue}`,
-                        // );
+                   
                       }}
                     >
                       <option value=''>Leagues</option>
@@ -377,6 +361,7 @@ const SuperAdmin = () => {
                             admin={true}
                             groupMatches={matches?.upcoming}
                             handleRewardableMatchUpdate={handleRewardableMatchUpdate}
+
                           />
                         </Tab>
                         <Tab
@@ -388,7 +373,6 @@ const SuperAdmin = () => {
                             tab={matchTab}
                             admin={true}
                             groupMatches={matches?.ongoing}
-
                           />
                         </Tab>
                         <Tab
@@ -400,7 +384,6 @@ const SuperAdmin = () => {
                             tab={matchTab}
                             admin={true}
                             groupMatches={matches?.finished}
-
                           />
                         </Tab>
                       </Tabs>
