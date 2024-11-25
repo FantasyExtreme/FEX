@@ -5108,7 +5108,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     pIncreaseParticipant(props);
 
   };
-  func pIncreaseParticipant({
+   func pIncreaseParticipant({
     id : Key;
     assetsVal : ?Nat;
   }) : Bool {
@@ -5946,7 +5946,6 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     return #ok("User has joined the contest");
 
   };
-
 
 
   system func preupgrade() {

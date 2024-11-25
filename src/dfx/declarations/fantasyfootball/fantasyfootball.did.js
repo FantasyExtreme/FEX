@@ -188,7 +188,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const ReturnAddParticipant = IDL.Variant({
     'ok' : IDL.Text,
-    'err' : TransferFromError,
+    'err' : TransferFromError__1,
   });
   const RPoints = IDL.Int;
   const Player = IDL.Record({
@@ -1151,6 +1151,16 @@ export const idlFactory = ({ IDL }) => {
       ),
     'increaseTotalEarning' : IDL.Func(
         [IDL.Record({ 'id' : Key__1, 'assetsVal' : IDL.Opt(IDL.Nat) })],
+        [IDL.Bool],
+        [],
+      ),
+    'increaseRewardsWon' : IDL.Func(
+        [IDL.Record({ 'id' : Key, 'assetsVal' : IDL.Opt(IDL.Nat) })],
+        [IDL.Bool],
+        [],
+      ),
+    'increaseTotalEarning' : IDL.Func(
+        [IDL.Record({ 'id' : Key, 'assetsVal' : IDL.Opt(IDL.Nat) })],
         [IDL.Bool],
         [],
       ),
