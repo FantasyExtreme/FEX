@@ -1,4 +1,5 @@
 import {
+  CONTESTS_ROUTE,
   MATCH_CONTEST_ROUTE,
   TEAM_CREATION_ROUTE,
   TEAMS_ROUTE,
@@ -8,7 +9,7 @@ import Link from 'next/link';
 import React from 'react';
 import { Button, Table } from 'react-bootstrap';
 import BeatLoader from 'react-spinners/BeatLoader';
-import {  isDev, sliceText } from '../utils/fantasy';
+import { getTeamStatus, isDev, sliceText } from '../utils/fantasy';
 import { Match, PlayerSquad } from '@/types/fantasy';
 import Tippy from '@tippyjs/react';
 import { useRouter } from 'next/navigation';

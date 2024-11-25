@@ -4,7 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { Button, Form, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { Contest, Match } from '@/types/fantasy';
 import Link from 'next/link';
+import JoinContest from './JoinContest';
 import useSearchParamsHook from '../utils/searchParamsHook';
+import { fromE8S } from '@/lib/ledger';
 import { TEAM_CREATION_ROUTE } from '@/constant/routes';
 import Countdown, { CountdownRenderProps } from 'react-countdown';
 import { date } from 'yup';
@@ -13,24 +15,27 @@ import {
   getPackage,
   getPackageIcon,
   isConnected,
+  shouldShowROI,
 } from '../utils/fantasy';
 import ConnectModal from './ConnectModal';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
-import { ContestInfoType } from '@/constant/variables';
+import { ContestInfoType, DefaultContest } from '@/constant/variables';
+import ContestInfoModal from './ContestInfoModal';
 import logger from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import Tippy from '@tippyjs/react';
 import CupSvg from '@/assets/images/icons/icon-trophy.png';
 import GiftSvg from '@/assets/images/icons/icon-gold-medal.png';
 import rulebook from '@/assets/images/icons/icon-book.png';
-import JoinContest from '@/components/Components/JoinContest';
 
 import coinicon from '@/assets/images/icons/coin-icon.png';
 import tethericon from '@/assets/images/icons/tether-icon.png';
+import JoinContestModal from './JoinContestModal';
+import RewardCalculatorModal from './RewardCalculatorModal';
 import CountdownRender from './CountdownRenderer';
 import PrincipalSvg from '../Icons/PrincipalSvg';
-import JoinContestModal from './JoinContestModal';
+import AddReferalLink from './AddReferalLink';
 
 interface Props {
   contest: Contest;
@@ -68,6 +73,7 @@ function ContestItem({
   const [modalType, setModalType] = useState<ContestInfoType>(
     ContestInfoType.rules,
   );
+  const [addCommunityId, setAddCommunityId] = useState(false);
 
   const [contestInfo, setContestInfo] = useState({
     entryFee: 0,
@@ -82,13 +88,22 @@ function ContestItem({
     auth: (state as ConnectPlugWalletSlice).auth,
     userAuth: (state as ConnectPlugWalletSlice).userAuth,
   }));
-
   function handleShowJoin() {
     setShowJoin(true);
   }
   function handleCloseJoin() {
     setShowJoin(false);
   }
+  function handleShowROI() {
+    setShowROI(true);
+  }
+  function handleCloseROI() {
+    setShowROI(false);
+  }
+  function handleCloseAddReferalLink() {
+    setAddCommunityId(false);
+  }
+
   /**
    * Decreases the number of slots left.
    *
@@ -97,7 +112,25 @@ function ContestItem({
   function decreaseSlots() {
     setSlotsLeft((prev) => prev - 1);
   }
-
+  const handleShowInfo = (type: ContestInfoType) => {
+    setModalType(type);
+    switch (type) {
+      case ContestInfoType.rules:
+        setModalText(contest?.rules?.split(','));
+        break;
+      case ContestInfoType.rewardDistribution:
+        let text = contest?.rewardDistribution?.map((r: any) => {
+          if (r.to == r.from)
+            return `Position ${r.to} : ${Math.abs(r.percentage)}`;
+          return `Positions ${r.from} - ${r.to} : ${Math.abs(r.percentage)}`;
+        });
+        setModalText(text);
+        break;
+      default:
+        break;
+    }
+    setShowInfo(true);
+  };
   const hideInfo = () => setShowInfo(false);
   function handleShowConnect() {
     setShowConnect(true);
@@ -127,7 +160,12 @@ function ContestItem({
         <div className='package-contest-post'>
           <div className='package-contest-post-inner'>
             <div className='contest-info'>
-       
+              <Image
+                src={getPackageIcon(contest.name)}
+                width={30}
+                height={35}
+                alt='img'
+              />{' '}
               {contest.name}
               {isAdminPannel &&  <span className='copytbn' onClick={()=>{
                 copyId(contest.id,"Contest Id")
@@ -200,19 +238,70 @@ function ContestItem({
               </div>
               <div className='txt-pnl'>
                 <h6>{contest.name}</h6>
-               
+                <span>Entry Fee: {contest.entryFee} ICP</span>
               </div>
             </div>
             <ul className='calculate-list'>
-            
+              {shouldShowROI(contest.name) ? (
+                <li>
+                  <p>Rewards:</p>
+                  <p onClick={handleShowROI}>
+                    <i className='fa fa-rocket color'></i> Reward Calculator{' '}
+                    <i className='fa fa-calculator'></i>
+                  </p>
+                </li>
+              ) : null}
               <li>
                 <p>Participants</p>
                 <p>{contest.slotsUsed}</p>
               </li>
-             
+              <li>
+                <p>Prize Pool</p>
+                <p>
+                  {contest.prizePool} ICP <small>(1 ICP ≈ {icpRate}$)</small>
+                </p>
+              </li>
             </ul>
-           
-             
+            <ul
+              className={`icon-list ${!shouldShowROI(contest.name) && 'justify-content-center'}`}
+            >
+              {shouldShowROI(contest.name) && (
+                <>
+                  {' '}
+                  <Tippy
+                    content={
+                      <>
+                        <span className='me-4'>Prize for 1st position:</span>
+                        <span> {contest?.firstPrize ?? 0} ICP</span>
+                      </>
+                    }
+                  >
+                    <li>
+                      <Image src={GiftSvg} alt='icon Gift' />
+                    </li>
+                  </Tippy>
+                  <li
+                    onClick={() => {
+                      handleShowInfo(ContestInfoType.rewardDistribution);
+                      setContestInfo({
+                        entryFee: contest.entryFee,
+                        totalparticipants: contest.slotsUsed,
+                      });
+                    }}
+                  >
+                    <Image src={CupSvg} alt='icon Cup' />
+                  </li>
+                </>
+              )}
+              <li
+                onClick={() => {
+                  setContestInfo({ entryFee: 0, totalparticipants: 0 });
+                  handleShowInfo(ContestInfoType.rules);
+                }}
+              >
+                <Image src={rulebook} alt='icon Rule Book' />
+              </li>
+            </ul>
 
             {isAdminPannel ? (
               <>
@@ -234,9 +323,20 @@ function ContestItem({
                 >
                   View Ranking
                 </Button>{' '}
+                {setAddCommunityId && (
+    <Button
+      onClick={() => {
+
+        setAddCommunityId(true);
+      }}
+      className='reg-btn mt-3'
+    >
+     Add Community Id
+    </Button>
+  )}
               </>
             ) : Number(match?.time) > Date.now() ? (
-              <Button  onClick={handleShowJoin} className='reg-btn'>
+              <Button onClick={handleShowJoin} className='reg-btn'>
                 Join Contest
               </Button>
             ) : (
@@ -251,7 +351,7 @@ function ContestItem({
 
             {!isAdminPannel && (
               <JoinContest
-              
+                entryFee={contest.entryFee}
                 teamsPerUser={contest.teamsPerUser}
                 contestId={contest?.id}
                 matchId={contest?.matchId}
@@ -260,22 +360,31 @@ function ContestItem({
                 contestPage={true}
                 updateSquad={showJoin}
                 contestName={contest.name}
-               
               />
             )}
           </div>
         </div>
       </div>
 
+      {showInfo && (
+        <ContestInfoModal
+          show={showInfo}
+          hide={hideInfo}
+          text={modalText}
+          type={modalType}
+          entryFee={contestInfo.entryFee}
+          totalParticipants={contestInfo.totalparticipants}
+          auth={auth}
+        />
+      )}
       <ConnectModal
         show={showConnect}
         hideModal={handleHideConnect}
         callBackfn={clickRef}
       />
-    
-    {showJoin && (
+      {showJoin && (
         <JoinContestModal
-         
+          entryFee={contest.entryFee}
           teamsPerUser={contest.teamsPerUser}
           contestId={contest?.id}
           matchId={contest?.matchId}
@@ -285,6 +394,23 @@ function ContestItem({
           handleClose={handleCloseJoin}
         />
       )}
+
+  {addCommunityId && (
+    <AddReferalLink
+      contestId={contest?.id}
+      show={addCommunityId}
+      handleClose={handleCloseAddReferalLink}
+    />
+  )}
+      <RewardCalculatorModal
+        show={showROI}
+        handleClose={handleCloseROI}
+        defaultContest={{
+          name: contest.name,
+          entryFee: contest.entryFee,
+          participants: contest.slotsUsed,
+        }}
+      />
     </>
   );
 }

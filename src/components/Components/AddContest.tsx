@@ -22,6 +22,7 @@ import { ConnectPlugWalletSlice } from '@/types/store';
 import { toast } from 'react-toastify';
 import { getContest } from '../utils/fantasy';
 import { Contest } from '@/types/fantasy';
+import { fromE8S } from '@/lib/ledger';
 import Tippy from '@tippyjs/react';
 
 interface Props {
@@ -47,10 +48,12 @@ const AddContest = ({
   const initialContest = {
     name: oldContest?.name ?? '',
     slots: oldContest?.slots ?? '',
+    entryFee: oldContest?.entryFee ?? '',
+    rewardDistribution: oldContest?.rewardDistribution ?? [],
     minCap: oldContest?.minCap ?? '',
     teamsPerUser: oldContest?.teamsPerUser ?? '',
     rules: oldContest?.rules ?? '',
-    // maxCap: '',
+    maxCap: '',
   };
   const heading = updateId ? 'Update Contest' : 'Add Contest';
   const button = updateId ? 'Update' : 'Add';
@@ -63,6 +66,12 @@ const AddContest = ({
     slots: number()
       .required(Messages.contest.slots.req)
       .min(Validations.contests.slots.min, Messages.contest.slots.min),
+    entryFee: number()
+      .required(Messages.contest.entryFee.req)
+      .min(Validations.contests.entryFee.min, Messages.contest.entryFee.min),
+    minCap: number()
+      .required(Messages.contest.minCap.req)
+      .min(Validations.contests.minCap.min, Messages.contest.minCap.min),
     teamsPerUser: number()
       .required(Messages.contest.teamsPerUser.req)
       .min(
@@ -70,22 +79,48 @@ const AddContest = ({
         Messages.contest.teamsPerUser.min,
       ),
     rules: string().required(Messages.contest.rules.req),
-
+    // maxCap: number()
+    //   .required(Messages.contest.maxCap.req)
+    //   .min(Validations.contests.maxCap.min, Messages.contest.maxCap.min),
+    rewardDistribution: array()
+      .of(
+        object().shape({
+          from: number().min(1, 'From is required'),
+          to: number().min(1, 'To is required'),
+          amount: number().min(1, 'Amount is required'),
+        }),
+      )
+      .min(1, 'Please add atleast one Reward'),
   });
   async function handleContest(values: any, actions: any) {
     try {
       setSaving(true);
-
+      // const _rewardDistribution: any = [];
+      // let keys = Object.keys(values);
+      // keys.map((key: any) => {
+      //   if (values[key]?.from > 0) {
+      //     _rewardDistribution.push(values[key]);
+      //   }
+      // });
+      let _rewardDistribution = values.rewardDistribution?.map((r: any) => ({
+        to: Number(r.to),
+        from: Number(r.from),
+        amount: Number(r.amount),
+      }));
 
       const contest = {
         name: values.name,
         slots: values.slots,
+        entryFee: values.entryFee,
         teamsPerUser: values.teamsPerUser,
         rules: values.rules,
+        rewardDistribution: _rewardDistribution,
         matchId,
-        minCap: 0,
+        minCap: values.minCap,
         maxCap: 0,
-        providerId: '0'
+        providerId: '0',
+        isDistributed: false,
+        paymentMethod: 'ryjl3-tyaaa-aaaaa-aaaba-cai',
       };
       logger(contest, 'foormm gothca');
       let respContest;
@@ -184,7 +219,33 @@ const AddContest = ({
                   component='div'
                 />
               </div>
-
+              <Field name='entryFee'>
+                {({ field, formProps }: any) => (
+                  <Form.Group className='mb-2'>
+                    <Form.Label>Entry Fees (In E8S)</Form.Label>
+                    <Form.Control
+                      type='number'
+                      placeholder={'Enter Entry Fees'}
+                      value={field.value}
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                      onInput={handleChange}
+                      name='entryFee'
+                    />
+                    <span className='color'>
+                      {' '}
+                      IN ICP: {fromE8S(field.value)}
+                    </span>
+                  </Form.Group>
+                )}
+              </Field>
+              <div className='text-danger mb-2'>
+                <ErrorMessage
+                  className='Mui-err'
+                  name='entryFee'
+                  component='div'
+                />
+              </div>
               <Field name='teamsPerUser'>
                 {({ field, formProps }: any) => (
                   <Form.Group className='mb-2'>
@@ -240,7 +301,183 @@ const AddContest = ({
                   component='div'
                 />
               </div>
-            
+              <Field name='minCap'>
+                {({ field, formProps }: any) => (
+                  <Form.Group className='mb-2'>
+                    <Form.Label>Minimum Cap</Form.Label>
+                    <Form.Control
+                      type='number'
+                      placeholder={'Enter Minimum Cap'}
+                      value={field.value}
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                      onInput={handleChange}
+                      name='minCap'
+                    />
+                  </Form.Group>
+                )}
+              </Field>
+              <div className='text-danger mb-2'>
+                <ErrorMessage
+                  className='Mui-err'
+                  name='minCap'
+                  component='div'
+                />
+              </div>
+              {/* <Field name='maxCap'>
+                {({ field, formProps }: any) => (
+                  <Form.Group className='mb-2'>
+                    <Form.Label>Maximum Cap</Form.Label>
+                    <Form.Control
+                      type='number'
+                      placeholder={'Enter Maximum Cap'}
+                      value={field.value}
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                      onInput={handleChange}
+                      name='maxCap'
+                    />
+                  </Form.Group>
+                )}
+              </Field>
+              <div className='text-danger mb-2'>
+                <ErrorMessage
+                  className='Mui-err'
+                  name='maxCap'
+                  component='div'
+                />
+              </div> */}
+              <Form.Label className='fw-bold my-2'>
+                Reward Distribution
+              </Form.Label>
+              <FieldArray
+                name='rewardDistribution'
+                render={(arrayHelpers) => (
+                  <>
+                    {values.rewardDistribution?.map((r: any, index: number) => (
+                      <div key={index} className='my-2'>
+                        <Form.Group className='d-flex justify-content-between mb-1 flex-row'>
+                          <Field name={`rewardDistribution[${index}].from`}>
+                            {({ field, formProps }: any) => (
+                              <Form.Group>
+                                <Form.Label>From</Form.Label>
+                                <Form.Control
+                                  type='number'
+                                  // placeholder={''}
+                                  value={field.value}
+                                  onBlur={handleBlur}
+                                  min={1}
+                                  onChange={(e) => {
+                                    arrayHelpers.replace(index, {
+                                      ...values.rewardDistribution[index],
+                                      from: e.target.value,
+                                    });
+                                    logger(
+                                      {
+                                        ...values.rewardDistribution[index],
+                                        from: e.target.value,
+                                      },
+                                      'hiii',
+                                    );
+                                  }}
+                                  onInput={handleChange}
+                                  name={`rewardDistribution[${index}].from`}
+                                />
+                              </Form.Group>
+                            )}
+                          </Field>
+                          <ErrorMessage
+                            className='Mui-err'
+                            name={`rewardDistribution[${index}].from`}
+                            component='div'
+                          />
+                          <Field name={`rewardDistribution[${index}].to`}>
+                            {({ field, formProps }: any) => (
+                              <Form.Group>
+                                <Form.Label>To</Form.Label>
+                                <Form.Control
+                                  type='number'
+                                  // placeholder={'Enter Entry Fees'}
+                                  value={field.value}
+                                  onBlur={handleBlur}
+                                  min={1}
+                                  onChange={(e) =>
+                                    arrayHelpers.replace(index, {
+                                      ...values.rewardDistribution[index],
+                                      to: e.target.value,
+                                    })
+                                  }
+                                  onInput={handleChange}
+                                  name={`rewardDistribution[${index}].to`}
+                                />
+                              </Form.Group>
+                            )}
+                          </Field>
+                          <ErrorMessage
+                            className='Mui-err'
+                            name={`rewardDistribution[${index}].to`}
+                            component='div'
+                          />
+                        </Form.Group>
+                        <Field name={`rewardDistribution[${index}].amount`}>
+                          {({ field, formProps }: any) => (
+                            <Form.Group className=''>
+                              <Form.Label>Amount</Form.Label>
+                              <Form.Control
+                                type='number'
+                                // placeholder={'Enter Entry Fees'}
+                                value={field.value}
+                                onBlur={handleBlur}
+                                min={1}
+                                onChange={(e) =>
+                                  arrayHelpers.replace(index, {
+                                    ...values.rewardDistribution[index],
+                                    amount: e.target.value,
+                                  })
+                                }
+                                onInput={handleChange}
+                                name={`rewardDistribution[${index}].amount`}
+                              />
+                            </Form.Group>
+                          )}
+                        </Field>
+                        <ErrorMessage
+                          className='Mui-err'
+                          name={`rewardDistribution[${index}].amount`}
+                          component='div'
+                        />
+                      </div>
+                    ))}
+                    <ErrorMessage
+                      className='Mui-err'
+                      name={`rewardDistribution`}
+                      component='div'
+                    />
+                    <div className='d-flex mt-2 gap-2'>
+                      {values.rewardDistribution?.length >
+                      Validations.contests.rewardDistribution.min ? (
+                        <Button
+                          className='reg-btn'
+                          onClick={() => arrayHelpers.pop()}
+                          id='minusbtn'
+                        >
+                          -
+                        </Button>
+                      ) : null}
+
+                      <Button
+                        className='reg-btn'
+                        id='plusbtn'
+                        onClick={() =>
+                          arrayHelpers.push(initialContest.rewardDistribution)
+                        }
+                      >
+                        +
+                      </Button>
+                    </div>
+                  </>
+                )}
+              />
 
               <div className='d-flex justify-content-end gap-4 mt-3'>
                 <Button

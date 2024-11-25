@@ -5,11 +5,14 @@ import {
 } from '@/constant/fantasticonst';
 import {
   MATCH_CONTEST_ROUTE,
-  
+  TEAMS_ROUTE,
   TEAM_CREATION_ROUTE,
 } from '@/constant/routes';
 import {
+  Contest,
   DetailedMatchContest,
+  LoadingState,
+  MatchesCountType,
   PlayerSquad,
 } from '@/types/fantasy';
 import Image from 'next/image';
@@ -18,21 +21,32 @@ import React, { useEffect, useState } from 'react';
 import Arrow from '../Icons/Arrow';
 import { Button, Spinner, Table } from 'react-bootstrap';
 import {
+  getContests,
+  getFilterdContests,
   getKeyFromMatchStatus,
   getRawPlayerSquads,
   getTeamStatus,
-  getTimeZone,
+  handleTransferError,
   isConnected,
+  isInPast,
   sliceText,
 } from '../utils/fantasy';
 import logger from '@/lib/logger';
+import { approveTokens, toE8S } from '@/lib/ledger';
 import { Identity } from '@dfinity/agent';
 import { toast } from 'react-toastify';
 import { TransferFromError } from '@dfinity/ledger-icp/dist/candid/ledger';
 import {
+  DEFAULT_MATCH_STATUS,
+  JoinContestText,
+  MATCHES_ITEMSPERPAGE,
+  MatchStatusNames,
   MatchStatuses,
+  QURIES,
 } from '@/constant/variables';
+import BeatLoader from 'react-spinners/BeatLoader';
 import ConfirmTransaction from './ConfirmTransaction';
+import { canisterId as fantasyTransCanisterId } from '@/dfx/declarations/fantasytransactions';
 import TeamRow from './TeamRow';
 import Countdown, { CountdownRenderProps } from 'react-countdown';
 import Tippy from '@tippyjs/react';
@@ -86,6 +100,7 @@ function MatchWithTeams({
     useState<boolean>(false);
   const [path, setPath] = useState<string | null>(null);
   let router = useRouter();
+  const { updateBalance } = useAuth();
   /**
    * Toggles the visibility of the teams and fetches the player squads if not already fetched.
    *
@@ -118,24 +133,7 @@ function MatchWithTeams({
       logger(error);
     }
   }
-  /**
-   * use to get user teams
-   * @parms null
-   */
-let getTeamsfn=()=>{
-  let contestId = null;
-  getRawPlayerSquads(
-    match.id,
-    actor,
-    match.teamsPerUser,
-    setSquads,
-    setParticipants,
-    setMaximumParticipated,
-    contestId,
-  )
-    .then(() => setLoading(false))
-    .catch(() => setLoading(false));
-}
+
   /**
    * Asynchronous function to add a participant to a squad.
    *
@@ -145,16 +143,25 @@ let getTeamsfn=()=>{
     setIsParticipating(true);
 
     try {
-
+      logger({ entry: match.entryFee, GAS_FEE, identity }, 'apprinving');
+      if (match.entryFee !== 0) {
+        let approve = await approveTokens(
+          toE8S(match.entryFee) + GAS_FEE,
+          identity,
+        );
+        if (!approve) {
+          return toast.error('Unexpected Error');
+        }
+      }
 
       const added: { err?: TransferFromError; ok?: string } =
-        await actor.addParticipant(match.id, selectedSquad,getTimeZone());
+        await actor.addParticipant(match.id, selectedSquad);
 
       if (added?.ok) {
         toast.success('Joined Successfully');
-        if (participants!=null && participants + 1 >= match.teamsPerUser)
+        if (participants && participants + 1 >= match.teamsPerUser)
           setMaximumParticipated(true);
-        setParticipants((prev) => (prev!=null ? prev++ : prev));
+        setParticipants((prev) => (prev ? prev++ : prev));
         match.teamsJoined++;
 
         // let newSquads = playerSquads.filter(())
@@ -169,14 +176,15 @@ let getTeamsfn=()=>{
             return squad;
           });
         });
-       
+        updateBalance();
         handleHideConfirm();
         if (handleGetAssets) {
           handleGetAssets();
         }
       } else if (added?.err) {
-        toast.error('Unexpected Error');
+        toast.error(handleTransferError(added?.err));
       }
+      logger(added);
     } catch (error) {
       toast.error('Unexpected Error');
       logger(error);
@@ -466,6 +474,7 @@ let getTeamsfn=()=>{
           )}
 
       <ConfirmTransaction
+        entryFee={match.entryFee}
         show={showConfirm}
         onConfirm={addParticipant}
         loading={isParticipating}
@@ -483,7 +492,6 @@ let getTeamsfn=()=>{
         teamId={selectedTeam.teamId}
         rankingModle={selectedTeam.rankingModle}
         router={router}
-        getTeamsfn={getTeamsfn}
       />
     </>
   );

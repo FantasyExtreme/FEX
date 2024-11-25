@@ -1,24 +1,51 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
-import { Spinner, Modal, Button } from 'react-bootstrap';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { date, object, string, number, array } from 'yup';
+import { Spinner, Modal, Form, Button } from 'react-bootstrap';
+import {
+  ErrorMessage,
+  Field,
+  Formik,
+  Form as FormikForm,
+  FieldArray,
+} from 'formik';
+import {
+  MAX_NAME_CHARACTERS,
+  MIN_NAME_CHARACTERS,
+  Messages,
+  ONLY_ALPHABET,
+  Validations,
+} from '@/constant/validations';
+import logger from '@/lib/logger';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
 import { toast } from 'react-toastify';
 import {
+  getContest,
+  isInPast,
   refineSquad,
   requireAuth,
   sliceText,
 } from '../utils/fantasy';
 import { convertMotokoObject } from '../utils/convertMotokoObject';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faTrophy,
+  faMedal,
+  faAward,
+  faStar,
+  faGift,
+} from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
-import { TEAMS_ROUTE } from '@/constant/routes';
+import { SQUAD_STATS_ROUTE, TEAMS_ROUTE } from '@/constant/routes';
 import { Match, RFSquadRanking } from '@/types/fantasy';
+import Image from 'next/image';
 import { Intervals, QURIES, QueryParamType } from '@/constant/variables';
 import { fromNullable } from '@dfinity/utils';
+import { useSimulatedRankings } from '../Hooks/MockData';
 import Tippy from '@tippyjs/react';
 import ConnectModal from './ConnectModal';
 import { useRouter } from 'next/navigation';
-import logger from '@/lib/logger';
 
 interface Props {
   contestId: string | null;
@@ -53,7 +80,7 @@ const RankingModal = ({
         search: '',
         status: '',
       });
-logger(resp,"hgasfksdfafasdf")
+
       const { rankings, total: _total, userRank: _userRank } = resp;
       let userRank: any = fromNullable(_userRank);
       if (userRank && userRank?.length > 0) {

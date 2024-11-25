@@ -1,135 +1,207 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import "react-toastify/dist/ReactToastify.css";
-import Image from "next/image";
-import Link from "next/link";
-import { Container, Row, Col, Button, Form, Spinner } from "react-bootstrap";
-import matchbg3 from "../assets/old-images/bg/bg-trans-3.png";
-import team1 from "../assets/images/teams/team-bestfoot-club.png";
-import team2 from "../assets/images/teams/team-soccer-club.png";
+'use client';
+import React, { useEffect, useState } from 'react';
 
-import HowItWorksList from "@/components/Components/HowItWorksList";
-
-import Header from "@/components/Components/Header";
-import { makeFantasyFootballActor } from "@/dfx/service/actor-locator";
-import LatestResult from "@/components/Components/LatestResult";
-import HowItWorksSlider from "@/components/Components/HowItWorksSlider";
-
-import { useRouter } from "next/navigation";
-
-import { ConnectPlugWalletSlice } from "@/types/store";
-import { useAuthStore } from "@/store/useStore";
-import { FANTASY_PLAYERS_ROUTE, MATCHES_ROUTE } from "@/constant/routes";
-import { QURIES } from "@/constant/variables";
-import FantasyPlayers from "@/components/Components/FantasyPlayers";
+import Link from 'next/link';
+import { Container, Row, Col } from 'react-bootstrap';
+import Header from '@/components/Components/Header';
+import { makeFantasyFootballActor } from '@/dfx/service/actor-locator';
+import FantasyPlayers from '@/components/Components/FantasyPlayers';
+import LatestResult from '@/components/Components/LatestResult';
+import moment from 'moment';
+import { utcToLocal } from '@/components/utils/utcToLocal';
+import { MATCHES_ROUTE, PLAYERS_ROUTE } from '@/constant/routes';
+import freeicon from '@/assets/images/icons/icon-free.png'; 
+import bronzeicon from '@/assets/images/icons/icon-bronze.png';
+import goldicon from '@/assets/images/icons/icon-gold.png';
+import coinicon from '@/assets/images/icons/coin-icon.png';
+import tethericon from '@/assets/images/icons/tether-icon.png';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { getTeam } from '@/components/utils/fantasy';
+import logger from '@/lib/logger';
+import BarLoader from 'react-spinners/BarLoader';
+import { isConnected, requireAuth } from '@/components/utils/fantasy';
+import { ConnectPlugWalletSlice } from '@/types/store';
+import { useAuthStore } from '@/store/useStore';
+import { QURIES } from '@/constant/variables';
+import Image from 'next/image';
+import MVPSlider from '../components/Components/MVPSlider';
+import VideoLink from '@/components/Components/VideoLink';
+import BillionInfo from '@/components/Components/BillionInfo';
+import HowItWorksList from '@/components/Components/HowItWorksList';
+import HowItWorksSlider from '@/components/Components/HowItWorksSlider';
 
 export default function HomePage() {
   const { auth } = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
   }));
+
+  // Scroll ANimation  MatchResult
   const [isVisible, setIsVisible] = useState(false);
+  let searchParams=useSearchParams()
+  const communityId = searchParams.get(QURIES.communityId);
+
   useEffect(() => {
     const handleScroll = () => {
-      const element: any = document.getElementById("MatchResult");
+      const element: any = document.getElementById('MatchResult');
       const rect = element.getBoundingClientRect();
       const isVisible = rect.top < window.innerHeight && rect.bottom >= 0;
       if (isVisible) {
         setIsVisible(true);
       }
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+  // Scroll ANimation  MatchResult
 
+  // Scroll ANimation  howtoplaypnl
   const [isVisible1, setIsVisible1] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
-      const element: any = document.getElementById("howtoplaypnl");
+      const element: any = document.getElementById('howtoplaypnl');
       const rect = element.getBoundingClientRect();
       const isVisible1 = rect.top < window.innerHeight && rect.bottom >= 0;
       if (isVisible1) {
         setIsVisible1(true);
       }
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+  // Scroll ANimation  howtoplaypnl
 
+  // Scroll ANimation  winnermp
   const [isVisible2, setIsVisible2] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
-      const element: any = document.getElementById("Fantasy");
+      const element: any = document.getElementById('winnermp');
       const rect = element.getBoundingClientRect();
       const isVisible2 = rect.top < window.innerHeight && rect.bottom >= 0;
       if (isVisible2) {
         setIsVisible2(true);
       }
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener('scroll', handleScroll);
     };
   });
+  // Scroll ANimation  winnermp
+
+  // Scroll ANimation  History
   const [isVisible3, setIsVisible3] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
-      const element: any = document.getElementById("History");
+      const element: any = document.getElementById('History');
       const rect = element.getBoundingClientRect();
       const isVisible3 = rect.top < window.innerHeight && rect.bottom >= 0;
       if (isVisible3) {
         setIsVisible3(true);
       }
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener('scroll', handleScroll);
     };
   });
-  const fantasyFootball = makeFantasyFootballActor({});
-  const navigation = useRouter();
+  // Scroll ANimation  History
 
+  // Scroll ANimation  Fantasy
   const [isVisible4, setIsVisible4] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
-      const element: any = document.getElementById("History");
+      const element: any = document.getElementById('Fantasy');
       const rect = element.getBoundingClientRect();
       const isVisible4 = rect.top < window.innerHeight && rect.bottom >= 0;
       if (isVisible4) {
         setIsVisible4(true);
       }
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener('scroll', handleScroll);
     };
   });
+  const [isVisible5, setIsVisible5] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      const element: any = document.getElementById('Demo');
+      const rect = element.getBoundingClientRect();
+      const isVisible5 = rect.top < window.innerHeight && rect.bottom >= 0;
+      if (isVisible5) {
+        setIsVisible5(true);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  });
+  useEffect(() => {
+    if(communityId){
+     localStorage.setItem("communityId",communityId)
+ 
+    }
+   }, [communityId]);
 
+  // Scroll ANimation  Fantasy
   return (
     <>
+      {/* Header Panel */}
       <Header />
+
+      {/* Demo Panel */}
+      <Container
+        fluid
+        id='Demo'
+        // ref={scrollToDemo}
+        className={isVisible5 == true ? 'animate demo' : 'demo'}
+      >
+        <Row>
+          <Container>
+            <Row>
+              <Col xl='12' lg='12' md='12' sm='12'>
+                <div className='text-center'>
+                  <h2>Demo</h2>
+                  <p className='m-0 text-white'>
+                    Click to watch the complete demo and experience the thrill
+                    of strategic team management in Fantasy Extreme—where every
+                    decision counts!
+                  </p>
+                  {/* Video */}
+                  <VideoLink />
+                  {/* Video */}
+                </div>
+              </Col>
+            </Row>
+          </Container>
+        </Row>
+      </Container>
+      {/* Demo Panel */}
+
       {/* How It Works */}
       <Container
         fluid
-        id="howtoplaypnl"
+        id='howtoplaypnl'
         className={
-          isVisible1 == true ? "animate how-to-play-pnl" : "how-to-play-pnl"
+          isVisible1 == true ? 'animate how-to-play-pnl' : 'how-to-play-pnl'
         }
       >
         <Row>
           <Container>
             <Row>
-              <Col xl="12" lg="12" md="12" sm="12">
-                <div className="text-center">
+              <Col xl='12' lg='12' md='12' sm='12'>
+                <div className='text-center'>
                   <h2>
                     HOW IT <span>WORKS</span>
                   </h2>
                 </div>
                 <HowItWorksList />
-                <div className="HowtoPlaySlider">
+                <div className='HowtoPlaySlider'>
                   <HowItWorksSlider />
                 </div>
               </Col>
@@ -138,20 +210,22 @@ export default function HomePage() {
         </Row>
       </Container>
       {/* How It Works */}
+
+      {/* History Panel */}
       <Container
         fluid
-        id="History"
+        id='History'
         className={
-          isVisible3 == true ? "animate history-panel" : "history-panel"
+          isVisible3 == true ? 'animate history-panel' : 'history-panel'
         }
       >
         <Row>
           <Container>
             <Row>
-              <Col xl="12" lg="12" md="12" sm="12">
-                <div className="text-panel">
-                  <div className="bg-layer" />
-                  <h3 className="text-uppercase">Our History</h3>
+              <Col xl='12' lg='12' md='12' sm='12'>
+                <div className='text-panel'>
+                  <div className='bg-layer' />
+                  <h3 className='text-uppercase'>Our History</h3>
                   <h2>
                     About <span>Fantasy</span>
                   </h2>
@@ -167,10 +241,10 @@ export default function HomePage() {
                     soccer with the challenge of building and managing your own
                     champion squad.
                   </p>
-                  <div className="mobile-view-center">
-                    <Link href={MATCHES_ROUTE} className="reg-btn mid">
-                      Play Now
-                    </Link>
+                  <div className='mobile-view-center'>
+                  <Link href={MATCHES_ROUTE} className='reg-btn mid'>
+                    Play Now
+                  </Link>
                   </div>
                 </div>
               </Col>
@@ -178,35 +252,36 @@ export default function HomePage() {
           </Container>
         </Row>
       </Container>
+      {/* History Panel */}
 
-      {/* matches Result Panel */}
+      {/* Latest Result Panel */}
       <Container
         fluid
-        id="MatchResult"
+        id='MatchResult'
         className={
           isVisible == true
-            ? "animate matches-result-panel mb-5"
-            : "matches-result-panel mb-5"
+            ? 'animate matches-result-panel'
+            : 'matches-result-panel'
         }
       >
-        <Row className="mb-5">
+        <Row>
           <Container>
             <Row>
-              <Col xl="12" lg="12" md="12" sm="12">
-                <div className="text-center">
+              <Col xl='12' lg='12' md='12' sm='12'>
+                <div className='text-center'>
                   <h2>
                     Latest <span>Results</span>
                   </h2>
                 </div>
-                <div className="spacer-30" />
+                <div className='spacer-30' />
                 <LatestResult />
-                <div className="spacer-10" />
-                <div className="flex-div justify-content-end">
+                <div className='spacer-10' />
+                <div className='flex-div justify-content-end'>
                   <Link
                     href={`${MATCHES_ROUTE}?${QURIES.matchTab}=2`}
-                    className="simple-link"
+                    className='simple-link'
                   >
-                    View All <i className="fa fa-arrow-right" />
+                    View All <i className='fa fa-arrow-right' />
                   </Link>
                 </div>
               </Col>
@@ -214,7 +289,8 @@ export default function HomePage() {
           </Container>
         </Row>
       </Container>
-      {/* matches Result Panel */}
+      {/* Latest Result Panel */}
+
       {/* Top Fantasy Player */}
       <Container
         fluid
@@ -234,7 +310,7 @@ export default function HomePage() {
                   <h2>
                     Top Fantasy <span>Players</span>
                   </h2>
-                  <Link className='simple-link mb-3' href={FANTASY_PLAYERS_ROUTE}>
+                  <Link className='simple-link mb-3' href='/fantasyplayer'>
                     View All{' '}
                     <i className='fa fa-arrow-right' aria-hidden='true'></i>
                   </Link>
@@ -249,6 +325,60 @@ export default function HomePage() {
         </Row>
       </Container>
       {/* Top Fantasy Player */}
+
+      {/* Winners MPVs Panel */}
+      <Container
+        fluid
+        id='winnermp'
+        className={`${isVisible2 == true ? 'animate' : ''} winner-mp winner-mvpscls mb-5`}
+      >
+        <Row>
+          <Container>
+            <Row>
+              <Col xl='12' lg='12' md='12' sm='12'>
+                <div className='text-center'>
+                  <h2>
+                    WINNERS <span>& Man of the match</span>
+                  </h2>
+                </div>
+                <div className='spacer-10' />
+                <div className='mvpsMain'>
+                  <MVPSlider />
+                </div>
+              </Col>
+            </Row>
+          </Container>
+        </Row>
+      </Container>
+      {/* Winners MPVs Panel */}
+
+      {/* Market Value */}
+      <Container fluid id='MarketValue' className='market-value'>
+        <Row>
+          <Container>
+            <Row>
+              <Col xl='12' lg='12' md='12' sm='12'>
+                <div className='text-center'>
+                  <h2>
+                    Market <span>Value</span>
+                  </h2>
+                  <p className='whitecolor'>
+                    Fantasy Extreme is poised for continuous growth by
+                    attracting millions of passionate players and fans
+                    worldwide. See the explosive growth of fantasy sports below
+                  </p>
+                  <div className='spacer-30' />
+                </div>
+                <div className='text-right'>
+                  <h2>4 Billion People</h2>
+                </div>
+                <BillionInfo />
+              </Col>
+            </Row>
+          </Container>
+        </Row>
+      </Container>
+      {/* Market Value */}
     </>
   );
 }

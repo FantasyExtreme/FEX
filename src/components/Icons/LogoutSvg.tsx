@@ -2,7 +2,7 @@ export default function LogoutSvg() {
   return (
     <svg
       className='svg-icon'
-      width='20'
+      width='21'
       height='20'
       viewBox='0 0 21 20'
       fill='none'

@@ -9,6 +9,7 @@ import { createAgent, fromNullable } from '@dfinity/utils';
 import { toast } from 'react-toastify';
 import { generateRandomName } from '@/components/utils/fantasy';
 import { DASHBOARD_ROUTE } from '@/constant/routes';
+import { getBalance } from './ledger';
 import { NFID } from '@nfid/embed';
 import { LoginEnum, appData } from '@/constant/fantasticonst';
 import { useAuthStore } from '@/store/useStore';
@@ -54,6 +55,7 @@ const useAuth = () => {
       return { success: false, actor: tempAuth };
     } else {
       const tempActor = makeFantasyFootballActor();
+      const newReward = await tempActor.getRewardPercentage();
 
       setAuth({
         ...auth,
@@ -64,7 +66,7 @@ const useAuth = () => {
       });
       setUserAuth({
         ...userAuth,
-       
+        rewardPercentage: Number(newReward),
       });
       return { success: false, actor: tempActor };
     }
@@ -80,14 +82,14 @@ const useAuth = () => {
             console.error('AuthClient not initialized');
             return;
           }
-          console.log("loging network",{net:process.env.DFX_NETWORK});
-          
           await auth.client.login({
             maxTimeToLive: BigInt(30 * 24 * 60 * 60 * 1000 * 1000 * 1000),
-         
+            ...(process.env.NEXT_PUBLIC_ENVIRONMENT_TYPE === 'alpha' && {
+              derivationOrigin: 'https://w2utv-nyaaa-aaaam-ac7iq-cai.icp0.io',
+            }),
 
             identityProvider:
-            (process.env.NEXT_PUBLIC_DFX_NETWORK ) === 'ic'
+              process.env.NEXT_PUBLIC_DFX_NETWORK === 'ic'
                 ? 'https://identity.ic0.app/#authorize'
                 : `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943/#authorize`,
             onSuccess: () => {
@@ -131,7 +133,9 @@ const useAuth = () => {
             });
             const delegationIdentity: Identity = await nfid.getDelegation({
               maxTimeToLive: BigInt(30 * 24 * 60 * 60 * 1000 * 1000 * 1000),
-            
+              ...(process.env.NEXT_PUBLIC_ENVIRONMENT_TYPE === 'alpha' && {
+                derivationOrigin: 'https://w2utv-nyaaa-aaaam-ac7iq-cai.icp0.io',
+              }),
             });
             authenticate(undefined, delegationIdentity).then(() => {
               const path = window?.location;
@@ -168,8 +172,9 @@ const useAuth = () => {
         name: '',
         role: '',
         userPerms: null,
- 
+        rewardPercentage: 0,
         email: '',
+        balance: 0,
       });
       setAuth({
         ...auth,
@@ -188,7 +193,11 @@ const useAuth = () => {
     }
     return { admin: false };
   }, []);
-
+  const updateBalance = useCallback(async () => {
+    let balance = await getBalance(auth.identity);
+    setUserAuth({ ...userAuth, balance });
+    return balance;
+  }, [setAuth, setUserAuth, userAuth]);
   const authenticate = useCallback(
     async (client?: AuthClient, identity?: Identity) => {
       try {
@@ -220,7 +229,9 @@ const useAuth = () => {
         });
 
         const resp = await actor.getUser([]);
+        const reward = await actor.getRewardPercentage();
         const user: any = fromNullable(resp);
+        let balance = await getBalance(myIdentity);
 
         if (user) {
           let userPerms = getPerms(user?.role);
@@ -229,33 +240,39 @@ const useAuth = () => {
             role: user?.role,
             email: user?.email,
             userPerms,
-          
+            rewardPercentage: reward ? Number(reward) : 0,
+            balance,
           });
         } else {
           let newUser = {
             name: generateRandomName(),
             email: '',
           };
-        
+
+
 
           const resp = await actor.addUser(
             newUser
-          
           );
 
           if (resp?.ok) {
+        
+       
+          
             resp.ok[1] = fromNullable(resp?.ok?.[1]);
             let userPerms = getPerms(resp?.ok?.[1]?.role);
+            const newReward = await actor.getRewardPercentage();
 
             setUserAuth({
               name: resp?.ok?.[1]?.name,
               role: resp?.ok?.[1]?.role,
               email: resp?.ok?.[1]?.email,
               userPerms,
-   
-              
+              rewardPercentage: newReward ? Number(newReward) : 0,
+              balance,
             });
           }
+          logger(resp, 'created user');
         }
 
         setAuth({
@@ -275,8 +292,9 @@ const useAuth = () => {
           name: '',
           role: '',
           userPerms: null,
+          rewardPercentage: 0,
           email: '',
-        
+          balance: 0,
         });
         logger(e, 'Error while authenticating');
         throw new Error('encountered an error while authenticating');
@@ -295,8 +313,8 @@ const useAuth = () => {
     initAuth,
     login,
     logout,
-    authenticate
-   
+    authenticate,
+    updateBalance,
   };
 };
 

@@ -21,6 +21,7 @@ import { useRouter } from 'next/navigation';
 import {
   getMatches,
   getTournaments,
+  getUpcomingMatches,
 } from '@/components/utils/fantasy';
 import {
   LoadingState,
@@ -43,12 +44,15 @@ import Loader from '@/components/Components/Loader';
 import MatchTable from '@/components/Components/MatchTable';
 import PaginatedList from '@/components/Components/Pagination';
 import CarouselSlider from '@/components/Components/CalenderSlider';
+import Calender_ from '@/components/Components/Calender';
 import MatchesPagination from '@/components/Components/MatchesPagination';
 import { MATCHES_ROUTE } from '@/constant/routes';
 import useSearchParamsHook from '@/components/utils/searchParamsHook';
 import calander from '@/assets/images/calender.png';
 import { date } from 'yup';
 import DatePicker from 'react-date-picker';
+import MyLiveRank from '@/components/Components/MyLiveRank';
+
 type ValuePiece = Date | null;
 
 type Value = ValuePiece | [ValuePiece, ValuePiece];
@@ -219,13 +223,14 @@ export default function Matches() {
       finished: 0,
     });
   };
-  /**
-   * Fetches and sets the matches for the selected tournament.
-   *
-   * @param {string} tournamentId - The ID of the tournament to fetch matches for.
-   */
+
   function selectTournament(Id: string) {
     changeOffset(0);
+    const currentUrl = new URL(window.location.href);
+    const currentParams = new URLSearchParams(currentUrl.search);
+    currentParams.set(QURIES.tournamentId, Id);
+    const newUrl = `${currentUrl.pathname}?${currentParams.toString()}`;
+    router.push(newUrl);
     getMatches(
       auth.actor,
       setMatches,
@@ -236,7 +241,7 @@ export default function Matches() {
       },
       setLoading,
       setPageCount,
-      [],
+      selectedTime ? [selectedTime] : [],
       Id ? Id : null,
     );
   }
@@ -328,9 +333,7 @@ export default function Matches() {
                         // }}
                         const selectedValue = e.target.value;
                         selectTournament(selectedValue);
-                        router.push(
-                          `${MATCHES_ROUTE}?tournament=${selectedValue}`,
-                        );
+                      
                       }}
                     >
                       <option value=''>Leagues</option>

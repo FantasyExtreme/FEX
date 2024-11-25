@@ -1,24 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Formik,
+  FormikProps,
+  Form as FormikForm,
+  Field,
+  FormikValues,
+  ErrorMessage,
+} from 'formik';
+import {
   Button,
   Dropdown,
+  Form,
   Modal,
+  Nav,
+  NavDropdown,
+  NavLink,
+  Spinner,
 } from 'react-bootstrap';
-
+import { number, object, string } from 'yup';
+import { Principal } from '@dfinity/principal';
 import useAuth from '@/lib/auth';
+import { E8S, GAS_FEE, GAS_FEE_ICP } from '@/constant/fantasticonst';
+import { makeICPLedgerCanister } from '@/dfx/service/actor-locator';
 import { toast } from 'react-toastify';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
+import { AccountIdentifier } from '@dfinity/ledger-icp';
 import logger from '@/lib/logger';
-import { Contest } from '@/types/fantasy';
+import JoinContest from './JoinContest';
+import { Contest, Match } from '@/types/fantasy';
 import {
   getContests,
-  getTimeZone,
+  getRawPlayerSquads,
+  handleTransferError,
+  isConnected,
 } from '../utils/fantasy';
+import { approveTokens, toE8S } from '@/lib/ledger';
 import { TransferFromError } from '@dfinity/ledger-icp/dist/candid/ledger';
 import ConfirmTransaction from './ConfirmTransaction';
-import {  TEAMS_ROUTE } from '@/constant/routes';
+import Link from 'next/link';
+import { TEAM_CREATION_ROUTE, TEAMS_ROUTE } from '@/constant/routes';
+import ConnectModal from './ConnectModal';
+import { useRouter } from 'next/navigation';
 import { QueryParamType, QURIES } from '@/constant/variables';
+// import { AccountIdentifier } from '@dfinity/ledger-icp';
 
 interface Props {
   matchId: string | null;
@@ -27,8 +52,6 @@ interface Props {
   show: boolean;
   handleClose: () => void;
   router: any;
- 
-  getTeamsfn?:any
 }
 interface SelectedContest {
   contestName: string | null;
@@ -42,7 +65,6 @@ const JoinDropDownContestModal = ({
   rankingModle,
   handleClose,
   router,
-  getTeamsfn
 }: Props) => {
   const [playerSquads, setPlayerSquads] = useState<any>([]);
   const { auth, userAuth } = useAuthStore((state) => ({
@@ -59,6 +81,7 @@ const JoinDropDownContestModal = ({
   });
   const [isParticipating, setIsParticipating] = useState(false);
 
+  const { updateBalance } = useAuth();
 
   /**
    * Fetches contests based on a given status and other match properties.
@@ -78,24 +101,34 @@ const JoinDropDownContestModal = ({
     }
   }, [auth, matchId]);
   async function addParticipant() {
+    // logger(contestId,"hdsagfhgsadjhgfsadfsadfasd");
     // return;
     if (!matchId) return logger(matchId, 'no match id');
     setIsParticipating(true);
     try {
-      let {contestId } = selectContest;
-
+      let { entryFee, contestId } = selectContest;
+      logger({ entry: entryFee, GAS_FEE }, 'apprinving');
+      if (entryFee && entryFee !== 0) {
+        let approve = await approveTokens(
+          toE8S(entryFee) + GAS_FEE,
+          auth.identity,
+        );
+        if (!approve) {
+          return toast.error('Unexpected Error');
+        }
+      }
       if (!teamId || !contestId) return;
       const added: { err?: TransferFromError; ok?: string } =
-        await auth.actor.addParticipant(contestId, teamId,getTimeZone());
+        await auth.actor.addParticipant(contestId, teamId);
 
       if (added?.ok) {
         toast.success('Joined Successfully');
 
-if(getTeamsfn) getTeamsfn();
+        updateBalance();
         handleHideConfirm();
         handleClose();
       } else if (added?.err) {
-        toast.error('Unexpected Error');
+        toast.error(handleTransferError(added?.err));
       }
       logger(added);
     } catch (error) {
@@ -203,6 +236,7 @@ if(getTeamsfn) getTeamsfn();
       </Modal>
       {selectContest.contestId && (
         <ConfirmTransaction
+          entryFee={selectContest.entryFee ?? 0}
           show={showConfirm}
           onConfirm={addParticipant}
           loading={isParticipating}

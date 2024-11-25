@@ -10,7 +10,6 @@ interface RawPlayer {
   positionString: 'goalKeeper' | 'midfielder' | 'forward' | 'defender';
   teamId: Key;
 }
-type GroupedContests = [string, GroupedContest[]];
 interface Player {
   country: string;
   id: Key;
@@ -26,77 +25,9 @@ interface Player {
   number: number;
   photo: string;
 }
-interface PlayerSquad {
-  id: string;
-  userId: string;
-  name: string;
-  matchId: string;
-  cap: string;
-  viceCap: string;
-  points: number;
-  formation: string;
-  creation_time: number;
-  rank: number;
-  matchTime?: number;
-  hasParticipated?: boolean;
-  joinedContestsName?: string;
-}
-interface TopPlayers {
-  userId: string;
-  name: string;
-  image: string;
-  participated: number;
-  contestWon: number;
-}
-interface MeAsTopPlayers {
-  userId: string;
-  name: string;
-  image: string;
-  participated: number;
-  contestWon: number;
-  rank: number;
-}
-interface Contest {
-  name: string;
-  matchId: Key;
-  creatorUserId: string;
-  id: Key;
-  slots: number;
-  slotsUsed: number;
-  slotsLeft: number;
-  minCap: number;
-  teamsPerUser: number;
-  rules: string;
-}
-interface SquadRanking {
-  userId: Key;
-  name: string;
-  matchId: Key;
-  points: BigInt;
-  creation_time: BigInt;
-}
-interface RFSquadRanking extends SquadRanking {
-  id: string;
-  points: number;
-  creation_time: number;
-  rank: number;
-  mine: boolean;
-}
-interface RfRefinedPlayerSquad extends RefinedPlayerSquad {
-  points: number;
-  creation_time: number;
-  players: Player[];
-}
 interface GroupedPlayers {
   [role: string]: Player[];
 }
-interface Formation {
-  [goalKeeper: string]: number;
-  [defender: string]: number;
-  [midfielder: string]: number;
-  [forward: string]: number;
-}
-
 
 interface PlayerWithPosition {
   player: Player;
@@ -121,6 +52,54 @@ interface PlayerS {
   isPlaying: boolean;
   isSub: boolean;
 }
+interface PlayerSquad {
+  id: string;
+  userId: string;
+  name: string;
+  matchId: string;
+  cap: string;
+  viceCap: string;
+  points: number;
+  formation: string;
+  creation_time: number;
+  rank: number;
+  matchTime?: number;
+  hasParticipated?: boolean;
+  joinedContestsName?: string;
+}
+interface GroupedPlayer {
+  matchName: string;
+  rank: number;
+  // the rest extends from PlayerSquad
+  id: string;
+  userId: string;
+  name: string;
+  matchId: string;
+  cap: string;
+  viceCap: string;
+  points: number;
+  formation: string;
+  creation_time: number;
+}
+interface TopPlayers {
+  userId: string;
+  name: string;
+  image: string;
+  participated: number;
+  contestWon: number;
+  rewardsWon: number;
+  totalEarning: number;
+}
+interface MeAsTopPlayers {
+  userId: string;
+  name: string;
+  image: string;
+  participated: number;
+  contestWon: number;
+  rewardsWon: number;
+  totalEarning: number;
+  rank: number;
+}
 type GroupedSquad = [string, GroupedPlayer[]];
 type TournamentType = [string, Tournament][];
 interface Match {
@@ -139,6 +118,7 @@ interface Match {
   status?: string;
   isPostpond?: boolean;
   isRewardable:boolean;
+
 }
 interface matchWithGroupedId extends Match {
   groupId: string;
@@ -156,7 +136,87 @@ interface Tournament {
   startDate: number;
   endDate: number;
 }
+interface Formation {
+  [goalKeeper: string]: number;
+  [defender: string]: number;
+  [midfielder: string]: number;
+  [forward: string]: number;
+}
 
+interface RewardDistribution {
+  from: BigInt;
+  to: BigInt;
+  amount: BigInt;
+}
+interface RfRewardDistribution {
+  from: number;
+  to: number;
+  amount: number;
+  percentage: number;
+}
+interface Contest {
+  name: string;
+  matchId: Key;
+  entryFee: number;
+  creatorUserId: string;
+  rewardDistribution: RfRewardDistribution[];
+  id: Key;
+  slots: number;
+  slotsUsed: number;
+  slotsLeft: number;
+  prizePool: number;
+  firstPrize: number;
+  rewardableUserPercentage: number;
+  minCap: number;
+  teamsPerUser: number;
+  isDistributed?: boolean;
+  rules: string;
+  firstPrize?: number;
+}
+interface GroupedContest {
+  contests: any;
+  matchName: string;
+  homeScore: number;
+  awayScore: number;
+  awayTeamName: string;
+  homeTeamName: string;
+  // the rest extends from Contest
+  name: string;
+  matchId: Key;
+  entryFee: number;
+  creatorUserId: string;
+  rewardDistribution: RfRewardDistribution;
+  id: Key;
+  slots: number;
+  slotsUsed: number;
+  slotsLeft: number;
+  prizePool: number;
+  firstPrize: number;
+  rewardableUserPercentage: number;
+  minCap: number;
+  teamsPerUser: number;
+}
+type GroupedContests = [string, GroupedContest[]];
+
+interface SquadRanking {
+  userId: Key;
+  name: string;
+  matchId: Key;
+  points: BigInt;
+  creation_time: BigInt;
+}
+interface RFSquadRanking extends SquadRanking {
+  id: string;
+  points: number;
+  creation_time: number;
+  rank: number;
+  mine: boolean;
+}
+interface RfRefinedPlayerSquad extends RefinedPlayerSquad {
+  points: number;
+  creation_time: number;
+  players: Player[];
+}
 interface GetProps {
   page: number;
   limit: number;
@@ -309,8 +369,18 @@ interface Stats {
   other: Other;
 }
 type LoginType = 0 | 1;
-export type TeamCreationErrorType = {
-  'GenericError' : { 'message' : string, 'error_code' : bigint }
-} |
-{ 'TemporarilyUnavailable' : null } |
-{ 'TooOld' : null } 
+
+interface CommunityContestPagination {
+  total:number ;
+  offset:number ;
+}
+
+
+CommunityContest
+interface CommunityContest {
+  communityId: string;
+  name: string;
+  contestId: string;
+  usersJoinedThisContest:number ;
+  joined_at:number ;
+}

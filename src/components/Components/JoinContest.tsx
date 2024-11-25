@@ -35,15 +35,30 @@ import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
-import { TEAM_CREATION_ROUTE } from '@/constant/routes';
+import { TEAM_CREATION_ROUTE, TEAMS_ROUTE } from '@/constant/routes';
+import {
+  JoinContestText,
+  MatchStatusNames,
+  MatchStatuses,
+  QURIES,
+  QueryParamType,
+} from '@/constant/variables';
+import BeatLoader from 'react-spinners/BeatLoader';
 import {
   fetchMatch,
   getRawPlayerSquads,
-  
+  handleTransferError,
   isConnected,
   isInPast,
 } from '../utils/fantasy';
-import {  Match, PlayerSquad } from '@/types/fantasy';
+import { Contest, Match, PlayerSquad } from '@/types/fantasy';
+import moment from 'moment';
+import { ReturnAddParticipant } from '@/dfx/declarations/temp/fantasyfootball/fantasyfootball.did';
+import { TransferFromError } from '@dfinity/ledger-icp/dist/candid/ledger';
+import { approveTokens, toE8S } from '@/lib/ledger';
+import { GAS_FEE } from '@/constant/fantasticonst';
+import ConfirmTransaction from './ConfirmTransaction';
+import { RiH1 } from 'react-icons/ri';
 import DashboardTable from './DashboardTable';
 import ConnectModal from './ConnectModal';
 import { useRouter } from 'next/navigation';
@@ -53,6 +68,7 @@ import { useRouter } from 'next/navigation';
 interface Props {
   matchId: string;
   contestId: string;
+  entryFee: number;
   match: Match | null;
   teamsPerUser: number;
   // contest: Contest;
@@ -67,6 +83,7 @@ const JoinContest = ({
   contestId,
   contestName,
   match,
+  entryFee,
   teamsPerUser,
   decreaseSlots,
   isModal,
@@ -155,6 +172,7 @@ const JoinContest = ({
               setSquads={setPlayerSquads}
               setParticipants={setParticipants}
               setMaximumParticipated={setMaximumParticipated}
+              entryFee={entryFee}
               teamsPerUser={teamsPerUser}
               maximumParticipated={maximumParticipated}
               participants={participants}

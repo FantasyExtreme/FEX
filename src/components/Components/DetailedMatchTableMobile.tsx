@@ -1,9 +1,24 @@
-
-import { DetailedMatchContest } from '@/types/fantasy';
+import { Directions, MATCHES_ICON_SIZES } from '@/constant/fantasticonst';
+import {
+  ADMIN_CONTESTS_ROUTE,
+  CONTESTS_ROUTE,
+  PLAYERS_ROUTE,
+  TEAMS_ROUTE,
+  TEAM_CREATION_ROUTE,
+} from '@/constant/routes';
+import { MatchStatuses, QURIES, QueryParamType } from '@/constant/variables';
+import logger from '@/lib/logger';
+import { DetailedMatchContest, Match } from '@/types/fantasy';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {  Spinner } from 'react-bootstrap';
+import { useEffect, useState } from 'react';
+import { Button, Spinner, Table } from 'react-bootstrap';
+import Arrow from '../Icons/Arrow';
+import MatchWithTeams from './MatchWithTeams';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
+import { toast } from 'react-toastify';
 import MatchWithTeamsMobile from './MatchWithTeamsMobile';
 
 export default function DetailedMatchTableMobile({
@@ -25,7 +40,7 @@ export default function DetailedMatchTableMobile({
   }));
 
   return (
-   
+    <>
       <div className=''>
         <div className='table-inner-container med-table-height'>
           {loading && (
@@ -52,6 +67,6 @@ export default function DetailedMatchTableMobile({
             ))}
         </div>
       </div>
-   
+    </>
   );
 }

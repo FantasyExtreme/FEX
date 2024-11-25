@@ -1,8 +1,20 @@
-
+import {
+  createActor as createIcpLedgerCanister,
+  canisterId as icpLedgerCanisterCanisterId,
+} from '@/dfx/declarations/icp_ledger_canister';
 import {
   createActor as createFantasyFootballCanister,
   canisterId as fantasyFootballCanisterId,
 } from '../declarations/fantasyfootball';
+import {
+  createActor as createFantasyTransactionsCanister,
+  canisterId as fantasyTransactionsCanisterId,
+} from '../declarations/fantasytransactions';
+import {
+  createActor as createCKBTCKLedger,
+  canisterId as ckBTCLedgerCanisterId,
+} from '../declarations/ckbtc_ledger';
+import { IcrcLedgerCanister } from '@dfinity/ledger';
 export const makeActor = (canisterId, createActor, options) => {
   const HostCanisterId =
     process.env.CANISTER_ID_FANTASYSPORTS ||
@@ -36,4 +48,29 @@ export function makeFantasyFootballActor(options) {
     createFantasyFootballCanister,
     options,
   );
+}
+export function makeFantasyTransactionsActor(options) {
+  return makeActor(
+    fantasyTransactionsCanisterId,
+    createFantasyTransactionsCanister,
+    options,
+  );
+}
+export function makeLedgerCanister(options) {
+  return makeActor(
+    icpLedgerCanisterCanisterId,
+    createIcpLedgerCanister,
+    options,
+  );
+}
+
+
+/**
+ * Creates a CKBTCLedgerCanister actor.
+ *
+ * @param {Object} options - The options for creating the actor.
+ * @return {IcrcLedgerCanister} The created CKBTCLedgerCanister actor.
+ */
+export function makeCKBTCLedgerCanister(options) {
+  return makeActor(ckBTCLedgerCanisterId, createCKBTCKLedger, options);
 }

@@ -1,12 +1,17 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
 
+import Link from 'next/link';
+import Image from 'next/image';
 import {
   Row,
   Col,
   Form,
   Button,
   Container,
+  Nav,
+  Navbar,
+  NavDropdown,
   Spinner,
   Modal,
   Table,
@@ -16,39 +21,66 @@ import {
   Field,
   Formik,
   Form as FormikForm,
-  FormikValues
+  FormikProps,
+  FormikValues,
+  FormikHelpers,
+  useFormikContext,
 } from 'formik';
 import useSearchParamsHook from '@/components/utils/searchParamsHook';
 import { useAuthStore } from '@/store/useStore';
 import { useRouter } from 'next/navigation';
 import { ConnectPlugWalletSlice } from '@/types/store';
 import {
+  Contest,
+  GroupedContest,
+  GroupedContests,
+  GroupedPlayers,
+  Player,
+  Stats,
+  Team,
+  TournamentType,
+} from '@/types/fantasy';
+import {
   getContestTypes,
+  getContests,
+  getPlayers,
+  getTeamsByTournament,
+  getTournaments,
   isConnected,
 } from '@/components/utils/fantasy';
-import { DEAFULT_PROPS } from '@/constant/variables';
+import { DEAFULT_PROPS, QueryParamType } from '@/constant/variables';
 import { toast } from 'react-toastify';
+import PointsEditor from '@/components/Components/PointsEditor';
 import {
   AdminSetting,
   ContestType,
+  Points,
   RContestType,
   RContestTypes,
 } from '@/dfx/declarations/temp/fantasyfootball/fantasyfootball.did';
 import { boolean, number, object, string } from 'yup';
 import { convertMotokoObject } from '@/components/utils/convertMotokoObject';
 import logger from '@/lib/logger';
+import { fromE8S } from '@/lib/ledger';
 import BeatLoader from 'react-spinners/BeatLoader';
 
 export default function SystemSettings() {
+  const urlparama = useSearchParamsHook();
+  const searchParams = new URLSearchParams(urlparama);
   const navigation = useRouter();
   const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [settings, setSettings] = useState<AdminSetting[] | null>(null);
   const [show, setShow] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [selectedSetting, setSelectedSetting] = useState<AdminSetting | null>(
     null,
   );
-
+  const [showContest, setShowContest] = useState(false);
+  const [contestTypes, setContestTypes] = useState<null | RContestTypes>(null);
+  const [selectedContest, setSelectedContest] = useState<null | RContestType>(
+    null,
+  );
 
   const { auth, userAuth } = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
@@ -66,7 +98,17 @@ export default function SystemSettings() {
     setShow(true);
   }
 
- 
+  /**
+   * Handles the display of the modal for adding or updating contest types.
+   *
+   * @param {RContestType} [contest] - The contest type to be displayed in the modal.
+   * If not provided, the modal will be empty for adding a new contest type.
+   */
+  function handleShowContestModal(contest?: RContestType) {
+    if (contest) setSelectedContest(contest);
+    setShowContest(true);
+  }
+
   /**
    * Handles the display of the warning modal for confirming the deletion of an admin setting.
    *
@@ -85,18 +127,32 @@ export default function SystemSettings() {
     setSelectedSetting(null);
   }
 
- 
+  /**
+   * Handles the closing of the contest type modal.
+   */
+  function handleCloseContestModal() {
+    setSelectedContest(null);
+    setShowContest(false);
+  }
   const settingsValues = {
     settingName: selectedSetting?.settingName ?? '',
     settingValue: selectedSetting?.settingValue ?? '',
   };
 
-
+  const contestValues = {
+    name: selectedContest?.name ?? '',
+    entryFee: Number(selectedContest?.entryFee) ?? 0,
+    isActive: selectedContest?.isActive,
+  };
   const settingsSchema = object().shape({
     settingName: string().required('Setting Name is required'),
     settingValue: string().required('Setting Value is required'),
   });
-
+  const contestSchema = object().shape({
+    name: string().required('Contest Name is required'),
+    entryFee: number().required('EntryFee is required'),
+    isActive: boolean().required('This field is required'),
+  });
   /**
    * Function to add a new admin setting to the system.
    *
@@ -184,10 +240,100 @@ export default function SystemSettings() {
     setSettings(respSettings);
   }
 
+  /**
+   * Function to add a new contest type to the system.
+   *
+   * @remarks
+   * This function sends a request to the blockchain to add a new contest type.
+   * It first creates a `ContestType` object from the provided form values.
+   * Then it calls the `addContestType` method of the actor with the contest type object.
+   * If the operation is successful, it shows a success toast message and closes the contest type modal.
+   * If an error occurs, it shows an error toast message and logs the error.
+   *
+   * @param values - The form values containing the contest type details.
+   * @returns Promise - Resolves when the contest type is added, rejects otherwise.
+   */
+  async function addContestType(values: FormikValues) {
+    try {
+      setLoading(true);
+      const contestType: ContestType = {
+        name: values.name,
+        entryFee: values.entryFee,
+        color: '',
+        isActive: values.isActive == 'true',
+        time: 0 as any,
+        status: '',
+      };
+      const added = await auth.actor.addContestType(contestType);
+      toast.success('Contest Type added');
+      handleCloseContestModal();
+    } catch (error) {
+      toast.error('Error adding contest type');
+      logger(error, 'contest type');
+    }
+    setLoading(false);
+  }
+
+  /**
+   * Function to update a contest type in the system.
+   *
+   * @remarks
+   * This function sends a request to the blockchain to update an existing contest type.
+   * It first creates a `ContestType` object from the provided form values.
+   * Then it calls the `updateContestType` method of the actor with the contest type object and the contest type ID.
+   * If the operation is successful, it shows a success toast message and closes the contest type modal.
+   * If an error occurs, it shows an error toast message and logs the error.
+   *
+   * @param values - The form values containing the contest type details.
+   * @returns Promise - Resolves when the contest type is updated, rejects otherwise.
+   */
+  async function updateContestType(values: FormikValues) {
+    try {
+      if (!selectedContest) return;
+      setLoading(true);
+      const contestType: ContestType = {
+        name: values.name,
+        entryFee: values.entryFee,
+        color: '',
+        isActive: values.isActive == 'true',
+        time: 0 as any,
+        status: '',
+      };
+      const added = await auth.actor.updateContestType(
+        selectedContest.id,
+        contestType,
+      );
+      logger(added, 'contest add');
+      toast.success('Contest Type added');
+      handleCloseContestModal();
+    } catch (error) {
+      toast.error('Error adding contest type');
+      logger(error, 'contest type');
+    }
+    setLoading(false);
+  }
+  /**
+   * Retrieves contest types from the blockchain and sets them in the component's state.
+   *
+   * @remarks
+   * This function fetches contest types from the blockchain using the provided actor and default properties.
+   * It then maps the contest types to their corresponding TypeScript objects and sets the contest types state.
+   *
+   * @param auth - The object containing the actor for interacting with the blockchain.
+   * @param auth.actor - The actor for interacting with the blockchain.
+   * @param setContestTypes - The function to set the retrieved contest types in the component's state.
+   * @param all - A boolean indicating whether to fetch all contest types or only active ones.
+   *
+   * @returns void
+   */
+  function handleGetContestTypes() {
+    getContestTypes({ actor: auth.actor, set: setContestTypes, all: true });
+  }
 
   useEffect(() => {
     if (!isConnected(auth.state)) return;
     getAdminSettings();
+    handleGetContestTypes();
   }, [auth]);
   useEffect(() => {
     if (isConnected(auth.state)) {
@@ -281,13 +427,202 @@ export default function SystemSettings() {
                     {saved && <div>Saved!</div>} */}
                   </div>
                 </Col>
-        
+                <Col xl='12' lg='12' md='12'>
+                  <div className='gray-panel mt-5'>
+                    <h4 className='animeleft d-flex justify-content-between whitecolor Nasalization fw-normal'>
+                      <span>Contest Types</span>
+                      <Button
+                        id='setting'
+                        onClick={() => handleShowContestModal()}
+                        disabled={loading}
+                        className='reg-btn mid text-capitalize'
+                      >
+                        Add Contest Type
+                      </Button>
+                    </h4>
+                    <div className='gray-panel'>
+                      <Table striped hover className='text-center'>
+                        <thead>
+                          <tr>
+                            <th>Contest Name & Type</th>
+                            <th>Entry Fee</th>
+                            <th>Active Status</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {contestTypes?.map((contest) => (
+                            <tr key={contest.id}>
+                              <td>{contest.name}</td>
+                              <td>{fromE8S(contest.entryFee)}</td>
+                              <td>{contest.isActive.toString()}</td>
+                              <td>
+                                {' '}
+                                <span
+                                  // onClick={() => handleShowConfirm(squad.id)}
+                                  onClick={() => {
+                                    handleShowContestModal(contest);
+                                  }}
+                                  // disabled={disabled && !isDev()}
+                                  className='underlined ms-2 empty pointer  contestbtn'
+                                  style={{ minWidth: '0' }}
+                                >
+                                  {loading ? (
+                                    <BeatLoader color='white' size={10} />
+                                  ) : (
+                                    'Edit'
+                                  )}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                    <div className='spacer-30' />
+
+                    {/* {loading && <Spinner size='sm' />}
+                    {saved && <div>Saved!</div>} */}
+                  </div>
+                </Col>
               </Row>
             </Container>
           </Row>
         </Container>
       )}
- 
+      <Modal show={showContest} centered onHide={handleCloseContestModal}>
+        <Modal.Body>
+          <h5 className='text-center'>
+            {selectedContest ? 'Update' : 'Add'} Contest Type
+          </h5>
+          <Formik
+            initialValues={contestValues}
+            validationSchema={contestSchema}
+            enableReinitialize
+            onSubmit={async (values, actions) => {
+              if (selectedContest) {
+                await updateContestType(values);
+              } else {
+                await addContestType(values);
+              }
+              handleGetContestTypes();
+            }}
+          >
+            {({
+              errors,
+              touched,
+              handleChange,
+              handleBlur,
+              isValid,
+              dirty,
+            }) => (
+              <FormikForm className='flex w-full flex-col items-center justify-center'>
+                <Field name='name'>
+                  {({ field, formProps }: any) => (
+                    <Form.Group
+                      className='mb-2'
+                      controlId='exampleForm.ControlInput1'
+                    >
+                      <Form.Label>Name</Form.Label>
+                      <Form.Control
+                        type='text'
+                        placeholder={'Enter Cotest Name / Type'}
+                        value={field.value}
+                        onBlur={handleBlur}
+                        onChange={handleChange}
+                        onInput={handleChange}
+                        name='name'
+                      />
+                    </Form.Group>
+                  )}
+                </Field>
+                <div className='text-danger mb-2'>
+                  <ErrorMessage
+                    className='Mui-err'
+                    name='name'
+                    component='div'
+                  />
+                </div>{' '}
+                <Field name='entryFee'>
+                  {({ field, formProps }: any) => (
+                    <Form.Group className='mb-2'>
+                      <Form.Label>Entry Fee</Form.Label>
+                      <Form.Control
+                        type='number'
+                        placeholder={'Enter Entry Fees In e8s'}
+                        value={field.value}
+                        onBlur={handleBlur}
+                        onChange={handleChange}
+                        onInput={handleChange}
+                        name='entryFee'
+                      />
+                      <span className='color'>
+                        {' '}
+                        IN ICP: {fromE8S(field.value)}
+                      </span>
+                    </Form.Group>
+                  )}
+                </Field>
+                <div className='text-danger mb-2'>
+                  <ErrorMessage
+                    className='Mui-err'
+                    name='entryFee'
+                    component='div'
+                  />
+                </div>
+                <Field name='isActive'>
+                  {({ field }: any) => (
+                    <Form.Group className='mb-2'>
+                      <Form.Label>Active Status</Form.Label>
+                      <Form.Control
+                        as='select'
+                        name='isActive'
+                        value={field.value}
+                        onChange={handleChange}
+                      >
+                        <option value=''>Select Status</option>
+                        <option value={'true'}>Active</option>
+                        <option value={'false'}>Inactive</option>
+                      </Form.Control>
+                    </Form.Group>
+                  )}
+                </Field>
+                <div className='text-danger mb-2'>
+                  <ErrorMessage
+                    className='Mui-err'
+                    name='isActive'
+                    component='div'
+                  />
+                </div>
+                <div className='btn-list-div'>
+                  <Button
+                    className='reg-btn'
+                    disabled={loading}
+                    type='submit'
+                    id='submit_btn'
+                  >
+                    {loading ? (
+                      <Spinner size='sm' />
+                    ) : selectedContest ? (
+                      'Update'
+                    ) : (
+                      'Add'
+                    )}
+                  </Button>
+                  <Button
+                    id='cancel_btn'
+                    className='reg-btn trans-white mid text-capitalize mx-2'
+                    disabled={loading}
+                    onClick={handleCloseContestModal}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </FormikForm>
+            )}
+          </Formik>
+        </Modal.Body>
+      </Modal>
       <Modal show={show} centered onHide={handleCloseModal}>
         <Modal.Body>
           <h5 className='text-center'>
@@ -318,7 +653,7 @@ export default function SystemSettings() {
                 <Field name='settingName'>
                   {({ field, formProps }: any) => (
                     <Form.Group
-                      className='mb-2 system-setting'
+                      className='mb-2'
                       controlId='exampleForm.ControlInput1'
                     >
                       <Form.Label>Name</Form.Label>
@@ -329,7 +664,6 @@ export default function SystemSettings() {
                         onBlur={handleBlur}
                         onChange={handleChange}
                         onInput={handleChange}
-                        disabled={selectedSetting? true :false}
                         name='settingName'
                       />
                     </Form.Group>

@@ -18,21 +18,35 @@ import { useAuthStore } from '@/store/useStore';
 import { useRouter } from 'next/navigation';
 import { ConnectPlugWalletSlice } from '@/types/store';
 import {
+  Contest,
+  GroupedContest,
+  GroupedContests,
+  GroupedPlayers,
   Player,
   Team,
   TournamentType,
 } from '@/types/fantasy';
 import {
+  getContests,
   getPlayers,
   getTeamsByTournament,
   getTournaments,
   isConnected,
 } from '@/components/utils/fantasy';
 import { DEAFULT_PROPS, QueryParamType } from '@/constant/variables';
+import ContestRow from '@/components/Components/ContestRow';
+import JoinContest from '@/components/Components/JoinContest';
+import RankingModal from '@/components/Components/Ranking';
 import { toast } from 'react-toastify';
 
 export default function PlayerPoints() {
+  const urlparama = useSearchParamsHook();
+  const searchParams = new URLSearchParams(urlparama);
   const [tournaments, setTournaments] = useState<TournamentType | null>(null);
+  const [selected, setSelected] = useState({
+    team: null,
+    tournament: null,
+  });
   const [teams, setTeams] = useState<Team[] | null>(null);
   const [defaultPrice, setDefaultPrice] = useState(6);
   const [players, setPlayers] = useState<Player[] | null>(null);
@@ -142,7 +156,12 @@ export default function PlayerPoints() {
                   <div className='gray-panel'>
                     <h4 className='animeleft d-flex justify-content-between whitecolor Nasalization fw-normal'>
                       <span>Player Points</span>
-                      
+                      {/* <Button
+                        // onClick={handleShowModal}
+                        className='reg-btn mid text-capitalize'
+                      >
+                        Create Contest
+                      </Button> */}
                     </h4>
 
                     <div className='spacer-30' />
