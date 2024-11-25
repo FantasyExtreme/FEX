@@ -755,17 +755,13 @@ module Types {
   };
   public let GAS_FEE = 10_000;
   public let MASTER_WALLET = "jfwt3-ckdh5-mv6s4-skjlw-cnh6l-qfpvs-v6wia-l2yap-z5diw-xskgi-uqe";
-
-  // below testing
-  // public let MASTER_WALLET = "cczcu-p2j5b-sgza5-dwrgs-luwwf-3giid-y4xgi-hyt34-ry4xk-7pv6p-vqe";
   public let ADMIN_WALLET = "23ojo-5fduj-boqrl-jokfi-glfug-ekijl-z6vyp-lbhju-hmiew-7ur3v-3qe";
-
   public let MAX_PLAYER_PER_SQUAD = 15;
   public let AdminSettings = {
     budget = "budget";
     platformPercentage = "platformPercentage";
     rewardableUsersPercentage = "rewardableUsersPercentage";
-   
+
 
   };
   /// 0 - direct distribution all the users will be rewarded
@@ -785,7 +781,6 @@ module Types {
     postponed = "Match Postponed";
   };
 
- 
   public let NEXT_PUBLIC_API_URL = "https://wrapper.fantasyextreme.org/v1/service/";
   public let ICP_LEDGER_CANISTER_ID = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 

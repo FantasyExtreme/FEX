@@ -200,7 +200,7 @@ type ReturnAdminSettings =
  };
 type ReturnAddParticipant = 
  variant {
-   err: TransferFromError;
+   err: TransferFromError__1;
    ok: text;
  };
 type Result_7 = 
@@ -1315,6 +1315,12 @@ type ContestType =
    name: text;
    status: text;
    time: int;
+ };
+type ContestRewardDistribution = 
+ record {
+   amount: int;
+   from: nat;
+   to: nat;
  };
 type ContestRewardDistribution = 
  record {
