@@ -24,14 +24,20 @@ import { ConnectPlugWalletSlice } from '@/types/store';
 import {
   Contest,
   ContestType,
+  GroupedContest,
+  GroupedContests,
   LoadingState,
   Match,
   MatchesCountType,
+  MatchesType,
 } from '@/types/fantasy';
 import {
+  getAllParticipants,
   fetchMatch,
+  // getContests,
   getFilterdContests,
   isConnected,
+  isInPast,
   getIcpRate,
 } from '@/components/utils/fantasy';
 
@@ -44,12 +50,18 @@ import {
   QURIES,
   QueryParamType,
 } from '@/constant/variables';
+import ContestRow from '@/components/Components/ContestRow';
+import logger from '@/lib/logger';
+import JoinContest from '@/components/Components/JoinContest';
+import RankingModal from '@/components/Components/Ranking';
+import MatchesPagination from '@/components/Components/MatchesPagination';
+import { match } from 'assert';
+import ContestGroupedRow from '@/components/Components/ConstestGroupedRow';
 import ContestItem from '@/components/Components/ContestItem';
 import Countdown from 'react-countdown';
 import CountdownRender from '@/components/Components/CountdownRenderer';
 import { TEAM_CREATION_ROUTE } from '@/constant/routes';
 import ConnectModal from '@/components/Components/ConnectModal';
-import RankingModal from '@/components/Components/Ranking';
 
 export default function Contests() {
   const urlparama = useSearchParamsHook();

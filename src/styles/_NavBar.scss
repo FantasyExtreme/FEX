@@ -59,7 +59,7 @@
     padding: 0px 0;
   }
   @media (max-width: 575px) {
-    padding: 10px 0;
+    padding:10px 0;
   }
   @media (min-width: 992px) {
     .navbar-collapse {
@@ -138,7 +138,7 @@
     @media (max-width: 1200px) {
       margin-left: 0px;
       margin-right: 0px;
-      font-size: 9px;
+      font-size: 10px;
       padding-left: 0.3rem !important;
       padding-right: 0.3rem !important;
     }
@@ -488,7 +488,7 @@
   margin: 0;
   background-color: black;
   border: 1px solid #333333;
-  padding: 12px 0;
+  padding: 15px 0;
   justify-content: space-around;
   border-radius: 24px;
   list-style: none;
@@ -505,9 +505,7 @@
         img {
           opacity: 1;
           filter: drop-shadow(0 0 3px #00f654) drop-shadow(0 0 5px #00f654) drop-shadow(0 0 60px #00f654);
-        }
-        span{
-          color: $color;
+
         }
       }
     }
@@ -516,61 +514,13 @@
         img {
           opacity: 1;
           filter: drop-shadow(0 0 3px #00f654) drop-shadow(0 0 5px #00f654) drop-shadow(0 0 60px #00f654);
-        }
-        span{
-          color: $color;
+
         }
       }
     }
   }
-  .Icon-User {
-    height: 28px;
-    width: 28px;
-    margin-bottom: 1px;
-  }
-
-  .Icon-Ball {
-    height: 29px;
-    width: 29px;
-  }
-
-  .Icon-Home {
-    height: 30px;
-    width: 30px;
-  }
-
-  .Cal-Icon {
-    height: 30px;
-    width: 34px;
-  }
-
-  .Rank-Icon {
-    height: 30px;
-    width: 30px;
-  }
-
   @media (max-width: 991px) {
     display: flex;
-  }
-  .nav-link {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    color: white;
-    span {
-      font-family: $Nasalization;
-      font-size: 12px;
-      margin-top: 8px;
-      @media (max-width: 700px) {
-        font-size: 11px;
-      }
-      @media (max-width: 500px) {
-        font-size: 10px;
-      }
-      @media (max-width: 390px) {
-        font-size: 9px;
-      }
-    }
   }
   // @media (max-width: 575px) {
   //   img {
@@ -620,10 +570,7 @@
       padding: 10px 20px;
       text-align: left;
       display: flex;
-      @media (max-width: 991px) {
-        color: $white;
-        font-family: $Nasalization;
-      }
+      @media(max-width:991px){color: $white;font-family:$Nasalization;}
       &:last-child {
         border-radius: 0 0 15px 15px;
       }
@@ -743,10 +690,10 @@
 }
 // Off Canvas
 
-.dropdown-item.active,
-.dropdown-item:active {
+.dropdown-item.active, .dropdown-item:active{
   background-color: $color;
 }
+
 .offcanvas-body,
 .navbar-nav {
   .dropdown .dropdown-menu a {
@@ -766,5 +713,3 @@
       }
   }
 }
-
-

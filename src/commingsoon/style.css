@@ -1,0 +1,338 @@
+* {
+  margin: 0;
+  padding: 0;
+  image-rendering: -o-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  -ms-interpolation-mode: nearest-neighbor;
+}
+@font-face {
+  font-family: 'Nasalization Rg';
+  src:
+    url('font/NasalizationRg-Regular.woff2') format('woff2'),
+    url('font/NasalizationRg-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+.bg-layer {
+  opacity: 1;
+  background-size: cover;
+  background-position: center center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+body,
+html,
+main {
+  -webkit-font-smoothing: antialiased;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+a,
+a:focus,
+button,
+button:focus {
+  outline: 0 !important;
+  box-shadow: none;
+  -webkit-transition: all 0.5s ease-in-out;
+  -moz-transition: all 0.5s ease-in-out;
+  -ms-transition: all 0.5s ease-in-out;
+  -o-transition: all 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
+}
+
+a {
+  display: inline-block;
+  text-decoration: none !important;
+}
+
+a.text-decoration {
+  text-decoration: underline !important;
+}
+img {
+  max-width: 100%;
+}
+body {
+  background-color: #000;
+}
+.text-center {
+  text-align: center;
+}
+.header {
+  width: 100%;
+  position: relative;
+}
+.header:before {
+  position: absolute;
+  content: '';
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  height: 150px;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.02) 0%,
+    rgba(0, 0, 0, 1) 100%
+  );
+}
+.logo {
+  position: absolute;
+  left: 15px;
+  top: 0px;
+  max-width: 100px;
+}
+.logo1 {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  max-width: 60px;
+  z-index: 2;
+}
+h1 {
+  font-size: 70px;
+  color: #fff;
+  font-family: 'Nasalization Rg';
+  font-weight: 400;
+}
+h2 {
+  font-size: 34px;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 8px;
+  font-weight: normal;
+  text-transform: uppercase;
+}
+h3 {
+  font-size: 40px;
+  color: rgba(255, 255, 255, 1);
+  font-weight: normal;
+  font-family: 'Nasalization Rg';
+  text-transform: uppercase;
+}
+h3 span {
+  color: #00f654;
+}
+.content-pnl p {
+  font-size: 18px;
+  color: white;
+  opacity: 0.8;
+  font-weight: 400;
+  text-align: justify;
+}
+.spacer-10 {
+  display: inline-block;
+  width: 100%;
+  height: 5px;
+}
+.spacer-20 {
+  display: inline-block;
+  width: 100%;
+  height: 20px;
+}
+.spacer-40 {
+  display: inline-block;
+  width: 100%;
+  height: 40px;
+}
+.spacer-50 {
+  display: inline-block;
+  width: 100%;
+  height: 50px;
+}
+.text-right {
+  text-align: right;
+}
+
+.social-list {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  list-style: none;
+  margin-top: 20px;
+  margin-bottom: 100px;
+}
+.social-list li {
+  margin: 0 7.5px;
+}
+.social-list li a:hover {
+  transform: scale(1.21);
+}
+@media (min-width: 1300px) {
+  .container {
+    max-width: 1300px;
+  }
+}
+@media (max-width: 1200px) {
+  h1 {
+    font-size: 60px;
+  }
+  h2 {
+    font-size: 26px;
+  }
+}
+@media (max-width: 991px) {
+  .logo {
+    max-width: 100px;
+    top: 0;
+    left: 10px;
+  }
+  .logo1 {
+    max-width: 50px;
+    top: 10px;
+    right: 10px;
+  }
+  h1 {
+    font-size: 50px;
+  }
+  h2 {
+    font-size: 20px;
+  }
+  h3 {
+    font-size: 34px;
+  }
+}
+@media (max-width: 767px) {
+  .logo1 {
+    max-width: 40px;
+    top: 10px;
+    right: 10px;
+  }
+  h1 {
+    font-size: 48px;
+  }
+  h2 {
+    font-size: 18px;
+  }
+
+  h3 {
+    font-size: 30px;
+  }
+}
+@media (max-width: 575px) {
+  .logo {
+    max-width: 60px;
+    top: 0;
+    left: 5px;
+  }
+  .logo1 {
+    max-width: 40px;
+    top: 10px;
+    right: 10px;
+  }
+  h1 {
+    font-size: 30px;
+  }
+  h2 {
+    font-size: 12px;
+    letter-spacing: 5px;
+  }
+  h3 {
+    font-size: 24px;
+  }
+  .social-list li {
+    margin: 0 5px;
+  }
+}
+
+.footer {
+  background-color: #1d1d1d;
+  padding-top: 60px;
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+}
+.footer .bg-layer {
+  background-image: url(img/footer-bg.png);
+  background-repeat: no-repeat;
+  background-position: center right;
+  opacity: 1;
+  z-index: -1;
+  width: 500px;
+  left: unset;
+  right: 0;
+  background-size: 100% auto;
+}
+
+@media (max-width: 767px) {
+  .footer {
+    padding-top: 30px;
+  }
+}
+.footer p {
+  color: white;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+.footer-list {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin-bottom: 50px;
+}
+.footer-list li {
+  width: calc(33.3333% - 10px);
+  margin-right: 10px;
+  margin-bottom: 20px;
+}
+.footer-list li a {
+  font-size: 18px;
+  color: white;
+  margin-bottom: 10px;
+  font-family: 'Nasalization Rg';
+  text-transform: uppercase;
+}
+.footer-list li a:hover {
+  color: #00f654;
+  text-shadow: 0 0 15px rgba(0, 246, 84, 0.5);
+}
+
+.footer-bottom {
+  padding-bottom: 10px;
+}
+.footer-bottom p {
+  margin: 0;
+  text-transform: uppercase;
+  font-family: 'Nasalization Rg';
+}
+@media (max-width: 1600px) {
+  .footer .bg-layer {
+    width: 440px;
+  }
+}
+@media (max-width: 1400px) {
+  .footer .bg-layer {
+    width: 350px;
+  }
+}
+@media (max-width: 1200px) {
+  .footer .bg-layer {
+    width: 550px;
+    opacity: 0.3;
+  }
+}
+@media (max-width: 991px) {
+  .text-right {
+    text-align: left !important;
+  }
+}
+@media (max-width: 767px) {
+  body,
+  .text-right {
+    text-align: center !important;
+  }
+}
+@media (max-width: 575px) {
+  .footer-list li {
+    width: calc(50% - 10px);
+  }
+  .footer p {
+    font-size: 14px;
+  }
+}

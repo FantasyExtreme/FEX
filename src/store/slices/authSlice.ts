@@ -11,12 +11,14 @@ const authSlice = (
     client: null,
     isLoading: true,
     identity: null,
+    agent: null,
   },
   userAuth: {
     name: '',
     role: '',
     userPerms: null,
     email: '',
+    ckBalance: 0,
   },
 
   setAuth: (input: any): void =>

@@ -7,8 +7,9 @@ import powerimg from '@/assets/images/footer-infinix.png';
 import footerammaglogo from '@/assets/images/footer-ammag-logo.png';
 
 import {
+  AMMAG_LINK,
   CONTACT_US_ROUTE,
-  FANTASY_PLAYERS_ROUTE,
+  FANTASY_PLAYER_ROUTE,
   GAMEPLAYRULES_ROUTE,
   MATCHES_ROUTE,
 } from '@/constant/routes';
@@ -33,7 +34,66 @@ export default function Footer() {
 
   return (
     <>
-     
+      {/* <Container
+        fluid
+        id='Footer'
+        className={isVisible3 == true ? 'animate footer' : 'footer'}
+      >
+        <div>
+          <div className="d-flex justify-content-center align-items-center footer-text">
+            <Link className='footer-logo' href='/'>
+              <img
+                src='https://fantasy-extreme-assets.s3.us-east-005.backblazeb2.com/Compressed/logo/footer-logo.png'
+                alt='logo'
+                width={700}
+              />
+            </Link>
+          </div>
+
+          <h4 className='text-center text-white Nasalization foter-text '>
+            Fantasy <span>Extreme</span>
+          </h4>
+        </div>
+
+
+        <Row>
+          <Col xxl='12' xl='12' lg='12' md='12'>
+            <ul className='footer-list'>
+              <li>
+                <Link href={MATCHES_ROUTE}>Matches</Link>
+              </li>
+              <li>
+                <Link href={FANTASY_PLAYER_ROUTE}>Players</Link>
+              </li>
+              <li>
+                <Link href={MATCHES_ROUTE}>Leagues</Link>
+              </li>
+              <li>
+                <Link href={GAMEPLAYRULES_ROUTE}>Gameplay Rules</Link>
+              </li>
+            </ul>
+          </Col>
+        </Row>
+      </Container>
+      <Container
+        style={{ borderTop: "1px solid #FFFFFF33" }}
+        fluid
+        id='Footer'
+        className={isVisible3 == true ? 'animate footer' : 'footer'}
+      >
+        <Row>
+          <Container>
+            <Row>
+              <Col xl='12'>
+                <div className="flex-div-xs align-items-center">
+                  <p className='m-0'>Copyright ©2024 Fantasy extreme All rights reserved.</p>
+                  <Image src={iconICPpowerd} width={250} height={27} alt="iconICPpowerd" />
+                </div>
+              </Col>
+            </Row>
+          </Container>
+        </Row>
+      </Container> */}
 
       <Container
         fluid
@@ -58,7 +118,7 @@ export default function Footer() {
                     <Link href={MATCHES_ROUTE}>Match</Link>
                   </li>
                   <li>
-                    <Link href={FANTASY_PLAYERS_ROUTE}>Players</Link>
+                    <Link href={FANTASY_PLAYER_ROUTE}>Players</Link>
                   </li>
                   <li>
                     <Link href={MATCHES_ROUTE}>Leagues</Link>
@@ -70,7 +130,7 @@ export default function Footer() {
                     <Link href={CONTACT_US_ROUTE}>Contact Us</Link>
                   </li> */}
                 </ul>
-               
+                <h6>100% on Chain</h6>
               </Col>
             </Row>
           </Container>
@@ -78,12 +138,12 @@ export default function Footer() {
         <div className='footer-bottom'>
           <Container>
             <Col xl='12' lg='12' md='12'>
-              <div className='flex-align-panel justify-content-center'>
-              {/* <Link href={AMMAG_LINK}>
+              <div className='flex-align-panel'>
+              <Link href={AMMAG_LINK}>
                  <Image src={footerammaglogo} alt='Ammag' />
-                </Link> */}
+                </Link>
                 <p>Copyright ©2024 Fantasy extreme All rights reserved.</p>
-                {/* <Image src={powerimg} alt='Footer Logo' /> */}
+                <Image src={powerimg} alt='Footer Logo' />
               </div>
             </Col>
           </Container>

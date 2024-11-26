@@ -1,5 +1,7 @@
 import { Identity } from '@dfinity/agent';
+import { AuthClient } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
+import { NFID } from '@nfid/embed';
 
 interface Auth {
   state: 'initializing-auth' | 'anonymous' | 'initialized' | 'error';
@@ -19,6 +21,9 @@ interface UserAuth {
   role: string;
   email: string;
   userPerms: null | UserPermissions;
+  rewardPercentage: number;
+  balance: number;
+  ckBalance?: number;
 }
 export interface Wallet {
   balance: number;

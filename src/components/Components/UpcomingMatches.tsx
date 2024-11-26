@@ -4,7 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Container } from 'react-bootstrap';
 import {
-  getMatches
+  getMatches,
+  getUpcomingMatches,
+  requireAuth,
 } from '@/components/utils/fantasy';
 import { useAuthStore } from '@/store/useStore';
 import { Spinner, Table } from 'react-bootstrap';

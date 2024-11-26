@@ -20,6 +20,7 @@ import userImage from '@/assets/images/user3.png';
 import { formatNumber } from '../utils/utcToLocal';
 import CupSvg from '../Icons/CupSvg';
 import { E8S } from '@/constant/fantasticonst';
+import { fromE8S } from '@/lib/ledger';
 import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
 export default function FantasyPlayers() {
@@ -150,7 +151,16 @@ export default function FantasyPlayers() {
                             </b>
                             <span>{formatNumber(player?.contestWon)}</span>
                           </h6>
-                    
+                          <h6>
+                            <b>
+                              <img
+                                src='https://fantasy-extreme-assets.s3.us-east-005.backblazeb2.com/Compressed/icons/icon-gift.png'
+                                alt='icon Gift'
+                              />{' '}
+                              Rewards Won:
+                            </b>
+                            <span>{fromE8S(player?.rewardsWon, true)} ICP</span>
+                          </h6>
                         </div>
                       </div>
                     </div>

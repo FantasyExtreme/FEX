@@ -75,23 +75,25 @@ export const PlayersMaxCount = {
 };
 export const DEFAULT_MATCH_STATUS: MATCH_STATUS_TYPE = MatchStatuses.upcoming;
 export const MATCHES_ITEMSPERPAGE = 10;
+export const REWARDS_PER_PAGE = 10;
+
 export const MATCHES_ITEMS_LIMIT = 1;
 export const TRANSACTIONS_ITEMSPERPAGE = 10;
+export const MAX_JOINED_CONTESTS_LIMIT = 6;
 
 export const TOP_FANTASY_PLAYERS_ITEMSPERPAGE = 4;
 export const TOP_FANTASY_PLAYERS_PAGE_ITEMSPERPAGE = 10;
-export const Intervals = {
-  contest: 20000,
-  ranking: 20000,
-};
+
 export enum QURIES {
   matchTab = 'match_tab',
   squadId = 'squadId',
   matchId = 'matchId',
   tournamentId = 'tournament',
   contestId = 'contestId',
-};
+  refferalId = 'refferalId',
+  communityId = "communityId"
 
+}
 export const JoinContestText = {
   upcoming: 'Join',
   ongoing: 'Match Live',
@@ -101,13 +103,25 @@ export const JoinContestText = {
 export const DefaultContest = {
   name: 'FX League',
   slots: 200,
+  entryFee: E8S * 100,
   teamsPerUser: 3,
+  rewardDistribution: [
+    { from: 1, to: 1, amount: 50 },
+    { from: 2, to: 2, amount: 20 },
+    { from: 3, to: 3, amount: 10 },
+    { from: 4, to: 20, amount: 30 },
+  ],
+  paymentMethod : "ryjl3-tyaaa-aaaaa-aaaba-cai",
   minCap: 1,
   maxCap: 0,
   providerId: '0',
-  rules: `Teams Per User = ${3}
+  isDistributed: false,
+  rules: `Teams Per User = ${3},
+          Entry Fee = ${100}
 `,
 };
+export const COMMUNITIES_PER_PAGE = 10;
+export const COMMUNITYCONTEST_PER_PAGE = 10;
 export const DefaultTeam = {
   matchId: null,
   cap: '',
@@ -116,7 +130,12 @@ export const DefaultTeam = {
   formation: '3-4-3',
 };
 export const DEAFULT_PROPS = { status: '0', page: 0, limit: 10, search: '' };
-
+export const Intervals = {
+  contest: 20000,
+  ranking: 20000,
+};
+export const DefaultContestType = DefaultContestTypes.gold;
+export const DefaultContestParticipants = 1000;
 export const carouselDefaultSettings = {
   additionalTransfrom: 0,
   arrows: true,

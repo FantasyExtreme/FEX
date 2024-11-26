@@ -12,10 +12,20 @@ import {
   Button,
   Form,
 } from 'react-bootstrap';
+import Image from 'next/image';
+import FantasyPlayers from '@/components/Components/FantasyPlayers';
+import player from '@/assets/images/Players/player-5.png';
+import player1 from '@/assets/images/Players/player-1.png';
+import player2 from '@/assets/images/Players/player-2.png';
+import player3 from '@/assets/images/Players/player-3.png';
+import player4 from '@/assets/images/Players/player-4.png';
 
 import CupSvg from '@/components/Icons/CupSvg';
 import GiftSvg from '@/components/Icons/GiftSvg';
 import LeaderBoardSvg from '@/components/Icons/LeaderboardSvg';
+import userSvg from '@/assets/images/icons/icon-users.png';
+import DashboardSvg from '@/components/Icons/DashboardSvg';
+import PrincipalSvg from '@/components/Icons/PrincipalSvg';
 import UserSvg from '@/components/Icons/Userrsvg';
 import { getMeAsTopplayers, getTopplayers } from '@/components/utils/fantasy';
 import { useAuthStore } from '@/store/useStore';
@@ -23,8 +33,13 @@ import { ConnectPlugWalletSlice } from '@/types/store';
 import { GetProps, MeAsTopPlayers, TopPlayers } from '@/types/fantasy';
 import { TOP_FANTASY_PLAYERS_PAGE_ITEMSPERPAGE } from '@/constant/variables';
 import logger from '@/lib/logger';
+import MatchesPagination from '@/components/Components/MatchesPagination';
 import PaginatedList from '@/components/Components/Pagination';
-
+import { E8S } from '@/constant/fantasticonst';
+import { fromE8S } from '@/lib/ledger';
+// import CupSvg from '@/assets/images/icons/icon-trophy-small.png';
+// import GiftSvg from '@/assets/images/icons/icon-gift.png';
+// import LeaderBoardSvg from '@/assets/images/icons/icon-ranks.png';
 
 export default function fantasyplayer() {
   const { auth } = useAuthStore((state) => ({
@@ -156,7 +171,26 @@ export default function fantasyplayer() {
                                 <span>{topPlayer?.contestWon}</span>
                               </div>
                             </li>
-                      
+                            {/* <li>
+                    <h6>Total Contests with Rewards</h6>
+                    <div className='stat-container'>
+                      <span>
+                        <GiftSvg />
+                      </span>
+                      <span>8</span>
+                    </div>
+                  </li> */}
+                            <li>
+                              <h6>Total Rewards.</h6>
+                              <div className='stat-container'>
+                                <span>
+                                  <LeaderBoardSvg />
+                                </span>
+                                <span>
+                                  {fromE8S(topPlayer?.totalEarning, true)} ICP
+                                </span>
+                              </div>
+                            </li>
                           </ul>
                         </div>
                       </div>
@@ -241,7 +275,27 @@ export default function fantasyplayer() {
                                     <span>{player?.contestWon ?? 0}</span>
                                   </div>
                                 </li>
-                         
+                                {/* <li>
+                            <h6>Total Contests with Rewards</h6>
+                            <div className='stat-container'>
+                              <span>
+                                <GiftSvg />
+                              </span>
+                              <span>8</span>
+                            </div>
+                          </li> */}
+                                <li>
+                                  <h6>Total Rewards.</h6>
+                                  <div className='stat-container'>
+                                    <span>
+                                      <LeaderBoardSvg />
+                                    </span>
+                                    <span>
+                                      {fromE8S(player?.rewardsWon ?? 0, true)}{' '}
+                                      ICP
+                                    </span>
+                                  </div>
+                                </li>
                               </ul>
                             </div>
                           </div>

@@ -7,7 +7,9 @@ import 'slick-carousel/slick/slick-theme.css';
 import Slider from 'react-slick';
 import {
   getMatches,
-
+  getMatchWinnerAndMVPS,
+  isConnected,
+  requireAuth,
 } from '@/components/utils/fantasy';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';

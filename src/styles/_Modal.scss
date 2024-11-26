@@ -6,6 +6,11 @@
   background-color: transparent;
   border-radius: 35px;
 }
+.light {
+  .modal-body {
+    background-color: rgba(0, 0, 0, 0.182) !important;
+  }
+}
 .modal-body {
   padding: 40px 30px 30px;
   border-radius: 35px;
@@ -13,6 +18,7 @@
   border: 2px solid rgba(255, 255, 255, 0.25);
   color: $white;
   backdrop-filter: blur(5px);
+
   h5 {
     font-weight: 700;
   }
@@ -25,5 +31,133 @@
   position: absolute;
   right: 15px;
   top: 15px;
+  color: $white;
   z-index: 5;
+  font-size: 22px;
+  &:hover {
+    color: $color;
+  }
+}
+.join-contest-list {
+  // margin-top: 30px;
+  margin-bottom: 0;
+  position: relative;
+  // max-height: 400px;
+  // overflow-y: auto;
+  li {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    &.active {
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      background: black;
+    }
+    @media (max-width: 430px) {
+      flex-direction: row;
+    }
+    @media (min-width: 431px) {
+      .reg-btn {
+        margin-right: 0 !important;
+      }
+    }
+    .box {
+      width: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 15px;
+      font-size: 22px;
+      font-weight: 700;
+      color: $white;
+      border-radius: 10px;
+      &.grey {
+        background-color: #2d2d2d;
+        border-radius: 10px;
+      }
+      @media (max-width: 430px) {
+        margin-bottom: 10px;
+      }
+    }
+    .grey-pnl {
+      display: flex;
+      @include trans;
+      justify-content: space-between;
+      background-color: #2d2d2d;
+      border-radius: 20px;
+      width: 100%;
+      padding: 15px 20px;
+      align-items: center;
+      @media (max-width: 991px) {
+        border-radius: 10px;
+        padding: 10px 20px;
+      }
+      @media (max-width: 575px) {
+        padding: 10px 10px;
+      }
+      @media (max-width: 430px) {
+        width: 100%;
+        margin-bottom: 15px;
+      }
+      h5 {
+        margin: 0;
+        color: $white;
+        font-size: 20px;
+        font-weight: 700;
+        &:nth-of-type(1) {
+          width: calc(100% - 60% + 21px);
+        }
+        &:nth-of-type(2) {
+          width: 30%;
+          text-align: center;
+        }
+        &:nth-of-type(3) {
+          width: 30%;
+          text-align: center;
+        }
+        @media (max-width: 575px) {
+          font-size: 16px;
+        }
+      }
+      a {
+        color: $white;
+        font-size: 18px;
+        width: 21px;
+      }
+    }
+    &.active,
+    &:hover {
+      .grey-pnl {
+        background-color: $white;
+        color: #262626;
+        a,
+        h5 {
+          color: #262626;
+        }
+      }
+      .grey {
+        background-color: $white;
+        color: #262626;
+      }
+    }
+  }
+}
+
+.deleteRewardModle{
+  .modal-content {
+    background-color: #1d1d1d;
+    border-radius: 35px;
+
+    color: white;
+    .modal-body{
+      border-radius: 0%;
+      border: none;
+    background-color: #1d1d1d;
+
+    }
+  }
+
 }

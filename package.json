@@ -21,7 +21,7 @@
     "prepare": "husky install",
     "move": "mv src/dfx/declarations/temp/$npm_config_canister/$npm_config_canister.did.js src/dfx/declarations/$npm_config_canister",
     "genploy": "dfx deploy $npm_config_canister && dfx generate $npm_config_canister && mv src/dfx/declarations/temp/$npm_config_canister/$npm_config_canister.did.js src/dfx/declarations/$npm_config_canister",
-    "fantasy": "dfx deploy fantasyfootball --argument 'record {ledgerCanisterId = \"dccg7-xmaaa-aaaaa-qaamq-cai\"; transactionCanisterId = \"dfdal-2uaaa-aaaaa-qaama-cai\";}' && dfx generate fantasyfootball && mv src/dfx/declarations/temp/fantasyfootball/fantasyfootball.did.js src/dfx/declarations/fantasyfootball"
+    "fantasy": "dfx deploy fantasyfootball --argument 'record {ledgerCanisterId = \"gm7ld-quaaa-aaaaa-qaaqa-cai\"; transactionCanisterId = \"dfdal-2uaaa-aaaaa-qaama-cai\";}' && dfx generate fantasyfootball && mv src/dfx/declarations/temp/fantasyfootball/fantasyfootball.did.js src/dfx/declarations/fantasyfootball"
    
   },
   "dependencies": {

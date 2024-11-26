@@ -1,6 +1,8 @@
 /* eslint-disable no-console */
 // import { showLogger } from '@/constant/env';
 
+import { EnvironmentEnum } from '@/constant/variables';
+
 /**
  * A logger function that will only logs on development
  * @param object - The object to log
@@ -11,7 +13,11 @@ export default function logger(
   comment?: string,
   isError?: boolean,
 ): void {
-  if (process.env.DFX_NETWORK == 'ic') return;
+  if (
+    process.env.NEXT_PUBLIC_DFX_NETWORK !== EnvironmentEnum.dev &&
+    process.env.NEXT_PUBLIC_ENVIRONMENT_TYPE !== EnvironmentEnum.stagging
+  )
+    return;
 
   if (isError) {
     console.log(

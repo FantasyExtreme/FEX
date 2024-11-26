@@ -2,8 +2,8 @@ export default function PrincipalSvg() {
   return (
     <svg
       className='svg-icon'
-      width='15'
-      height='28'
+      width='21'
+      height='23'
       viewBox='0 0 21 23'
       fill='none'
       xmlns='http://www.w3.org/2000/svg'
