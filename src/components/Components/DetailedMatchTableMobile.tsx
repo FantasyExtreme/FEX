@@ -40,7 +40,7 @@ export default function DetailedMatchTableMobile({
   }));
 
   return (
-    <>
+   
       <div className=''>
         <div className='table-inner-container med-table-height'>
           {loading && (
@@ -67,6 +67,6 @@ export default function DetailedMatchTableMobile({
             ))}
         </div>
       </div>
-    </>
+   
   );
 }

@@ -20,7 +20,13 @@ import {
 import ConnectModal from './ConnectModal';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
-import { ContestInfoType, DefaultContest } from '@/constant/variables';
+import {
+  ContestInfoType,
+  ContestPayment,
+  DefaultContest,
+  PaymentsArray,
+  PaymentTypes,
+} from '@/constant/variables';
 import ContestInfoModal from './ContestInfoModal';
 import logger from '@/lib/logger';
 import { useRouter } from 'next/navigation';
@@ -35,7 +41,6 @@ import JoinContestModal from './JoinContestModal';
 import RewardCalculatorModal from './RewardCalculatorModal';
 import CountdownRender from './CountdownRenderer';
 import PrincipalSvg from '../Icons/PrincipalSvg';
-import AddReferalLink from './AddReferalLink';
 
 interface Props {
   contest: Contest;
@@ -47,7 +52,7 @@ interface Props {
   handleShowUpdateModal?: (contest: string) => void;
   setSelectedContest?: any;
   isDashboard?: boolean;
-  icpRate?: number;
+  icpRate: number;
   isAdminPannel?: boolean;
 }
 function ContestItem({
@@ -70,11 +75,10 @@ function ContestItem({
   const [showInfo, setShowInfo] = useState(false);
   const [modalText, setModalText] = useState<string[]>([]);
   const [showJoin, setShowJoin] = useState(false);
+
   const [modalType, setModalType] = useState<ContestInfoType>(
     ContestInfoType.rules,
   );
-  const [addCommunityId, setAddCommunityId] = useState(false);
-
   const [contestInfo, setContestInfo] = useState({
     entryFee: 0,
     totalparticipants: 0,
@@ -83,6 +87,8 @@ function ContestItem({
 
   const searchParams = new URLSearchParams(urlparama);
   const matchId = searchParams.get('matchId');
+  const contestPaymentObj =
+    ContestPayment.get(contest.paymentMethod as string) || PaymentsArray[0];
   let router = useRouter();
   const { auth, userAuth } = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
@@ -94,14 +100,12 @@ function ContestItem({
   function handleCloseJoin() {
     setShowJoin(false);
   }
+ 
   function handleShowROI() {
     setShowROI(true);
   }
   function handleCloseROI() {
     setShowROI(false);
-  }
-  function handleCloseAddReferalLink() {
-    setAddCommunityId(false);
   }
 
   /**
@@ -153,7 +157,6 @@ function ContestItem({
   useEffect(() => {
     setSlotsLeft(contest?.slotsLeft);
   }, [contest?.slotsLeft]);
-  logger(contest, 'agfkjhgsajkfdsadfsadfsf');
   return (
     <>
       <div className={`package-contest-post-main ${getPackage(contest.name)}`}>
@@ -167,82 +170,89 @@ function ContestItem({
                 alt='img'
               />{' '}
               {contest.name}
-              {isAdminPannel &&  <span className='copytbn' onClick={()=>{
-                copyId(contest.id,"Contest Id")
-              }}>
-              <PrincipalSvg />
-              </span>}
+              {isAdminPannel && (
+                <span
+                  className='copybtn'
+                  onClick={() => {
+                    copyId(contest.id, 'Contest Id');
+                  }}
+                >
+                  <PrincipalSvg />
+                </span>
+              )}
             </div>
             <div className='mobile-view-contest-btn'>
-            {match && Number(match.time) > Date.now() ? (
-                            <OverlayTrigger
-                              placement='top'
-                              overlay={
-                                <Tooltip
-                                  id='tooltip-top'
-                                  className='Nasalization text-white'
-                                >
-                                  Time{' '}
-                                  <span>
-                                    {' '}
-                                    Remaining untill the match starts
-                                  </span>
-                                </Tooltip>
-                              }
-                            >
-                                <h6 className=''>Starts In <span><Countdown
-                                  date={match?.time}
-                                  renderer={CountdownRender}
-                                /></span></h6>
-                            </OverlayTrigger>
-                          ) : (
-                            <span></span>
-                          )}
-             
+              {match && Number(match.time) > Date.now() ? (
+                <OverlayTrigger
+                  placement='top'
+                  overlay={
+                    <Tooltip
+                      id='tooltip-top'
+                      className='Nasalization text-white'
+                    >
+                      Time <span> Remaining untill the match starts</span>
+                    </Tooltip>
+                  }
+                >
+                  <h6 className=''>
+                    Starts In{' '}
+                    <span>
+                      <Countdown
+                        date={match?.time}
+                        renderer={CountdownRender}
+                      />
+                    </span>
+                  </h6>
+                </OverlayTrigger>
+              ) : (
+                <span></span>
+              )}
 
+              {match && Number(match.time) > Date.now() ? (
+                <Link
+                  className='reg-btn trans-white mid text-capitalize'
+                  href={'#'}
+                  // href={
+                  //   isConnected(auth.state)
+                  //     ? `${TEAM_CREATION_ROUTE}?matchId=${matchId}`
+                  //     : '#'
+                  // }
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!isConnected(auth.state)) {
+                      handleShowConnect();
 
-                                 {match && Number(match.time) > Date.now() ? (
-                            <Link
-                              className='reg-btn trans-white mid text-capitalize'
-                              href={'#'}
-                              // href={
-                              //   isConnected(auth.state)
-                              //     ? `${TEAM_CREATION_ROUTE}?matchId=${matchId}`
-                              //     : '#'
-                              // }
-                              onClick={(e) => {
-                                e.preventDefault();
-                                if (!isConnected(auth.state)) {
-                                  handleShowConnect();
-
-                                  setPath(
-                                    `${TEAM_CREATION_ROUTE}?matchId=${matchId}`,
-                                  );
-                                } else {
-                                  router.push(
-                                    `${TEAM_CREATION_ROUTE}?matchId=${matchId}`,
-                                  );
-                                }
-                              }}
-                            >
-                              Create Team
-                            </Link>
-                          ) : (
-                            <span></span>
-                          )}
+                      setPath(`${TEAM_CREATION_ROUTE}?matchId=${matchId}`);
+                    } else {
+                      router.push(`${TEAM_CREATION_ROUTE}?matchId=${matchId}`);
+                    }
+                  }}
+                >
+                  Create Team
+                </Link>
+              ) : (
+                <span></span>
+              )}
             </div>
             <div className='post-heading-info'>
               <div className='img-pnl'>
-                <Image className='small' src={coinicon} alt='img' />
-                <Image src={tethericon} alt='img' />
+                <Image
+                  className='small'
+                  src={contestPaymentObj.fexIcon}
+                  alt='img'
+                />
+                <Image src={contestPaymentObj.tetherIcon} alt='img' />
               </div>
               <div className='txt-pnl'>
                 <h6>{contest.name}</h6>
-                <span>Entry Fee: {contest.entryFee} ICP</span>
+                <span>
+                  Entry Fee: {contest.entryFee} {contestPaymentObj?.name}
+                </span>
               </div>
             </div>
             <ul className='calculate-list'>
-              {shouldShowROI(contest.name) ? (
+              {shouldShowROI(contest.name) &&
+              contestPaymentObj?.id == PaymentTypes.ICP ? (
                 <li>
                   <p>Rewards:</p>
                   <p onClick={handleShowROI}>
@@ -258,41 +268,51 @@ function ContestItem({
               <li>
                 <p>Prize Pool</p>
                 <p>
-                  {contest.prizePool} ICP <small>(1 ICP ≈ {icpRate}$)</small>
+                  {contest.prizePool} {contestPaymentObj?.name}{' '}
+                  <small>
+                    {contestPaymentObj?.id == PaymentTypes.ICP
+                      ? `(1 ICP ≈ ${icpRate}$)`
+                      : null}
+                  </small>
                 </p>
               </li>
             </ul>
             <ul
-              className={`icon-list ${!shouldShowROI(contest.name) && 'justify-content-center'}`}
+              className={`icon-list ${
+                !shouldShowROI(contest.name) &&
+                contestPaymentObj?.id == PaymentTypes.ICP &&
+                'justify-content-center'
+              }`}
             >
-              {shouldShowROI(contest.name) && (
-                <>
-                  {' '}
-                  <Tippy
-                    content={
-                      <>
-                        <span className='me-4'>Prize for 1st position:</span>
-                        <span> {contest?.firstPrize ?? 0} ICP</span>
-                      </>
-                    }
-                  >
-                    <li>
-                      <Image src={GiftSvg} alt='icon Gift' />
+              {shouldShowROI(contest.name) &&
+                contestPaymentObj?.id == PaymentTypes.ICP && (
+                  <>
+                    {' '}
+                    <Tippy
+                      content={
+                        <>
+                          <span className='me-4'>Prize for 1st position:</span>
+                          <span> {contest?.firstPrize ?? 0} ICP</span>
+                        </>
+                      }
+                    >
+                      <li>
+                        <Image src={GiftSvg} alt='icon Gift' />
+                      </li>
+                    </Tippy>
+                    <li
+                      onClick={() => {
+                        handleShowInfo(ContestInfoType.rewardDistribution);
+                        setContestInfo({
+                          entryFee: contest.entryFee,
+                          totalparticipants: contest.slotsUsed,
+                        });
+                      }}
+                    >
+                      <Image src={CupSvg} alt='icon Cup' />
                     </li>
-                  </Tippy>
-                  <li
-                    onClick={() => {
-                      handleShowInfo(ContestInfoType.rewardDistribution);
-                      setContestInfo({
-                        entryFee: contest.entryFee,
-                        totalparticipants: contest.slotsUsed,
-                      });
-                    }}
-                  >
-                    <Image src={CupSvg} alt='icon Cup' />
-                  </li>
-                </>
-              )}
+                  </>
+                )}
               <li
                 onClick={() => {
                   setContestInfo({ entryFee: 0, totalparticipants: 0 });
@@ -323,17 +343,7 @@ function ContestItem({
                 >
                   View Ranking
                 </Button>{' '}
-                {setAddCommunityId && (
-    <Button
-      onClick={() => {
-
-        setAddCommunityId(true);
-      }}
-      className='reg-btn mt-3'
-    >
-     Add Community Id
-    </Button>
-  )}
+          
               </>
             ) : Number(match?.time) > Date.now() ? (
               <Button onClick={handleShowJoin} className='reg-btn'>
@@ -394,17 +404,11 @@ function ContestItem({
           handleClose={handleCloseJoin}
         />
       )}
-
-  {addCommunityId && (
-    <AddReferalLink
-      contestId={contest?.id}
-      show={addCommunityId}
-      handleClose={handleCloseAddReferalLink}
-    />
-  )}
+ 
       <RewardCalculatorModal
         show={showROI}
         handleClose={handleCloseROI}
+        icpRate={icpRate}
         defaultContest={{
           name: contest.name,
           entryFee: contest.entryFee,

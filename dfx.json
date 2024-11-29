@@ -7,17 +7,6 @@
         "output": "src/dfx/declarations/temp/fantasyfootball"
       }
     },
-    "FantasySports": {
-      "frontend": {
-        "entrypoint": "out/index.html"
-      },
-      "build": ["npm run build:prod"],
-      "source": ["out"],
-      "type": "assets",
-      "declarations": {
-        "output": "src/dfx/declarations/temp/FantasySports"
-      }
-    },
     "fantasytransactions": {
       "main": "backend/service/FantasyTransactions.mo",
       "type": "motoko",
@@ -25,12 +14,15 @@
         "output": "src/dfx/declarations/temp/fantasytransactions"
       }
     },
-    "icp_ledger_canister": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/d87954601e4b22972899e9957e800406a0a6b929/rs/rosetta-api/icp_ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/d87954601e4b22972899e9957e800406a0a6b929/canisters/ledger-canister.wasm.gz",
+    "FantasySports": {
+      "frontend": {
+        "entrypoint": "out/index.html"
+      },
+      "source": ["out"],
+      "build": ["npm run build:dm"],
+      "type": "assets",
       "declarations": {
-        "output": "src/dfx/declarations/temp/icp_ledger_canister"
+        "output": "src/dfx/declarations/temp/FantasySports"
       }
     },
     "internet_identity": {
@@ -46,17 +38,49 @@
       "declarations": {
         "output": "src/dfx/declarations/temp/FantasySports"
       }
+    },
+    "icp_ledger_canister": {
+      "type": "custom",
+      "candid": "https://raw.githubusercontent.com/dfinity/ic/d87954601e4b22972899e9957e800406a0a6b929/rs/rosetta-api/icp_ledger/ledger.did",
+      "wasm": "https://download.dfinity.systems/ic/d87954601e4b22972899e9957e800406a0a6b929/canisters/ledger-canister.wasm.gz",
+      "declarations": {
+        "output": "src/dfx/declarations/temp/icp_ledger_canister"
+      }
+    },
+    "icp_ledger_canister_real": {
+      "type": "custom",
+      "specified_id": "ryjl3-tyaaa-aaaaa-aaaba-cai",
+      "candid": "https://raw.githubusercontent.com/dfinity/ic/d87954601e4b22972899e9957e800406a0a6b929/rs/rosetta-api/icp_ledger/ledger.did",
+      "wasm": "https://download.dfinity.systems/ic/d87954601e4b22972899e9957e800406a0a6b929/canisters/ledger-canister.wasm.gz",
+      "declarations": {
+        "output": "src/dfx/declarations/temp/icp_ledger_canister_real"
+      }
+    },
+    "ckbtc_ledger": {
+      "type": "custom",
+      "candid": "https://raw.githubusercontent.com/dfinity/ic/95787355499f3be929f2ab302ed44cdad7c64061/rs/rosetta-api/icrc1/ledger/ledger.did",
+      "wasm": "https://download.dfinity.systems/ic/95787355499f3be929f2ab302ed44cdad7c64061/canisters/ic-icrc1-ledger.wasm.gz",
+      "remote": {
+        "id": {
+          "ic": "mxzaz-hqaaa-aaaar-qaada-cai"
+        }
+      }
+    },
+    "icrc1_index": {
+      "type": "custom",
+      "candid": "https://raw.githubusercontent.com/dfinity/ic/95787355499f3be929f2ab302ed44cdad7c64061/rs/rosetta-api/icrc1/index/index.did",
+      "wasm": "https://download.dfinity.systems/ic/95787355499f3be929f2ab302ed44cdad7c64061/canisters/ic-icrc1-index.wasm.gz",
+      "remote": {
+        "id": {
+          "ic": "n5wcd-faaaa-aaaar-qaaea-cai"
+        }
+      }
     }
   },
+  "output_env_file": ".env.icprod",
 
-  "networks": {
-    "ic": {
-      "providers": ["https://mainnet.dfinity.network"],
-      "subnet": "4zbus-z2bmt-ilreg-xakz4-6tyre-hsqj4-slb4g-zjwqo-snjcc-iqphi-3qe" 
-    }
-
-  },
-   "defaults": {
+  "networks": {},
+  "defaults": {
     "build": {
       "packtool": "mops sources"
     }

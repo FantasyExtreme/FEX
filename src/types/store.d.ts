@@ -36,12 +36,14 @@ export interface ConnectStore {
   userAuth: UserAuth;
   balance: number;
   reward: number;
+  icpRate:number,
   setIdentity: (input: string) => void;
   setReward: (input: number) => void;
   setBalance: (input: number) => void;
   setPrincipal: (input: string) => void;
   setAuth: (input: Auth) => void;
   setUserAuth: (input: UserAuth) => void;
+  setICPRate: (input: number) => void;
 }
 
 export interface ConnectPlugWalletSlice {
@@ -52,6 +54,7 @@ export interface ConnectPlugWalletSlice {
   balance: number;
   reward: number;
   emailConnected: boolean;
+  icpRate:number,
   setIdentity: (input: any) => void;
   setEmailConnected: (input: boolean) => void;
   setPrincipal: (input: string) => void;
@@ -59,4 +62,6 @@ export interface ConnectPlugWalletSlice {
   setBalance: (input: number) => void;
   setAuth: (input: Auth) => void;
   setUserAuth: (input: UserAuth) => void;
+  setICPRate: (input: number) => void;
+
 }

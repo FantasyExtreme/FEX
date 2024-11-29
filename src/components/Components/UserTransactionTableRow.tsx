@@ -1,10 +1,15 @@
 import Image from 'next/image';
 import React from 'react';
-import infinite from '../../assets/images/infinte.png';
 import { E8S } from '@/constant/fantasticonst';
+import infinite from '../../assets/images/infinte.png';
+import ckbtc from '../../assets/images/icons/ckbtc.png';
 import Link from 'next/link';
 import { CONTESTS_ROUTE } from '@/constant/routes';
-import { QueryParamType } from '@/constant/variables';
+import {
+  ContestPayment,
+  PaymentTypes,
+  QueryParamType,
+} from '@/constant/variables';
 
 export default function UserTransactionTableRow({ trans }: { trans: any }) {
   return (
@@ -12,8 +17,12 @@ export default function UserTransactionTableRow({ trans }: { trans: any }) {
       <td className='text-capitalize'>{trans?.title}</td>
       <td>
         <div className='d-flex'>
-        <Image className='mx-1 mxw-50' src={infinite} alt='Infinite' />{' '}
-        {trans?.amount / E8S}
+          <Image
+            className='mx-1 mxw-50'
+            src={trans?.paymentMethod == PaymentTypes.CKBTC ? ckbtc : infinite}
+            alt='Infinite'
+          />{' '}
+          {trans?.amount / E8S}
         </div>
       </td>
       <td className={`color ${trans?.transaction_type}`}>

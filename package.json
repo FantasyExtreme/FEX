@@ -7,6 +7,7 @@
     "build": "next build",
     "build:dev": "env-cmd -f .env.dev next build",
     "build:uat": "env-cmd -f .env.uat next build",
+    "build:dm": "env-cmd -f .env.dm next build",
     "build:prod": "env-cmd -f .env.prod next build",
     "start": "next start",
     "lint": "",
@@ -21,8 +22,8 @@
     "prepare": "husky install",
     "move": "mv src/dfx/declarations/temp/$npm_config_canister/$npm_config_canister.did.js src/dfx/declarations/$npm_config_canister",
     "genploy": "dfx deploy $npm_config_canister && dfx generate $npm_config_canister && mv src/dfx/declarations/temp/$npm_config_canister/$npm_config_canister.did.js src/dfx/declarations/$npm_config_canister",
-    "fantasy": "dfx deploy fantasyfootball --argument 'record {ledgerCanisterId = \"gm7ld-quaaa-aaaaa-qaaqa-cai\"; transactionCanisterId = \"dfdal-2uaaa-aaaaa-qaama-cai\";}' && dfx generate fantasyfootball && mv src/dfx/declarations/temp/fantasyfootball/fantasyfootball.did.js src/dfx/declarations/fantasyfootball"
-   
+    "fantasy:ic": "dfx deploy fantasyfootball --ic  --argument 'record {ledgerCanisterId = \"a4h2j-nqaaa-aaaam-ac3oq-cai\"; transactionCanisterId = \"x43ns-2iaaa-aaaam-adwhq-cai\";  ckbtcCanisterID = \"mxzaz-hqaaa-aaaar-qaada-cai\";}' ",
+    "fantasy:local": "dfx deploy fantasyfootball   --argument 'record {ledgerCanisterId = \"gm7ld-quaaa-aaaaa-qaaqa-cai\"; transactionCanisterId = \"dfdal-2uaaa-aaaaa-qaama-cai\";  ckbtcCanisterID = \"mxzaz-hqaaa-aaaar-qaada-cai\";}' && dfx generate fantasyfootball && mv src/dfx/declarations/temp/fantasyfootball/fantasyfootball.did.js src/dfx/declarations/fantasyfootball"
   },
   "dependencies": {
     "@dfinity/agent": "^2.0.0",
@@ -38,6 +39,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@fortawesome/react-fontawesome": "^0.2.1",
     "@nfid/embed": "^0.10.3",
+    "@open-ic/openchat-xframe": "^1.0.6",
     "@popperjs/core": "^2.11.8",
     "@tippyjs/react": "^4.2.6",
     "@types/react": "^18.3.3",
@@ -45,7 +47,7 @@
     "@types/react-slick": "^0.23.13",
     "@types/uuid": "^9.0.3",
     "assert": "^2.0.0",
-    "axios": "^1.7.7",
+    "axios": "^1.4.0",
     "bootstrap": "^5.3.3",
     "buffer": "^6.0.3",
     "bufferutil": "^4.0.7",

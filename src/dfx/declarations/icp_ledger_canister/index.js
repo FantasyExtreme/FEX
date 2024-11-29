@@ -9,7 +9,7 @@ export { idlFactory } from './icp_ledger_canister.did.js';
  * process.env.CANISTER_ID_<CANISTER_NAME_UPPERCASE>
  * beginning in dfx 0.15.0
  */
-export const canisterId = process.env.CANISTER_ID_ICP_LEDGER_CANISTER;
+export const canisterId = process.env.NEXT_PUBLIC_ICP_LEDGER_CANISTER_ID;
 
 export const createActor = (canisterId, options = {}) => {
 

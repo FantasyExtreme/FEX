@@ -24,6 +24,7 @@ import { getContest } from '../utils/fantasy';
 import { Contest } from '@/types/fantasy';
 import { fromE8S } from '@/lib/ledger';
 import Tippy from '@tippyjs/react';
+import { ContestPayment, PaymentsArray, PaymentTypes } from '@/constant/variables';
 
 interface Props {
   matchId: string | null;
@@ -53,7 +54,8 @@ const AddContest = ({
     minCap: oldContest?.minCap ?? '',
     teamsPerUser: oldContest?.teamsPerUser ?? '',
     rules: oldContest?.rules ?? '',
-    maxCap: '',
+    paymentMethod: oldContest?.paymentMethod ?? '',
+    // maxCap: '',
   };
   const heading = updateId ? 'Update Contest' : 'Add Contest';
   const button = updateId ? 'Update' : 'Add';
@@ -69,9 +71,9 @@ const AddContest = ({
     entryFee: number()
       .required(Messages.contest.entryFee.req)
       .min(Validations.contests.entryFee.min, Messages.contest.entryFee.min),
-    minCap: number()
-      .required(Messages.contest.minCap.req)
-      .min(Validations.contests.minCap.min, Messages.contest.minCap.min),
+    // minCap: number()
+    //   .required(Messages.contest.minCap.req)
+    //   .min(Validations.contests.minCap.min, Messages.contest.minCap.min),
     teamsPerUser: number()
       .required(Messages.contest.teamsPerUser.req)
       .min(
@@ -79,18 +81,19 @@ const AddContest = ({
         Messages.contest.teamsPerUser.min,
       ),
     rules: string().required(Messages.contest.rules.req),
+    paymentMethod: string().required(),
     // maxCap: number()
     //   .required(Messages.contest.maxCap.req)
     //   .min(Validations.contests.maxCap.min, Messages.contest.maxCap.min),
-    rewardDistribution: array()
-      .of(
-        object().shape({
-          from: number().min(1, 'From is required'),
-          to: number().min(1, 'To is required'),
-          amount: number().min(1, 'Amount is required'),
-        }),
-      )
-      .min(1, 'Please add atleast one Reward'),
+    // rewardDistribution: array()
+    //   .of(
+    //     object().shape({
+    //       from: number().min(1, 'From is required'),
+    //       to: number().min(1, 'To is required'),
+    //       amount: number().min(1, 'Amount is required'),
+    //     }),
+    //   )
+    //   .min(1, 'Please add atleast one Reward'),
   });
   async function handleContest(values: any, actions: any) {
     try {
@@ -102,11 +105,11 @@ const AddContest = ({
       //     _rewardDistribution.push(values[key]);
       //   }
       // });
-      let _rewardDistribution = values.rewardDistribution?.map((r: any) => ({
-        to: Number(r.to),
-        from: Number(r.from),
-        amount: Number(r.amount),
-      }));
+      // let _rewardDistribution = values.rewardDistribution?.map((r: any) => ({
+      //   to: Number(r.to),
+      //   from: Number(r.from),
+      //   amount: Number(r.amount),
+      // }));
 
       const contest = {
         name: values.name,
@@ -114,13 +117,15 @@ const AddContest = ({
         entryFee: values.entryFee,
         teamsPerUser: values.teamsPerUser,
         rules: values.rules,
-        rewardDistribution: _rewardDistribution,
+        paymentMethod: values.paymentMethod,
+        // rewardDistribution: _rewardDistribution,
+        rewardDistribution: [],
         matchId,
-        minCap: values.minCap,
+        // minCap: values.minCap,
+        minCap: 0,
         maxCap: 0,
         providerId: '0',
         isDistributed: false,
-        paymentMethod: 'ryjl3-tyaaa-aaaaa-aaaba-cai',
       };
       logger(contest, 'foormm gothca');
       let respContest;
@@ -219,8 +224,37 @@ const AddContest = ({
                   component='div'
                 />
               </div>
+              <Field name='paymentMethod'>
+                {({ field, form }: any) => (
+                  <Form.Group className='mb-2'>
+                    <Form.Label>Payment Method</Form.Label>
+                    <Form.Select
+                      {...field}
+                      onChange={(e) => {
+                        form.setFieldValue('paymentMethod', e.target.value);
+                      }}
+                      disabled={updateId}
+                    >
+                      <option value=''>Select Payment Method</option>
+                      {PaymentsArray.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                          
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                )}
+              </Field>
+              <div className='text-danger mb-2'>
+                <ErrorMessage
+                  className='Mui-err'
+                  name='paymentMethod'
+                  component='div'
+                />
+              </div>
               <Field name='entryFee'>
-                {({ field, formProps }: any) => (
+                {({ field, form }: any) => (
                   <Form.Group className='mb-2'>
                     <Form.Label>Entry Fees (In E8S)</Form.Label>
                     <Form.Control
@@ -234,8 +268,8 @@ const AddContest = ({
                     />
                     <span className='color'>
                       {' '}
-                      IN ICP: {fromE8S(field.value)}
-                    </span>
+                      IN {ContestPayment.get(form.values.paymentMethod)?.name}: {fromE8S(field.value)}
+                      </span>
                   </Form.Group>
                 )}
               </Field>
@@ -269,6 +303,7 @@ const AddContest = ({
                   component='div'
                 />
               </div>
+             
               <Field name='rules'>
                 {({ field, formProps }: any) => (
                   <Form.Group className='mb-2'>
@@ -301,7 +336,7 @@ const AddContest = ({
                   component='div'
                 />
               </div>
-              <Field name='minCap'>
+              {/* <Field name='minCap'>
                 {({ field, formProps }: any) => (
                   <Form.Group className='mb-2'>
                     <Form.Label>Minimum Cap</Form.Label>
@@ -323,7 +358,7 @@ const AddContest = ({
                   name='minCap'
                   component='div'
                 />
-              </div>
+              </div> */}
               {/* <Field name='maxCap'>
                 {({ field, formProps }: any) => (
                   <Form.Group className='mb-2'>
@@ -347,7 +382,7 @@ const AddContest = ({
                   component='div'
                 />
               </div> */}
-              <Form.Label className='fw-bold my-2'>
+              {/* <Form.Label className='fw-bold my-2'>
                 Reward Distribution
               </Form.Label>
               <FieldArray
@@ -477,7 +512,7 @@ const AddContest = ({
                     </div>
                   </>
                 )}
-              />
+              /> */}
 
               <div className='d-flex justify-content-end gap-4 mt-3'>
                 <Button

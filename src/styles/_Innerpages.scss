@@ -1601,9 +1601,20 @@ input {
   display: flex;
   padding: 25px;
   border-radius: 1.5rem;
-  .contactusform,
+  @media(max-width:767px){flex-direction: column;padding:15px;}
+
+  .contactusform{width:calc(100% - 420px);padding-right: 30px;
+    @media(max-width:1200px){padding-right: 20px;width: calc(100% - 300px);}
+    @media(max-width:992px){width: calc(100% - 250px);}
+    @media(max-width:767px){width: 100%;order:2;padding-right:0;margin-right:0;}
+  }
   .imagesec {
-    width: 50%;
+    width: 420px;
+    img{border-radius: 15px;}
+    @media(max-width:1200px){width: 300px;}
+    @media(max-width:992px){width: 250px;}
+    @media(max-width:767px){width: 100%;height:500px;order:1;margin-bottom:20px;}
+    @media(max-width:575px){height:400px;}
   }
   .contactusform {
     h4 {
@@ -1631,9 +1642,6 @@ input {
   }
   @media (max-width: 530px) {
     flex-direction: column;
-    .imagesec {
-      display: none;
-    }
     .contactusform,
     .imagesec {
       width: 100%;
@@ -1766,16 +1774,10 @@ input {
 }
 .contactusContainer {
   position: relative;
-  top: -750px;
   z-index: 1;
-  @media (min-width: 500px) {
-    top: -650px;
-  }
-  @media (min-width: 992px) {
-    top: -350px;
-  }
-  @media (min-width: 1400px) {
-    top: -90px;
+  padding-top: 100px;
+  @media (max-width: 1200px) {
+    padding-top: 0px;
   }
 }
 .flexooo {
@@ -1905,4 +1907,289 @@ input {
     }
   }
 }
-// My Live Rank Panel
+
+
+
+// Promotion Panel Starts Here
+.promotion-main{
+  padding: 100px 80px;
+  position: relative;
+  text-align: center;
+  @media(max-width:1400px){padding: 100px 60px;}
+  @media(max-width:1200px){padding: 100px 50px;}
+  @media(max-width:991px){padding: 80px 40px;}
+  @media(max-width:767px){padding: 80px 30px 50px;}
+  @media(max-width:575px){padding: 80px 15px 30px;}
+  .promotion-main-inner{
+    max-width: 1600px;
+    width: 100%;
+    margin: 0 auto;
+    text-align: left;
+  }
+  .bg-layer{
+    background-image: url(../assets/images/Promotion/logo.png);
+    background-repeat: no-repeat;
+    background-position: top right;
+  }
+  .heading-pnl{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 50px;
+    
+    @media(max-width:575px){flex-direction: column;}
+    img{width: calc(100% - 900px);max-width: 400px;
+      @media(max-width:1400px){width: calc(100% - 500px);max-width: 400px;}
+      @media(max-width:1200px){width: calc(100% - 400px);max-width: 350px;}
+      @media(max-width:991px){max-width: 250px;}
+      @media(max-width:575px){max-width: 250px;width: 100%;}
+    }
+  }
+  h1{
+    font-size: 60px;
+    font-family: $Nasalization;
+    color: $white;
+    font-weight: 400;
+    span{color: $color;}
+    @media(max-width:1400px){font-size: 50px;}
+    @media(max-width:1200px){font-size: 40px;}
+    @media(max-width:991px){font-size: 30px;}
+  }
+  h2{
+    font-size: 30px;
+    color: $white;
+    font-weight: 400;
+    font-family: 'Roboto';
+    font-weight: 700;
+    text-transform: capitalize;
+    margin: 0;
+    margin-bottom: 10px;
+    @media(max-width:1200px){font-size: 30px;}
+    @media(max-width:991px){font-size: 25px;}
+    @media(max-width:767px){font-size: 22px;}
+    @media(max-width:575px){font-size: 20px;}
+    span{color: $color;}
+  }
+  h3{
+    font-size: 26px;
+    color: $white;
+    font-weight: 400;
+    @media(max-width:991px){font-size: 24px;}
+    @media(max-width:767px){font-size: 22px;}
+    @media(max-width:575px){font-size: 20px;}
+  }
+  p{
+    font-size: 20px;
+    color: $white;
+    font-weight: 300;
+    opacity: 0.7;
+    margin-bottom: 40px;
+    @media(max-width:767px){font-size: 18px;}
+    &.mb-10{
+      margin-bottom: 10px;
+    }
+    b{font-weight: 500;}
+    span{
+      font-size: 22px;
+      opacity: 0.5;
+    }
+  }
+  .dot-list {
+    padding-left: 30px;
+    font-size: 20px;
+    margin: 0;
+    margin-bottom: 40px;
+    color: $white;
+    &.none{list-style: none !important;}
+    li {
+      p{margin-bottom: 0;opacity: 1;
+        color: rgba(255,255,255,0.7);
+        b{color: $white;font-weight: 500;}
+        span.green{color: $color;opacity: 1;}
+      }
+    }
+    &.small{
+      padding-left: 50px;
+      @media(max-width:991px){padding-left: 30px;}
+      @media(max-width:767){padding-left: 20px;}
+      @media(max-width:575px){padding-left: 10px;}
+      li{
+        p{
+          font-size: 18px;
+        }
+      }
+    }
+  }
+  hr{
+    border: none;
+    background-image: url(../assets/images/Promotion/hr-bg.png);
+    background-repeat: no-repeat;
+    background-position: center center;
+    height: 18px;
+  }
+
+}
+.assemption-post{
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 30px;
+  margin-bottom: 50px;
+  padding: 50px;
+  background: linear-gradient(to bottom,  rgba(15,25,31,1) 0%,rgba(0,8,16,1) 100%);
+  @media(max-width:991px){
+    padding: 20px;
+  }
+  .assumption-list{
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    @media(max-width:991px){
+      flex-wrap: wrap;
+    }
+    
+    @media(max-width:575px){
+      gap: 15px;
+    }
+    li{
+      background-color: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      width: 25%;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 20px 10px 0px;
+      @media(max-width:991px){
+        width: calc(50% - 10px);
+      }
+      @media(max-width:575px){
+        width: calc(100% - 0px);
+        padding: 20px 10px 20px;
+      }
+      p{max-width: 250px;line-height:32px;margin: 0;
+        @media(max-width:1400px){font-size: 22px;max-width:100%;}
+        @media(max-width:1200px){font-size: 18px;}
+        @media(max-width:991px){font-size: 20px;max-width:220px;}
+        @media(max-width:767px){font-size: 18px;}
+        @media(max-width:575px){font-size: 16px;}
+      }
+      h2{font-size: 80px;margin: 0;margin-top: 10px;
+        @media(max-width:991px){font-size: 70px;}
+        @media(max-width:767px){font-size: 50px;margin-top:10px;}
+        @media(max-width:575px){font-size: 40px;}
+      }
+    }
+    &.full{
+      li{width: 100%;
+        flex-direction: row;
+        text-align: left;
+        padding: 20px;
+        gap: 25px;
+        @media(max-width:767px){gap: 15px;}
+        @media(max-width:575px){
+          flex-direction: column;
+        }
+        p{font-size: 35px;max-width: unset;
+          @media(max-width:1400px){font-size: 36px;}
+          @media(max-width:1200px){font-size: 28px;}
+          @media(max-width:991px){font-size: 26px;}
+          @media(max-width:767px){font-size: 18px;}
+          @media(max-width:575px){font-size: 16px;}
+        }
+        h2{font-size: 45px;margin: 0;
+          @media(max-width:1400px){font-size: 45px;}
+          @media(max-width:1200px){font-size: 35px;}
+          @media(max-width:991px){font-size: 30px;}
+          @media(max-width:767px){font-size: 24px;}
+          @media(max-width:575px){font-size: 22px;}
+        }
+      }
+    }
+  }
+}
+.benefit-post{
+  display: flex;
+  align-items: center;
+  padding: 0 30px;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 100px;
+  @media(max-width:991px){padding: 30px 30px;}
+  @media(max-width:767px){flex-direction: column;}
+  @media(max-width:575px){padding: 15px;}
+  &:before{
+    position: absolute;
+    content: "";
+    z-index: -1;
+    left: 0px;top: 40px;bottom: 40px;right: 0;
+    border-radius: 30px;
+    background-color: rgba(255,255,255,0.2);
+    @media(max-width:991px){top: 0;bottom:0;}
+  }
+  
+  .img-pnl{
+    max-width: 350px;
+    @media(max-width:991px){max-width: 250px;}
+  }
+  .txt-pnl{
+    width: calc(100% - 350px);
+    padding-left: 30px;
+    @media(max-width:991px){width: calc(100% - 250px);padding-left:15px;}
+    @media(max-width:767px){width: 100%;padding-left:0;padding-top:30px;}
+
+    h6{font-size: 22px;color: rgba(255,255,255,0.7);
+      b{font-weight: 400;color: $white;}
+    }
+    h2{
+      span{color: $color;}
+    }
+    .dot-list{
+      padding-left: 30px;
+      margin-bottom: 0;
+    }
+  }
+  &.reverse{
+    flex-direction: row-reverse;
+    @media(max-width:767px){flex-direction: column;}
+    .txt-pnl{padding-left: 0px;padding-right: 30px;
+      @media(max-width:991px){padding-right: 15px;}
+      @media(max-width:767px){padding-right:0;}
+    }
+  }
+  &.bronze{
+    &:before{
+      border: 1px solid rgba(168,113,35,1);
+    }
+    .txt-pnl{
+      h2{
+        span{color: #904C17;}
+      }
+    } 
+  }
+  &.silver{
+    &:before{
+      border: 1px solid #818181;
+    }
+    .txt-pnl{
+      h2{
+        span{color: #929292;}
+      }
+    } 
+  }
+  &.gold{
+    &:before{
+      border: 1px solid #F9A700;
+    }
+    .txt-pnl{
+      h2{
+        span{color: #F9A700;}
+      }
+    } 
+  }
+  
+}
+// Promotion Panel Ends Here
+
+// manage 

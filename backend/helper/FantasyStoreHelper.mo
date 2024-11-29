@@ -85,13 +85,12 @@ module FantasyStoreHelper {
 
     return (year, month, day);
   };
-  // Function to compare two timestamps and return true if they fall on the same dayisSameDay
+  // Function to compare two timestamps and return true if they fall on the same day
   public func isSameDay(timestamp1 : Int, timestamp2 : Int) : Bool {
     let (year1, month1, day1) = getDateParts(timestamp1);
     let (year2, month2, day2) = getDateParts(timestamp2);
     return year2 == year1 and month2 == month1 and day2 == day1;
   };
-
   public func isSameDayWithOffset(timestamp1 : Int, timestamp2 : Int,offset:Int) : Bool {
     let (year1, month1, day1) = getDateParts(timestamp1+offset);
     let (year2, month2, day2) = getDateParts(timestamp2+offset);

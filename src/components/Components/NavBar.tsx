@@ -41,12 +41,15 @@ import logger from '@/lib/logger';
 import { toast } from 'react-toastify';
 import {
   copyAccount,
-  copyPrincipal,
   copyRefferalLink,
   formatEmail,
+  getIcpRate,
   getTournaments,
   isConnected,
 } from '../utils/fantasy';
+import {
+  copyPrincipal,
+} from '@/components/utils/fantasy';
 import {
   ADMIN_PLAYER_PRICES_ROUTE,
   ADMIN_ROUTE,
@@ -67,6 +70,7 @@ import {
   SQUAD_STATS_ROUTE,
   FANTASY_PLAYER_ROUTE,
   CONTACT_US_ROUTE,
+
 } from '@/constant/routes';
 import { makeLedgerCanister } from '@/dfx/service/actor-locator';
 import { E8S, LoginEnum } from '@/constant/fantasticonst';
@@ -79,6 +83,7 @@ import useSearchParamsHook from '../utils/searchParamsHook';
 import useAuth from '@/lib/auth';
 import TransferSvg from '../Icons/Transfer';
 import TransferModal from './TransferModal';
+import DepositSvg from '../Icons/Deposit';
 import connectIcon from '@/assets/images/Alpha.png';
 import connectIconBg from '@/assets/images/Rectangle 409.png';
 
@@ -87,7 +92,6 @@ import discordIcon from '@/assets/images/Group (1).png';
 import RewardCalculatorModal from './RewardCalculatorModal';
 import BottomNav from './BottomNav';
 import TransferCKBTCModal from './TransferCKBTCModal';
-import DepositSvg from '../Icons/Deposit';
 
 export default function NavBar() {
   const [isLoading, setIsLoading] = useState(false);
@@ -100,10 +104,14 @@ export default function NavBar() {
 
   const searchParams = new URLSearchParams(urlparama);
   const tournament = searchParams.get(QURIES.tournamentId);
-  const { auth, userAuth, setUserAuth } = useAuthStore((state) => ({
+  const { auth, userAuth, setUserAuth, setICPRate, icpRate } = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
     userAuth: (state as ConnectPlugWalletSlice).userAuth,
     setUserAuth: (state as ConnectPlugWalletSlice).setUserAuth,
+    setICPRate: (state as ConnectPlugWalletSlice).setICPRate,
+    icpRate: (state as ConnectPlugWalletSlice).icpRate,
+
+
   }));
   const [showROICalculator, setShowROICalculator] = useState(false);
   const [showTokenModal, setShowTokenModal] = useState(false);
@@ -173,7 +181,17 @@ export default function NavBar() {
       initAuth();
     }
   }, []);
+  useEffect(() => {
+    const fetchICPRate = async () => {
+      try {
+        let icpRate = await getIcpRate();
+        setICPRate(icpRate);
+      } catch (error) {
+      }
+    };
 
+    fetchICPRate();
+  }, []);
   const handleClose10 = () => setShow(false);
   const handleShow10 = () => setShow(true);
   const toggleShow10 = () => setShow(!show);
@@ -218,13 +236,13 @@ export default function NavBar() {
             <span>Player</span> Price
           </h1>
         );
+      
       case ADMIN_STATS_SYSTEM_ROUTE:
         return (
           <h1>
             <span>Stats</span> System
           </h1>
         );
-   
       case MY_TEAMS_ROUTE:
         return (
           <h1>
@@ -289,7 +307,7 @@ export default function NavBar() {
       >
         <Container fluid>
           <div className='nav-flex'>
-            <Navbar.Brand href='/' as={Link} onClick={(e)=>{
+            <Navbar.Brand href='/' as={Link} onClick={(e) => {
               e.preventDefault()
               setShowROICalculator(false);
               router.push("/")
@@ -417,7 +435,7 @@ export default function NavBar() {
               >
                 MATCHES
               </Nav.Link>
-      
+            
               <Nav.Link onClick={handleShowROI} href='#calculator' as={Link}>
                 Rewards Calculator
               </Nav.Link>
@@ -475,8 +493,6 @@ export default function NavBar() {
                   >
                     Player Points
                   </NavDropdown.Item>
-                
-                 
                   <NavDropdown.Item
                     as={Link}
                     href={ADMIN_STATS_SYSTEM_ROUTE}
@@ -484,6 +500,7 @@ export default function NavBar() {
                   >
                     Stats System
                   </NavDropdown.Item>
+               
                   <NavDropdown.Item
                     as={Link}
                     href={ADMIN_UPLOAD_LEAGUE_ROUTE}
@@ -500,7 +517,6 @@ export default function NavBar() {
                   </NavDropdown.Item>
                 </NavDropdown>
               )}
-                   
               {/* <Nav.Link
                 as={Link}
                 href={GAMEPLAYRULES_ROUTE}
@@ -535,59 +551,59 @@ export default function NavBar() {
 
                       <span>Join Discord</span>
                     </Button> */}
-                   <NavDropdown
-title={
-  <>
-    <div className='user-button'>
-      <div>
-        <h6 className='email_text'>
-          {userAuth?.name?.slice(0, 8)}
-        </h6>
-        <p className='email_text'>
-          {formatEmail(userAuth?.email ?? '')}
-        </p>
-      </div>
-      <img
-        src='https://fantasy-extreme-assets.s3.us-east-005.backblazeb2.com/Compressed/images.jpeg'
-        height={40}
-        width={40}
-        alt='User'
-      />
-    </div>
-  </>
-}
-id='navbarScrollingDropdown'
->
-<NavDropdown.Item className='big'>  
-<DepositSvg /> Deposit
-</NavDropdown.Item>
+                    <NavDropdown
+                      title={
+                        <>
+                          <div className='user-button'>
+                            <div>
+                              <h6 className='email_text'>
+                                {userAuth?.name?.slice(0, 8)}
+                              </h6>
+                              <p className='email_text'>
+                                {formatEmail(userAuth?.email ?? '')}
+                              </p>
+                            </div>
+                            <img
+                              src='https://fantasy-extreme-assets.s3.us-east-005.backblazeb2.com/Compressed/images.jpeg'
+                              height={40}
+                              width={40}
+                              alt='User'
+                            />
+                          </div>
+                        </>
+                      }
+                      id='navbarScrollingDropdown'
+                    >
+                      <NavDropdown.Item className='big'>
+                        <DepositSvg /> Deposit
+                      </NavDropdown.Item>
 
-<NavDropdown.Item
-onClick={() => copyAccount(auth.identity)}
-  >
-  <PrincipalSvg /> Copy Wallet Address
-</NavDropdown.Item>
+                      <NavDropdown.Item
+                        onClick={() => copyAccount(auth.identity)}
+                      >
+                        <PrincipalSvg /> Copy Wallet Address
+                      </NavDropdown.Item>
 
- <NavDropdown.Item
-  onClick={() => copyPrincipal(auth)}
-  >
-  <PrincipalSvg /> Copy Principal
-</NavDropdown.Item>
-{/* <NavDropdown.Item
-  onClick={() => copyRefferalLink(auth.identity)}
->
-  <PrincipalSvg /> &emsp; Copy Refferal Link
-</NavDropdown.Item> */}
-<NavDropdown.Item className='big' onClick={handleShowTokenModal}>
-<TransferSvg /> Transfer ICP
-</NavDropdown.Item>{' '}
-{/* <NavDropdown.Item onClick={handleShowTransferCKBTC}>
-  <TransferSvg /> &emsp; Transfer CKBTC
-</NavDropdown.Item> */}
-<NavDropdown.Item className='big' href='#action5' onClick={logout}>
-<LogoutSvg /> Logout
-</NavDropdown.Item>
-</NavDropdown>
+                      <NavDropdown.Item
+                        onClick={() => copyPrincipal(auth)}
+                      >
+                        <PrincipalSvg /> Copy Principal
+                      </NavDropdown.Item>
+                      {/* <NavDropdown.Item
+                        onClick={() => copyRefferalLink(auth.identity)}
+                      >
+                        <PrincipalSvg />  Copy Refferal Link
+                      </NavDropdown.Item> */}
+                      <NavDropdown.Item className='big' onClick={handleShowTokenModal}>
+                        <TransferSvg /> Transfer ICP
+                      </NavDropdown.Item>{' '}
+                      <NavDropdown.Item className='big' onClick={handleShowTransferCKBTC}>
+                        <TransferSvg /> Transfer CKBTC
+                      </NavDropdown.Item>
+                      <NavDropdown.Item className='big' href='#action5' onClick={logout}>
+                        <LogoutSvg /> Logout
+                      </NavDropdown.Item>
+                    </NavDropdown>
                   </div>
                 ) : (
                   <Button
@@ -729,42 +745,40 @@ onClick={() => copyAccount(auth.identity)}
                 }
                 id='navbarScrollingDropdown'
               >
-                <NavDropdown.Item className='big'>  
-<DepositSvg /> Deposit
-</NavDropdown.Item>
-
-<NavDropdown.Item
-onClick={() => copyAccount(auth.identity)}
-  >
-  <PrincipalSvg /> Copy Wallet Address
-</NavDropdown.Item>
-
- <NavDropdown.Item
-  onClick={() => copyPrincipal(auth)}
-  >
-  <PrincipalSvg /> Copy Principal
-</NavDropdown.Item>
-                {/* <NavDropdown.Item onClick={() => copyAccount(auth.identity)}>
-                  <PrincipalSvg /> &emsp; Copy Wallet Address
+                <NavDropdown.Item className='big'>
+                  <DepositSvg />   Deposit
                 </NavDropdown.Item>
+
                 <NavDropdown.Item
+                  onClick={() => copyAccount(auth.identity)}
+                >
+                  <PrincipalSvg /> Copy Wallet Address
+                </NavDropdown.Item>
+
+                <NavDropdown.Item
+                  onClick={() => copyPrincipal(auth)}
+                >
+                  <PrincipalSvg /> Copy Principal
+                </NavDropdown.Item>
+                {/* <NavDropdown.Item
                   onClick={() => copyRefferalLink(auth.identity)}
                 >
-                  <PrincipalSvg /> &emsp; Copy Refferal Link
+                  <PrincipalSvg />  Copy Refferal Link
                 </NavDropdown.Item> */}
                 <NavDropdown.Item
+                  className='big'
                   onClick={() => {
                     handleClose10();
-                    handleShowTokenModal();
+                    handleShowTransferCKBTC();
                   }}
                 >
-                  <TransferSvg /> &emsp; Transfer ICP
+                  <TransferSvg />   Transfer ICP
                 </NavDropdown.Item>
                 {/* <NavDropdown.Item onClick={handleShowTransferCKBTC}>
                   <TransferSvg /> &emsp; Transfer CKBTC
                 </NavDropdown.Item> */}
-                <NavDropdown.Item href='#action5' onClick={logout}>
-                  <LogoutSvg /> &emsp; Logout
+                <NavDropdown.Item href='#action5' onClick={logout} className='big'>
+                  <LogoutSvg />   Logout
                 </NavDropdown.Item>
               </NavDropdown>
             </div>
@@ -775,7 +789,7 @@ onClick={() => copyAccount(auth.identity)}
                 handleShowConnect();
               }}
               // disabled={auth.isLoading}
-              className='reg-btn m-1 w-loader '
+              className='reg-btn m-1 w-loader'
               id='connect_btn_'
             >
               {/* <Image
@@ -875,8 +889,6 @@ onClick={() => copyAccount(auth.identity)}
               >
                 Player Points
               </NavDropdown.Item>
-            
-          
               <NavDropdown.Item
                 as={Link}
                 href={ADMIN_STATS_SYSTEM_ROUTE}
@@ -884,6 +896,8 @@ onClick={() => copyAccount(auth.identity)}
               >
                 Stats System
               </NavDropdown.Item>
+           
+        
               <NavDropdown.Item
                 as={Link}
                 href={ADMIN_UPLOAD_LEAGUE_ROUTE}
@@ -903,19 +917,18 @@ onClick={() => copyAccount(auth.identity)}
           {/* <Nav.Link
             as={Link}
             href={CONTACT_US_ROUTE}
-            active={location == CONTACT_US_ROUTE}dashboard
+            active={location == CONTACT_US_ROUTE}
             onClick={handleClose10}
           >
             Contact Us
           </Nav.Link> */}
-   
           <Nav.Link
             as={Link}
             href={GAMEPLAYRULES_ROUTE}
             active={location == GAMEPLAYRULES_ROUTE}
             onClick={handleClose10}
           >
-           Game Rules
+            Game Rules
           </Nav.Link>
           <ul className='nav-social-list'>
             <li>
@@ -973,7 +986,7 @@ onClick={() => copyAccount(auth.identity)}
       <ConnectModal
         show={showConnect}
         hideModal={handleHideConnect}
-        callBackfn={() => {}}
+        callBackfn={() => { }}
       />
       <TransferModal
         showTokenModal={showTokenModal}
@@ -983,11 +996,12 @@ onClick={() => copyAccount(auth.identity)}
         showTokenModal={showCKBTCTransferModal}
         handleCloseTokenModal={handleCloseTransferCKBTC}
       />
-     {showROICalculator && <RewardCalculatorModal
+      {showROICalculator && <RewardCalculatorModal
         show={showROICalculator}
         handleClose={handleHideROI}
+        icpRate={icpRate}
       />}
-      <BottomNav handleShowROI={handleShowROI} location={location} auth={auth}/>
+      <BottomNav handleShowROI={handleShowROI} location={location} auth={auth} />
     </>
   );
 }

@@ -30,7 +30,6 @@ import {
 import {
   fetchMatch,
   getContests,
-  getIcpRate,
   handleTransferError,
   isConnected,
   isDev,
@@ -64,13 +63,13 @@ export default function Contests() {
   const [showModal, setShowModal] = useState(false);
   const [updateId, setUpdateId] = useState<null | string>(null);
   const navigation = useRouter();
-  const [icpRate, setIcpRate] = useState(0);
   const [showConnect, setShowConnect] = useState(false);
   const [path, setPath] = useState<string | null>(null);
   const router = useRouter();
-  const { auth, userAuth } = useAuthStore((state) => ({
+  const { auth, userAuth,icpRate } = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
     userAuth: (state as ConnectPlugWalletSlice).userAuth,
+    icpRate: (state as ConnectPlugWalletSlice).icpRate,
   }));
 
   const handleShowModal = () => {
@@ -174,13 +173,7 @@ export default function Contests() {
       setMatch,
     });
   }, [auth, matchId]);
-  let getLatestIcpRate = async () => {
-    let rate = await getIcpRate();
-    setIcpRate(rate);
-  };
-  useEffect(() => {
-    getLatestIcpRate();
-  }, []);
+ 
   useEffect(() => {
     if (isConnected(auth.state)) {
       if (!userAuth.userPerms?.admin) {

@@ -121,6 +121,7 @@ export async function approveTokens(amount: number, identity: Identity) {
  * @return true if approval is successful, false otherwise.
  */
 export async function approveCKBTCTokens(amount: number, identity: Identity) {
+  logger({ amount, identity, fantasyCanisterId }, 'approving ckbtc');
   let ledgerActor = makeCKBTCLedgerCanister({
     agentOptions: {
       identity: identity,
@@ -139,6 +140,7 @@ export async function approveCKBTCTokens(amount: number, identity: Identity) {
         subaccount: [],
       },
     });
+    
     logger(Number(approval), 'approved ckbtc');
     return true;
   } catch (error) {
@@ -182,6 +184,6 @@ export function fromCKE8S(
  * @param icp - The value in ICP to convert.
  * @return The converted value in the E8S.
  */
-export function toE8S(icp: number) {
-  return Math.ceil(icp * E8S);
+export function toE8S(icp: number | bigint) {
+  return Math.ceil(Number(icp) * E8S);
 }

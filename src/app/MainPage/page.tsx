@@ -82,7 +82,7 @@ export default function MainPage() {
                   <h1>
                     FANTASY <span> EXTREME</span>
                   </h1>
-                  <h4>Where Blockchain Meets Fantasy Sports</h4>
+                  <h4>Where ICP Meets Fantasy Sports</h4>
                   <h5>(Create Strong Teams, Win Smart, & Earn Big Rewards)</h5>
                   <p className='text-justify'>
                     Lorem ipsum dolor sit amet consectetur. Scelerisque est

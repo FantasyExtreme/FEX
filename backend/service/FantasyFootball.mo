@@ -27,8 +27,9 @@ import Error "mo:base/Error";
 import Int64 "mo:base/Int64";
 import List "mo:base/List";
 import FunctionalStableHashMap "mo:StableHashMap/FunctionalStableHashMap";
+import Validation "../model/Validation";
 
-shared ({ caller = initializer }) actor class FantasyFootball(init : { ledgerCanisterId : Text; transactionCanisterId : Text }) = this {
+shared ({ caller = initializer }) actor class FantasyFootball(init : { ledgerCanisterId : Text; ckbtcCanisterID : Text; transactionCanisterId : Text }) = this {
 
   type Key = Types.Key;
   type User = Types.User;
@@ -66,9 +67,9 @@ shared ({ caller = initializer }) actor class FantasyFootball(init : { ledgerCan
   type ContestType = Types.ContestType;
   type JoinedTeams = Types.JoinedTeams;
   type MatchTeamsInfo = Types.MatchTeamsInfo;
-  type UserNftRecord = Types.UserNftRecord;
+
   type JoinedMatchesRecord = Types.JoinedMatchesRecord;
-type ReturnReward=Types.ReturnReward;
+
   type IContest = Types.IContest;
   type Participant = Types.Participant;
   type IPlayerStats = Types.IPlayerStats;
@@ -77,13 +78,10 @@ type ReturnReward=Types.ReturnReward;
   type RPoints = Types.RPoints;
   type GetProps = Types.GetProps;
   type Transaction = Types.Transaction;
-  type Reward = Types.Reward;
-  type Rewards = Types.Rewards;
   type ContestTypes = Types.ContestTypes;
   type ContestWinner = Types.ContestWinner;
   type ContestWithFirstPrize = Types.ContestWithFirstPrize;
   type JoinedTeamsRecords = [(Key, JoinedTeams)];
-  type UserNftRecords = [(Key, UserNftRecord)];
   type JoinedMatchesRecords = [(Key, JoinedMatchesRecord)];
 
   // Ledger types
@@ -93,6 +91,7 @@ type ReturnReward=Types.ReturnReward;
   type TransferFromResult = Types.TransferFromResult;
   type TransferFromError = Types.TransferFromError;
 
+ 
   // Return types
   type ReturnMatches = { matches : RTournamentMatches; total : Nat };
   type RMVPSTournamentMatchsList = {
@@ -119,7 +118,6 @@ type ReturnReward=Types.ReturnReward;
   };
   type ReturnAdminSettings = { settings : AdminSettings; total : Nat };
   type ReturnAddParticipant = Result.Result<Text, TransferFromError>;
-type ReturnRewards = { rewards : [ReturnReward]; total : Nat };
 
   type Users = Types.Users;
   type Matches = Types.Matches;
@@ -147,12 +145,13 @@ type ReturnRewards = { rewards : [ReturnReward]; total : Nat };
   type UserAssets = Types.UserAssets;
   type TopPlayers = Types.TopPlayers;
   type MeAsTopPlayer = Types.MeAsTopPlayer;
-type PlugPrincipalMap = Types.PlugPrincipalMap;
+
   type TopPlayer = Types.TopPlayer;
   type AdminSettings = Types.AdminSettings;
   type AdminSetting = Types.AdminSetting;
   type IAdminSetting = Types.IAdminSetting;
   type MVPSPlayers = Types.MVPSPlayers;
+
 
   var TIME_DEVISOR = Types.TIME_DEVISOR;
   var MAX_LIMIT = Types.MAX_LIMIT;
@@ -176,12 +175,17 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
 
 
 
-
   // stable var matchDateIndexStorage = FunctionalStableHashMap.init<Int, List.List<Text>>();
   stable var matchDateIndex = FunctionalStableHashMap.init<Int, List.List<Text>>();
-  stable var rewardableMatchesList = List.make<Text>("");
+  // it will store matches which user has joined during spacific time period for nft distribution
+  stable var joinedMatchesOfUser = FunctionalStableHashMap.init<Key, List.List<(Text, Int)>>();
+
+  var contestPaymentArray = [("0", init.ledgerCanisterId), ("", init.ledgerCanisterId), ("1", init.ckbtcCanisterID)];
+  var contestPaymentMap = Map.fromIter<Text, Text>(contestPaymentArray.vals(), 2, Text.equal, Text.hash);
 
   stable var stableUserNameCount : Nat = 200;
+
+
 
   var userStorage = Map.fromIter<Key, User>(stable_users.vals(), 0, Text.equal, Text.hash);
   var matchStorage = Map.fromIter<Key, Match>(stable_matches.vals(), 0, Text.equal, Text.hash);
@@ -196,12 +200,14 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
   var userStatsStorage = Map.fromIter<Key, UserAssets>(stable_userStats.vals(), 0, Text.equal, Text.hash);
   var adminSettingStorage = Map.fromIter<Key, AdminSetting>(stable_adminSettings.vals(), 0, Text.equal, Text.hash);
   var contestTypeStorage = Map.fromIter<Key, ContestType>(stable_contestTypes.vals(), 0, Text.equal, Text.hash);
-
-
   var userJoinedMatchedStorage = Map.fromIter<Key, JoinedMatchesRecord>(stable_joined_matches.vals(), 0, Text.equal, Text.hash);
 
+ 
+  // user taks storage
 
   let adminPrincipal = Principal.fromText(Types.MASTER_WALLET);
+  let oneWeekInMilli = 7 * 24 * 60 * 60 * 1_000;
+  let milisecondsInOneDay = 24 * 60 * 60 * 1000;
 
   stable var rewardPercentage = 80;
   // TODO change this when going into production and also add the api's identity as admin
@@ -439,6 +445,26 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
       };
     };
     return Buffer.toArray(contestIdsBuffer);
+  };
+  private func alreadyContestsCreated(matchId : Key) : {
+    isGoldContestCreated : Bool;
+    isBronzeContestCreated : Bool;
+  } {
+    var isGoldContestCreated : Bool = false;
+    var isBronzeContestCreated : Bool = false;
+
+    label contestLoop for ((key, contest) in contestStorage.entries()) {
+      if (isGoldContestCreated and isBronzeContestCreated) {
+        break contestLoop;
+      };
+      if (contest.matchId == matchId) {
+
+        if (search({ compare = contest.name; s = "Gold" })) isGoldContestCreated := true;
+        if (search({ compare = contest.name; s = "Bronze" })) isBronzeContestCreated := true;
+
+      };
+    };
+    return { isGoldContestCreated; isBronzeContestCreated };
   };
   /// Check if user can be shown in FE
   private func shouldShowPlayer(player : Player) : Bool {
@@ -680,6 +706,13 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
       return false;
     };
   };
+  private func compareStrings({ compare; s } : { compare : Text; s : Text }) : Bool {
+    let searchString = Text.map(s, Prim.charToLower);
+    let compareString = Text.map(compare, Prim.charToLower);
+    if (compareString == searchString) { return true } else {
+      return false;
+    };
+  };
   private func getLimit(limit : Nat) : Nat {
     var _l = MAX_LIMIT;
     if (limit < MAX_LIMIT) _l := limit;
@@ -690,6 +723,9 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
   };
   private func isInPast(time : Int) : Bool {
     return time < getTime();
+  };
+  private func isWithIn24H(time : Int) : Bool {
+    return (getTime() < time and (getTime() +milisecondsInOneDay) > time);
   };
   private func isInFuture(time : Int) : Bool {
     return time > getTime();
@@ -779,6 +815,36 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     };
 
   };
+  private func hasUserJoinedTheContest(matchId : Key, userId : Key) : Bool {
+    let contestIds = getContestIdsByMatch(matchId);
+    var isJoined = false;
+
+    for (contestId in contestIds.vals()) {
+      let maybeContest = contestStorage.get(contestId);
+
+      switch (maybeContest) {
+        case (?contest) {
+
+          label playerLoop for ((key, squad) in playerSquadStorage.entries()) {
+            if (squad.userId == userId and squad.matchId == matchId) {
+              let maybeSquad = participantStorage.get(key # contestId);
+              if (Option.isSome(maybeSquad)) {
+                isJoined := true;
+                break playerLoop;
+              };
+
+            };
+          };
+
+        };
+        case (null) {
+
+        };
+      };
+    };
+    return isJoined;
+
+  };
   private func getRewardPercentages() : {
     platformPercentage : Nat;
     rewardableUsersPercentage : Nat;
@@ -832,49 +898,9 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
       case (?number) { return number };
     };
   };
- 
-  func isMatchRewardable(matchId : Key) : Bool {
-   return List.some<Text>(rewardableMatchesList, func(item : Text) : Bool { item == matchId });
-  };
-  public shared ({ caller }) func toggleRewardableMatch(matchId : Key, isRewardable : Bool) : async Result.Result<Text, Text> {
-    onlyAdmin(caller);
 
-    let getMatch = matchStorage.get(matchId);
-    switch (getMatch) {
-      case (null) {
-        return #err("Match not found");
-      };
-      case (?isMatch) {
-        let currentTime = getTime();
-        if (isMatch.time > currentTime) {
-          if (isRewardable) {
-            if (not isMatchRewardable(matchId)) {
-              return #err("Match is not reward able.");
-
-            } else {
-              rewardableMatchesList := List.filter(rewardableMatchesList, func(item : Text) : Bool { item != matchId });
-              return #ok("Match removed from rewardable list.");
-            };
-          } else {
-            if (not isMatchRewardable(matchId)) {
-              rewardableMatchesList := List.push(matchId, rewardableMatchesList);
-              return #ok("Match added to rewardable matches.");
-
-            } else {
-              return #err("Match is already rewardable.");
-            };
-          };
-        } else {
-          return #err("Match is too old.");
-
-        };
-
-      };
-    };
-
-  };
   private func getTierBasedUsers(n : Nat) : (Nat, Nat) {
-    if (n < 10) {
+    if (n < 7) {
       return (1, 1);
     };
     let allTiers = n / 7;
@@ -890,7 +916,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
         let tournament = tournamentStorage.get(isSeason.tournamentId);
         switch (tournament) {
           case (?isTournament) {
-            var isRewardable = isMatchRewardable(m.id);
+            var isRewardable =false;
             return ?{
               m with tournamentId = isSeason.tournamentId;
               tournamentName = isTournament.name;
@@ -937,30 +963,66 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
   };
 
   // Ledger methods
-  private func transferToAdmin(user : Principal, amount : Nat) : async TransferFromResult {
-    let LEDGER = actor (init.ledgerCanisterId) : actor {
+  private func transferToAdmin(user : Principal, amount : Nat, paymentMethod : Text) : async TransferFromResult {
+    let maybeLedgerId = contestPaymentMap.get(paymentMethod);
+    switch (maybeLedgerId) {
+      case (?ledgerId) {
+        let LEDGER = actor (ledgerId) : actor {
+          icrc2_transfer_from : (TransferFromArgs) -> async (TransferFromResult);
+        };
+        // let userPrincipal = Principal.fromText(userId);
+        let adminPrincipal = Principal.fromText(Types.ADMIN_WALLET);
+        let result = await LEDGER.icrc2_transfer_from({
+          amount = amount;
+          created_at_time = null;
+          fee = null;
+          from = { owner = user; subaccount = null };
+          memo = null;
+          spender_subaccount = null;
+          to = { owner = adminPrincipal; subaccount = null };
+        });
+        return result;
+      };
+      case (null) {
+        return #Err(#GenericError { error_code = 0; message = "payment method not found" });
+      };
+    };
+  };
+  // Ledger methods
+  private func transferFromAdmin(user : Principal, amount : Nat, paymentMethod : Text) : async TransferFromResult {
+    let maybeLedgerId = contestPaymentMap.get(paymentMethod);
+    switch (maybeLedgerId) {
+      case (?ledgerId) {
+        let LEDGER = actor (ledgerId) : actor {
+          icrc2_transfer_from : (TransferFromArgs) -> async (TransferFromResult);
+        };
+        // let userPrincipal = Principal.fromText(userId);
+        let adminPrincipal = Principal.fromText(Types.ADMIN_WALLET);
+        let result = await LEDGER.icrc2_transfer_from({
+          amount = amount;
+          created_at_time = null;
+          fee = null;
+          from = { owner = adminPrincipal; subaccount = null };
+          memo = null;
+          spender_subaccount = null;
+          to = { owner = user; subaccount = null };
+        });
+        return result;
+
+      };
+      case (null) {
+        return #Err(#GenericError { error_code = 0; message = "payment method not found" });
+
+      };
+    };
+  };
+  // Ledger methods
+  private func transferICPFromAdmin(user : Principal, amount : Nat) : async TransferFromResult {
+    let LEDGER = actor (Types.ICP_LEDGER_CANISTER_ID) : actor {
       icrc2_transfer_from : (TransferFromArgs) -> async (TransferFromResult);
     };
     // let userPrincipal = Principal.fromText(userId);
     let adminPrincipal = Principal.fromText(Types.MASTER_WALLET);
-    let result = await LEDGER.icrc2_transfer_from({
-      amount = amount;
-      created_at_time = null;
-      fee = null;
-      from = { owner = user; subaccount = null };
-      memo = null;
-      spender_subaccount = null;
-      to = { owner = adminPrincipal; subaccount = null };
-    });
-    return result;
-  };
-  // Ledger methods
-  private func transferFromAdmin(user : Principal, amount : Nat) : async TransferFromResult {
-    let LEDGER = actor (init.ledgerCanisterId) : actor {
-      icrc2_transfer_from : (TransferFromArgs) -> async (TransferFromResult);
-    };
-    // let userPrincipal = Principal.fromText(userId);
-    let adminPrincipal = Principal.fromText(Types.ADMIN_WALLET);
     let result = await LEDGER.icrc2_transfer_from({
       amount = amount;
       created_at_time = null;
@@ -1492,72 +1554,31 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
 
   func getIcpusdExchange() : async ?Float {
 
-    //1. DECLARE MANAGEMENT CANISTER
-    //You need this so you can use it to make the HTTP request
     let ic : Types.IC = actor ("aaaaa-aa");
 
-    //2. SETUP ARGUMENTS FOR HTTP GET request
-
-    // 2.1 Setup the URL and its query parameters
     let ONE_MINUTE : Nat64 = 60;
     let start_timestamp : Types.Timestamp = 1682978460; //May 1, 2023 22:01:00 GMT
     let end_timestamp : Types.Timestamp = 1682978520; //May 1, 2023 22:02:00 GMT
     let host : Text = "api.coingecko.com";
     let url = "https://" # host # "/api/v3/simple/price?ids=internet-computer&vs_currencies=usd";
 
-    // 2.2 prepare headers for the system http_request call
-    // let request_headers = [
-    //     { name = "Host"; value = host # ":443" },
-    //     { name = "User-Agent"; value = "exchange_rate_canister" },
-    // ];
-
-    // 2.2.1 Transform context
     let transform_context : Types.TransformContext = {
       function = transform;
       context = Blob.fromArray([]);
     };
-
-    // 2.3 The HTTP request
     let http_request : Types.HttpRequestArgs = {
       url = url;
-      max_response_bytes = null; //optional for request
+      max_response_bytes = null;
       headers = [];
-      body = null; //optional for request
+      body = null;
       method = #get;
       transform = ?transform_context;
     };
 
-    //3. ADD CYCLES TO PAY FOR HTTP REQUEST
-
-    //The IC specification spec says, "Cycles to pay for the call must be explicitly transferred with the call"
-    //The management canister will make the HTTP request so it needs cycles
-    //See: /docs/current/motoko/main/canister-maintenance/cycles
-
-    //The way Cycles.add() works is that it adds those cycles to the next asynchronous call
-    //"Function add(amount) indicates the additional amount of cycles to be transferred in the next remote call"
-    //See: /docs/current/references/ic-interface-spec#ic-http_request
     Cycles.add(20_949_972_000);
 
-    //4. MAKE HTTP REQUEST AND WAIT FOR RESPONSE
-    //Since the cycles were added above, you can just call the management canister with HTTPS outcalls below
     let http_response : Types.HttpResponsePayload = await ic.http_request(http_request);
 
-    //5. DECODE THE RESPONSE
-
-    //As per the type declarations in `src/Types.mo`, the BODY in the HTTP response
-    //comes back as [Nat8s] (e.g. [2, 5, 12, 11, 23]). Type signature:
-
-    //public type HttpResponsePayload = {
-    //     status : Nat;
-    //     headers : [HttpHeader];
-    //     body : [Nat8];
-    // };
-
-    //You need to decode that [Nat8] array that is the body into readable text.
-    //To do this, you:
-    //  1. Convert the [Nat8] into a Blob
-    //  2. Use Blob.decodeUtf8() method to convert the Blob to a ?Text optional
-    //  3. You use a switch to explicitly call out both cases of decoding the Blob into ?Text
     let response_body : Blob = Blob.fromArray(http_response.body);
     let decoded_text : Text = switch (Text.decodeUtf8(response_body)) {
       case (null) { "No value returned" };
@@ -1566,22 +1587,6 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     let usd = extractUSD(decoded_text);
     Debug.print(debug_show (usd));
 
-    //6. RETURN RESPONSE OF THE BODY
-    //The API response will looks like this:
-
-    // ("[[1682978460,5.714,5.718,5.714,5.714,243.5678]]")
-
-    //Which can be formatted as this
-    //  [
-    //     [
-    //         1682978460, <-- start/timestamp
-    //         5.714, <-- low
-    //         5.718, <-- high
-    //         5.714, <-- open
-    //         5.714, <-- close
-    //         243.5678 <-- volume
-    //     ],
-    // ]
     usd;
   };
 
@@ -1608,16 +1613,18 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     transformed;
   };
 
-
+  
   // private func addReward()
   // Users
   public shared ({ caller }) func addUser(iUser : IUser) : async Result.Result<(Text, ?User), Text> {
     // Return error if the user already exists
     assert not Principal.isAnonymous(caller);
-    let maybeOldUser = userStorage.get(Principal.toText(caller));
+    let userId = Principal.toText(caller);
+    let maybeOldUser = userStorage.get(userId);
 
     switch maybeOldUser {
       case (?user) {
+       
         return #ok("Already a User", ?user);
       };
       case (null) {
@@ -1638,8 +1645,8 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
           email = iUser.email;
         };
         userStorage.put(Principal.toText(caller), tempUser);
- 
-     
+    
+    
         return #ok("User added successfuly", ?tempUser);
       };
     };
@@ -1963,6 +1970,10 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
 
           // onlyAdmin(caller);
         };
+        if (not isWithIn24H(isMatch.time)) {
+          // TODO return #err("Hold tight! Team setup opens 24 hours before the match.");
+
+        };
       };
       case (null) {
         return #err("Match does not exist");
@@ -1976,24 +1987,12 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     };
 
     // Count the number of players and substitutes
-    var playerCount : Nat = 0;
-    var substituteCount : Nat = 0;
-
-    for ((_, isSubstitute) in inputSquad.players.vals()) {
-      if (isSubstitute) {
-        substituteCount += 1;
-      } else {
-        playerCount += 1;
+    let playersCount = Validation.playersCount(inputSquad.players);
+    switch (playersCount) {
+      case (#ok(_)) {};
+      case (#err(res)) {
+        return #err(res);
       };
-    };
-
-    // Check if there are exactly 11 players and 4 substitutes
-    if (playerCount != 11) {
-
-      return #err("There must be exactly 11 players.");
-    };
-    if (substituteCount != 4) {
-      return #err("There must be exactly 4 substitutes.");
     };
 
     let playerKeys = Array.map<(Text, Bool), Text>(
@@ -2005,20 +2004,48 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     );
     switch (countDuplicates(playerKeys)) {
       case (#ok(count)) {
-        let newSquad = {
-          inputSquad with
-          rank = 0;
-          points = 0;
-          userId = Principal.toText(caller);
-          creation_time = getTime();
-          hasParticipated = false;
-        };
-        playerSquadStorage.put(
-          Types.generateNewRemoteObjectId(),
-          newSquad,
-        );
-        return #ok("Squad created successfully");
+        let teamFormatiopnValidate = Validation.validateTeamFormation(inputSquad.players, inputSquad.formation, playerStorage);
+        switch (teamFormatiopnValidate) {
+          case (#err(err)) {
+            return #err(err);
+          };
+          case (#ok(_)) {
 
+            let getMatch = matchStorage.get(inputSquad.matchId);
+            switch (getMatch) {
+              case (null) {
+                return #err("Match not found");
+              };
+              case (?isMatch) {
+                //this check what ever selected players are not from single team
+                let selectedPlayersNotFromSingleTeam = Validation.validateSelectedPlayersAreNotFromSingleTeam(inputSquad.players, isMatch.homeTeam, isMatch.awayTeam, playerStorage);
+
+                switch (selectedPlayersNotFromSingleTeam) {
+                  case (#err(err)) {
+                    return #err(err);
+                  };
+                  case (#ok(_)) {
+
+                    let newSquad = {
+                      inputSquad with
+                      rank = 0;
+                      points = 0;
+                      userId = Principal.toText(caller);
+                      creation_time = getTime();
+                      hasParticipated = false;
+                    };
+                    playerSquadStorage.put(
+                      Types.generateNewRemoteObjectId(),
+                      newSquad,
+                    );
+                    return #ok("Squad created successfully");
+                  };
+                };
+
+              };
+            };
+          };
+        };
       };
       case (#err(msg)) {
         Debug.print(msg);
@@ -2178,33 +2205,17 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
         key;
       },
     );
-
-    // var count : Nat = 0;
-    // var size = playerKeys.size();
-    // var i = 0;
-
-    // Iterate over each key in playerKeys using a while loop
-    // while (i < size) {
-    //   let key1 = playerKeys[i];
-    //   var isDuplicate : Bool = false;
-
-    //   // Compare key1 with previous keys
-    //   var j = 0;
-    //   while (j < i) {
-    //     let key2 = playerKeys[j];
-    //     if (key1 == key2) {
-    //       isDuplicate := true; // Use := for assignment
-    //        count += 1;    // If a duplicate is found, increment the count
-    //        Debug.print(Int.toText(count));
-    //        return #err("Duplicate player keys found in the squad.");// Stop checking further once a duplicate is found
-    //     };
-    //     j += 1; // Increment inner loop index
-    //   };
-    //   i += 1; // Increment outer loop index
-    // };
+    let playersCount = Validation.playersCount(newSquad.players);
+    switch (playersCount) {
+      case (#ok(_)) {};
+      case (#err(res)) {
+        return #err(res);
+      };
+    };
 
     switch (countDuplicates(playerKeys)) {
       case (#ok(count)) {
+
         let maybeSquad = playerSquadStorage.get(squadId);
         switch (maybeSquad) {
           case (?isSquad) {
@@ -2225,27 +2236,54 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
             };
 
             thisUser(Principal.toText(caller), isSquad.userId);
-            let updatedSquad = {
-              userId = isSquad.userId;
-              name = newSquad.name;
-              matchId = newSquad.matchId;
-              cap = newSquad.cap;
-              viceCap = newSquad.viceCap;
-              players = newSquad.players;
-              formation = newSquad.formation;
-              creation_time = isSquad.creation_time;
-              rank = isSquad.rank;
-              hasParticipated = isSquad.hasParticipated;
-              points = isSquad.points;
-              // providerId = newSquad.providerId;
+            let teamFormatiopnValidate = Validation.validateTeamFormation(newSquad.players, newSquad.formation, playerStorage);
+            switch (teamFormatiopnValidate) {
+              case (#err(err)) {
+                return #err(err);
+              };
+              case (#ok(_)) {
+                let getMatch = matchStorage.get(newSquad.matchId);
+                switch (getMatch) {
+                  case (null) {
+                    return #err("Match not found");
+                  };
+                  case (?isMatch) {
+
+                    let selectedPlayersNotFromSingleTeam = Validation.validateSelectedPlayersAreNotFromSingleTeam(newSquad.players, isMatch.homeTeam, isMatch.awayTeam, playerStorage);
+
+                    switch (selectedPlayersNotFromSingleTeam) {
+                      case (#err(err)) {
+                        return #err(err);
+                      };
+                      case (#ok(_)) {
+
+                        let updatedSquad = {
+                          userId = isSquad.userId;
+                          name = newSquad.name;
+                          matchId = newSquad.matchId;
+                          cap = newSquad.cap;
+                          viceCap = newSquad.viceCap;
+                          players = newSquad.players;
+                          formation = newSquad.formation;
+                          creation_time = isSquad.creation_time;
+                          rank = isSquad.rank;
+                          hasParticipated = isSquad.hasParticipated;
+                          points = isSquad.points;
+                          // providerId = newSquad.providerId;
+                        };
+
+                        let oldSquad = playerSquadStorage.replace(squadId, updatedSquad);
+                        return #ok({
+                          message = "Squad updated successfully";
+                          squad = oldSquad;
+                        });
+                      };
+                    };
+                  };
+
+                };
+              };
             };
-
-            let oldSquad = playerSquadStorage.replace(squadId, updatedSquad);
-            return #ok({
-              message = "Squad updated successfully";
-              squad = oldSquad;
-            });
-
           };
           case (null) {
             return #err("Squad not found");
@@ -2265,6 +2303,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
   public shared ({ caller }) func addContest(inputContest : IContest) : async Result.Result<Text, Text> {
     onlyAdmin(caller);
     let maybeMatch = matchStorage.get(inputContest.matchId);
+    if (Option.isNull(contestPaymentMap.get(inputContest.paymentMethod))) return #err("Payment method not found");
     switch (maybeMatch) {
       case (?isMatch) {
         let currentTime = getTime();
@@ -2318,7 +2357,6 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
               return #err("No Contest found");
             };
             case (?isContest) {
-
               // if (inputContest.slots < isContest.slotsUsed) return #err("Slots overflow");
               let newContest : Contest = {
                 creatorUserId = Principal.toText(caller);
@@ -2406,6 +2444,26 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
       };
     };
     return tempContextNames;
+  };
+  /**
+   getContestsByIds use to get list of contest names og given ids
+   @param array of contestIds
+   @return [(id, Contest)]
+
+  **/
+  public query func getContestsByIds(contestIds : [Key]) : async [Contest and { id : Key }] {
+    var contests : [Contest and { id : Key }] = [];
+    for (id in contestIds.vals()) {
+      let getContest = contestStorage.get(id);
+
+      switch (getContest) {
+        case (?isContest) {
+          contests := Array.append(contests, [{ isContest with id }]);
+        };
+        case (null) {};
+      };
+    };
+    return contests;
   };
   public query func getContestsByMatchId(matchId : Key) : async Contests {
     let contests = Buffer.Buffer<(Key, Contest)>(contestStorage.size());
@@ -2516,8 +2574,6 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
         count += 1;
         if (count > startIndex and count <= endIndex) {
           var firstPrize = 0;
-     
-
           if (contest.entryFee != 0 and contest.slotsUsed != 0) {
             let rewardMap = getRewardMap({
               slotsUsed = contest.slotsUsed;
@@ -2670,17 +2726,16 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
 
   // public query func getRankingOfSquads
   // Participant
-  public shared ({ caller }) func addParticipant(iContestId : Key, squadId : Key) : async ReturnAddParticipant {
+  public shared ({ caller }) func addParticipant(iContestId : Key, squadId : Key, offset : Int) : async ReturnAddParticipant {
     onlyUser(caller);
     let contest = contestStorage.get(iContestId);
-      let userId = Principal.toText(caller);
+    let userId = Principal.toText(caller);
     switch (contest) {
       case (?isContest) {
 
         let maybeMatch = matchStorage.get(isContest.matchId);
         switch (maybeMatch) {
           case (?isMatch) {
-            
             if (not isInFuture(isMatch.time)) {
               // onlyAdmin(caller);
 
@@ -2693,12 +2748,6 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
               transactionId = "";
               isRewarded = false;
               rank = 0;
-            };
-            var startDate : Int = Date_In_Miliseconds.september15;
-            let endDate = Date_In_Miliseconds.november15;
-            if (startDate <= isMatch.time and endDate >= isMatch.time) {
-              addMatchToJoinedList(isContest.matchId, userId); //new
-
             };
 
             var isAlreadyParticipated = false;
@@ -2727,7 +2776,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
             if (Option.isNull(maybeSquad)) return #err(#GenericError { error_code = 0; message = "Error joining contest please refresh the page and try again" });
             let isPaid = isContest.entryFee != 0;
             if (isPaid) {
-              let transfer = await transferToAdmin(caller, isContest.entryFee);
+              let transfer = await transferToAdmin(caller, isContest.entryFee, isContest.paymentMethod);
               switch (transfer) {
                 case (#Err(error)) {
                   return #err(error);
@@ -2750,7 +2799,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
               };
             };
 
-            let newSlotsUsed = isContest.slotsUsed +1;
+            let newSlotsUsed = isContest.slotsUsed + 1;
             let newContest : Contest = {
               creatorUserId = isContest.creatorUserId;
               name = isContest.name;
@@ -2802,7 +2851,13 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
               squadId # iContestId,
               { newParticipant with transactionId },
             );
-           
+            var startDate : Int = Date_In_Miliseconds.september15;
+            let endDate = Date_In_Miliseconds.november15;
+            if (startDate <= isMatch.time and endDate >= isMatch.time) {
+              addMatchToJoinedList(isContest.matchId, userId); //new
+
+            };
+          
             return #ok("Participated successfully");
           };
           case (null) {
@@ -3565,6 +3620,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     };
     // return Buffer.toArray(playerSquad);
   };
+
   public query ({ caller }) func getMatches(props : GetProps, time : ?Int) : async ReturnMatches {
     // let _matches = Iter.toArray(matchStorage.entries());
     // get current time in miliseconds
@@ -3642,6 +3698,8 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
   public query ({ caller }) func getDetailedMatchesContests(props : GetProps) : async ReturnDetailedMatchContests {
     let currentTime = getTime();
     var limit = getLimit(props.limit);
+    let userId = Principal.toText(caller);
+
     var isUpcoming : Bool = true;
     var isCompleted : Bool = false;
     var all = false;
@@ -3667,13 +3725,15 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
           if (not ((isUpcoming and v.time > currentTime) or (((not isUpcoming) and v.time < currentTime)))) return null;
           if (not ((isCompleted and checkMatchCompleted(v.status)) or (not isCompleted and not checkMatchCompleted(v.status)))) return null;
         };
+        let isMatchJoined = hasUserJoinedTheContest(k, userId);
+        if (not isMatchJoined) return null;
+
         return ?{ v with id = k };
 
       },
     );
     let filteredArr = Iter.toArray(_matches.vals());
 
-    let userId = Principal.toText(caller);
     if (not all) {
       var sortedMatches : RMatches = [];
       if (isUpcoming) {
@@ -3836,16 +3896,19 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     };
   };
 
-  private func pGetMatches(props : GetProps, time : ?Int,offset:Int, tournamentId : ?Key) : RMatches {
+  private func pGetMatches(props : GetProps, time : ?Int, offset : Int, tournamentId : ?Key) : RMatches {
     let currentTime = getTime();
     var isUpcoming : Bool = true;
     var isCompleted : Bool = false;
     var withInThirtyMinutes = false;
+    var isOngoing = false;
+
     var thirtyMinutes = 30 * 60 * 1000;
     if (props.status == "0") {
       isUpcoming := true;
     } else if (props.status == "1") {
       isUpcoming := false;
+      isOngoing := true;
     } else if (props.status == "2") {
       isUpcoming := false;
       isCompleted := true;
@@ -3859,9 +3922,25 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
       Text.hash,
       func(k, v) {
         if (not search({ compare = v.location; s = props.search })) return null;
-        if (not ((isUpcoming and v.time > currentTime) or (((not isUpcoming) and v.time < currentTime) or withInThirtyMinutes))) return null;
-        if (not ((isCompleted and checkMatchCompleted(v.status)) or (not isCompleted and not checkMatchCompleted(v.status)))) return null;
-        if (not ((withInThirtyMinutes and (v.time - currentTime) <= thirtyMinutes) or not withInThirtyMinutes)) return null;
+        //checking for is match upcomming
+        if (not ((isUpcoming and v.time > currentTime) or (((not isUpcoming) and v.time < currentTime) or withInThirtyMinutes))) {
+          return null;
+
+        };
+        //checking for is match completed
+
+        if (not ((isCompleted and checkMatchCompleted(v.status)) or (not isCompleted and not checkMatchCompleted(v.status)))) {
+          return null;
+        };
+        //checking for is match inprogress
+
+        if (not ((withInThirtyMinutes and (v.time - currentTime) <= thirtyMinutes) or not withInThirtyMinutes)) {
+          return null;
+        };
+        //is match inprogress and match status is "Time to be defined" then dont show it inprogress match list
+        if (isOngoing and v.status == "Time to be defined") {
+          return null;
+        };
 
         switch (tournamentId) {
           case (?isId) {
@@ -3882,7 +3961,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
           case (?isTime) {
             if (isCompleted) {
 
-              if (FantasyStoreHelper.isSameDayWithOffset(isTime, v.time,offset)) {
+              if (FantasyStoreHelper.isSameDayWithOffset(isTime, v.time, offset)) {
                 return ?{ v with id = k };
               } else {
                 return null;
@@ -3934,10 +4013,10 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     return sortedMatches;
   };
   // function for filtering the matchws with tournamnet
-  public query func getMatchesWithTournamentId(props : GetProps, time : ?Int,offset:Int, tournamentId : ?Key) : async ReturnMatches {
+  public query func getMatchesWithTournamentId(props : GetProps, time : ?Int, offset : Int, tournamentId : ?Key) : async ReturnMatches {
 
     var limit = getLimit(props.limit);
-    let sortedMatches = pGetMatches(props : GetProps, time : ?Int,offset:Int, tournamentId : ?Key);
+    let sortedMatches = pGetMatches(props : GetProps, time : ?Int, offset : Int, tournamentId : ?Key);
     // let sortedMatches : [Match] = [];
     let totalMatches = Array.size(sortedMatches);
     let startIndex : Nat = props.page * limit;
@@ -4086,6 +4165,46 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     };
 
   };
+
+  public shared ({
+    caller;
+  }) func addDefaultContestsOnMatches() : async Result.Result<(Text), (Text)> {
+    onlyAdmin(caller);
+    let currentTime = getTime();
+
+    for ((key, match) in matchStorage.entries()) {
+      if (match.time >= currentTime) {
+        let alreadyContestCreated = alreadyContestsCreated(key);
+        let id = Int.toText(Time.now()) # key;
+        if (not alreadyContestCreated.isGoldContestCreated) {
+          contestStorage.put(
+            id,
+            {
+              Types.Default_Contests[0] with matchId = key;
+              creatorUserId = "";
+              slotsUsed = 0;
+              winner = null;
+              isDistributed = false;
+            },
+          );
+        };
+        if (not alreadyContestCreated.isBronzeContestCreated) {
+          contestStorage.put(
+            id # "124",
+            {
+              Types.Default_Contests[1] with matchId = key;
+              creatorUserId = "";
+              slotsUsed = 0;
+              winner = null;
+              isDistributed = false;
+            },
+          );
+        };
+
+      };
+    };
+    return #ok("contest created successfully");
+  };
   public shared ({ caller }) func updateMatchStatus(status : MatchStatus, matchId : Key) : async Bool {
     onlyAdmin(caller);
     let maybeMatch = matchStorage.get(matchId);
@@ -4188,8 +4307,8 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
   public shared ({ caller }) func finishMatch(inputMatch : Types.MatchScore) : async Result.Result<Text, Text> {
     onlyAdmin(caller);
     let maybeMatch = matchStorage.get(inputMatch.id);
-    var alphaRewardsGiven = false;
- 
+
+  
     switch (maybeMatch) {
       case (null) {
         return #err("Match not found");
@@ -4230,11 +4349,9 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
                     case (null) {};
                   };
 
-                  // squads.add(squad);
+                 
                 };
-                // if (squads.size() == contest.slots) {
-                //   break squadLoop;
-                // };
+               
               };
               switch (winner) {
                 case (null) {
@@ -4242,10 +4359,10 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
                   // return #err("No winner found");
                 };
                 case (?isWinner) {
-                  let rewardKey = isWinner # inputMatch.id;
+             
                   // add match to mvps
                   addMatchToMvps(inputMatch.id);
-              
+                
                   if (contest.entryFee != 0) {
                     let _resp = await nDistributeRewards(inputMatch.id, contestId);
                     Debug.print(debug_show (_resp, "DONE WITH IT "));
@@ -4263,8 +4380,8 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
         };
         resetPlayerSquadByTeamIds([match.homeTeam, match.awayTeam]);
 
-       
-        return #ok("Match finished");
+        
+        return #ok("Match finished" );
       };
 
     };
@@ -4300,202 +4417,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     };
   };
 
-  public shared ({ caller }) func distributeRewards(matchId : Key, contestId : Key) : async ReturnAddParticipant {
-    onlyAdmin(caller);
-    let maybeMatch = matchStorage.get(matchId);
-    switch (maybeMatch) {
-      case (null) {
-        return #err(#GenericError { error_code = 0; message = "Match not found" });
-      };
-      case (?match) {
-        if (isInFuture(match.time)) return #err(#GenericError { error_code = 0; message = "Match not finished" });
-        if (match.status != Types.MatchStatuses.finished) {
-          return #err(#GenericError { error_code = 0; message = "Match not finished" });
-        };
-        let maybeContest = contestStorage.get(contestId);
-        switch (maybeContest) {
-          case (null) {
-            return #err(#GenericError { error_code = 0; message = "Contest not found" });
-          };
-          case (?contest) {
-            if (contest.isDistributed) return #err(#GenericError { error_code = 0; message = "Already distributed" });
-            if (contest.entryFee == 0) return #err(#GenericError { error_code = 0; message = "Error while distribution" });
-            // Initiate canister actor to call methods afterwards
-            let transactionCanister = actor (init.transactionCanisterId) : actor {
-              getAllTransactions : (Types.GetAllTransactionProps) -> async Types.ReturnTransactions;
-              addTransaction : (Transaction, ?Text) -> async Result.Result<(Text), (Text, Bool)>;
-            };
-            let limit = 10;
-            var page = 0;
-            // Get all the transactions related to this contest and store them in a hashmap.
-            let initialTransactions = await transactionCanister.getAllTransactions({
-              page;
-              limit;
-              userId = null;
-              contestId = ?contestId;
-            });
-            let transactionMap = Map.fromIter<Key, Transaction>(initialTransactions.transaction.vals(), 0, Text.equal, Text.hash);
-            while (transactionMap.size() < initialTransactions.total) {
-              let newTransactions = await transactionCanister.getAllTransactions({
-                page;
-                limit;
-                userId = null;
-                contestId = ?contestId;
-              });
-              for ((key, transaction) in newTransactions.transaction.vals()) {
-                transactionMap.put(key, transaction);
-              };
-              if (transactionMap.size() < initialTransactions.total) page += 1;
-            };
-            let slotsUsed = contest.slotsUsed;
-            let rewardDistribution = contest.rewardDistribution;
-            let totalPrizePool = contest.entryFee * contest.slotsUsed;
-
-            let maybePlatformPercentage = adminSettingStorage.get(Types.AdminSettings.platformPercentage);
-            var platformPercentage = rewardPercentage;
-            switch (maybePlatformPercentage) {
-              case (?isPlatformPercentage) {
-                platformPercentage := textToNat(isPlatformPercentage.settingValue);
-              };
-              case (null) {};
-            };
-
-            let rewardablePrizePool = (totalPrizePool * platformPercentage) / 100;
-
-            // Calculate rewards per user and store in a map according to rank
-            let rewardMap = Map.HashMap<Nat, Nat>(0, Nat.equal, Hash.hash);
-
-            var totalDistributedPercentage : Int = 0;
-
-            var totalDistributedAmount : Nat = 0;
-
-            // First, distribute rewards as per the distribution structure
-            for (reward in rewardDistribution.vals()) {
-              var index = reward.from;
-              let rangeSize : Int = reward.to - reward.from + 1;
-              let totalAmount = (rewardablePrizePool * reward.amount) / 100;
-              let rewardPerUserInt = totalAmount / rangeSize;
-
-              // Return error if Int is negative
-              if (rewardPerUserInt < 0) return #err(#GenericError { error_code = 0; message = "Faulty value for reward Distribution" });
-
-              let rewardPerUser = Int.abs(rewardPerUserInt);
-              var actualDistributedAmount : Nat = 0;
-
-              label rewardLoop while (index <= reward.to) {
-                if (index > slotsUsed) break rewardLoop;
-                let existingReward = switch (rewardMap.get(index)) {
-                  case (?value) value;
-                  case null 0;
-                };
-                rewardMap.put(index, existingReward + rewardPerUser);
-                actualDistributedAmount += rewardPerUser;
-                index += 1;
-              };
-
-              totalDistributedAmount += actualDistributedAmount;
-            };
-
-            // Calculate remaining rewards
-            let remainingRewards : Int = rewardablePrizePool - totalDistributedAmount;
-            Debug.print(debug_show ("mapp before", { rewardMap = Iter.toArray(rewardMap.entries()) }));
-            Debug.print(debug_show ("remainingsss", { remainingRewards; totalDistributedAmount; rewardablePrizePool }));
-
-            if (remainingRewards > 0 and slotsUsed > 0) {
-              let remainingRewardPerUserInt = remainingRewards / slotsUsed;
-              if (remainingRewardPerUserInt < 0) return #err(#GenericError { error_code = 0; message = "Faulty value for reward Distribution" });
-              let remainingRewardPerUser = Int.abs(remainingRewardPerUserInt);
-              var index = 1;
-              while (index <= slotsUsed) {
-                switch (rewardMap.get(index)) {
-                  case (?value) {
-                    let existingReward = value;
-                    rewardMap.put(index, existingReward + remainingRewardPerUser);
-                  };
-                  case null {};
-                };
-                index += 1;
-              };
-            };
-            Debug.print(debug_show ("rewardMap afterrrr", { rewardMap = Iter.toArray(rewardMap.entries()) }));
-
-            // check all the participant of this contest and get squad and reward them
-            var particpantIndex = 0;
-            label participantLoop for ((key, participant) in participantStorage.entries()) {
-              particpantIndex += 1;
-              if (participant.contestId == contestId) {
-                if (participant.isRewarded) return #err(#GenericError { error_code = 0; message = "Already rewarded participant" });
-                let userId = Principal.fromText(participant.userId);
-                let maybeSquad = playerSquadStorage.get(participant.squadId);
-                switch (maybeSquad) {
-                  case (null) {
-                    Debug.print(debug_show ("Squad not found", { matchId; squadId = participant.squadId }));
-                    return #err(#GenericError { error_code = 0; message = "Squad not found" });
-                  };
-                  case (?squad) {
-
-                    let maybeTransaction = transactionMap.get(participant.transactionId);
-                    switch (maybeTransaction) {
-                      case (?transaction) {
-                        // If amount in transaction and the fee of contest do not match return error
-                        if (transaction.amount != contest.entryFee) {
-                          Debug.print(debug_show ("Amount Difference", participant.transactionId, matchId, { amount = transaction.amount; fee = contest.entryFee }));
-                          return #err(#GenericError { error_code = 0; message = "Amount Difference" });
-                        };
-
-                        // Give reward from admin wallet to user wallet
-
-                        switch (rewardMap.get(squad.rank)) {
-                          case (?reward) {
-                            let transfer = await transferFromAdmin(userId, reward);
-                            switch (transfer) {
-                              case (#Ok(_)) {
-                                var tempTrans : Transaction = {
-                                  user = userId;
-                                  from = adminPrincipal;
-                                  to = userId;
-                                  amount = reward;
-                                  created_at_time = getTime();
-                                  contestId = contestId;
-                                  transaction_type = #receive;
-                                  title = "Contest Reward";
-                                };
-                                let _ = pIncreaseRewardsWon({
-                                  id = Principal.toText(userId);
-                                  assetsVal = ?reward;
-                                });
-
-                                // Add transaction
-                                let _res2 = transactionCanister.addTransaction(tempTrans, ?Nat.toText(particpantIndex));
-                              };
-                              case (#Err(error)) {
-                                return #err(error);
-                              };
-                            };
-                          };
-                          case (null) {};
-                        };
-                        // Change participant status to rewarded
-                        let _newSquad = participantStorage.replace(key, { participant with isRewarded = true });
-                      };
-                      case (null) {
-                        Debug.print(debug_show ("transaction not found", participant.transactionId, matchId));
-                        return #err(#GenericError { error_code = 0; message = "Transaction not found" });
-                      };
-                    };
-                  };
-                };
-              };
-            };
-            let _newContest = contestStorage.replace(contestId, { contest with isDistributed = true });
-            return #ok("Done");
-          };
-        };
-
-      };
-
-    };
-  };
+ 
   public shared ({ caller }) func nDistributeRewards(matchId : Key, contestId : Key) : async ReturnAddParticipant {
     onlyAdmin(caller);
     Debug.print(debug_show ("we started distribution"));
@@ -4517,7 +4439,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
           case (?contest) {
             if (contest.isDistributed) return #err(#GenericError { error_code = 0; message = "Already distributed" });
             if (contest.entryFee == 0) return #err(#GenericError { error_code = 0; message = "Error while distribution" });
-            // Initiate canister actor to call methods afterwards
+            // Initiate canister actor to call methods
             let transactionCanister = actor (init.transactionCanisterId) : actor {
               getAllTransactions : (Types.GetAllTransactionProps) -> async Types.ReturnTransactions;
               addTransaction : (Transaction, ?Text) -> async Result.Result<(Text), (Text, Bool)>;
@@ -4581,7 +4503,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
 
                         switch (rewardMap.get(participant.rank)) {
                           case (?reward) {
-                            let transfer = await transferFromAdmin(userId, reward);
+                            let transfer = await transferFromAdmin(userId, reward, contest.paymentMethod);
                             switch (transfer) {
                               case (#Ok(_)) {
                                 var tempTrans : Transaction = {
@@ -4590,7 +4512,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
                                   to = userId;
                                   amount = reward;
                                   created_at_time = getTime();
-                                  contestId = matchId;
+                                  contestId = contestId;
                                   transaction_type = #receive;
                                   title = "Contest Reward";
                                 };
@@ -4633,7 +4555,6 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     };
   };
  
-
   public shared ({ caller }) func testingIncreaseMatchTime(matchId : Key) : async ?Match {
     onlyAdmin(caller);
     let maybeMatch = matchStorage.get(matchId);
@@ -4693,12 +4614,23 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
                 // status = match.status;
               };
               let id = Int.toText(Time.now()) # match.id;
+
               matchStorage.put(id, newMatch);
               addMatchDateIndex(newMatch.time, id);
               contestStorage.put(
                 id,
                 {
-                  Types.Default_Contest with matchId = id;
+                  Types.Default_Contests[0] with matchId = match.id;
+                  creatorUserId = "";
+                  slotsUsed = 0;
+                  winner = null;
+                  isDistributed = false;
+                },
+              );
+              contestStorage.put(
+                id # "124",
+                {
+                  Types.Default_Contests[1] with matchId = match.id;
                   creatorUserId = "";
                   slotsUsed = 0;
                   winner = null;
@@ -4772,7 +4704,17 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
               contestStorage.put(
                 id,
                 {
-                  Types.Default_Contest with matchId = id;
+                  Types.Default_Contests[0] with matchId = match.id;
+                  creatorUserId = "";
+                  slotsUsed = 0;
+                  winner = null;
+                  isDistributed = false;
+                },
+              );
+              contestStorage.put(
+                id # "321",
+                {
+                  Types.Default_Contests[1] with matchId = match.id;
                   creatorUserId = "";
                   slotsUsed = 0;
                   winner = null;
@@ -4799,14 +4741,14 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     let errArray = Buffer.toArray(err);
     return { succ = succArray; err = errArray };
   };
-   public shared ({ caller }) func updateUpcomingMatches(matches : [InputMatch]) : async {
+  public shared ({ caller }) func updateUpcomingMatches(matches : [InputMatch]) : async {
     succ : [(Bool, Text)];
     err : [(Bool, Text)];
   } {
     onlyAdmin(caller);
     let succ = Buffer.Buffer<(Bool, Text)>(matches.size());
     let err = Buffer.Buffer<(Bool, Text)>(matches.size());
-    for ((key,match) in matchStorage.entries()) {
+    for ((key, match) in matchStorage.entries()) {
       for (newMatch in matches.vals()) {
         // let maybeMatch = matchStorage.get(match.id);
         if (match.providerId == newMatch.providerId) {
@@ -5108,7 +5050,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     pIncreaseParticipant(props);
 
   };
-   func pIncreaseParticipant({
+  func pIncreaseParticipant({
     id : Key;
     assetsVal : ?Nat;
   }) : Bool {
@@ -5235,7 +5177,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
           case (?assets) {
 
             let tempAsset : UserAssets = {
-              assets with rewardsWon = tempRewardsWon +assets.rewardsWon;
+              assets with rewardsWon = tempRewardsWon + assets.rewardsWon;
             };
             let _res = userStatsStorage.replace(id, tempAsset);
             return true;
@@ -5630,7 +5572,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
   };
 
 
-
+ 
   private func getMatchesCount(startDate : Int, endDate : Int) : Int {
     var tempMatchcount : Int = 0;
     for ((key, match) in matchStorage.entries()) {
@@ -5665,9 +5607,8 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
 
   };
 
-  
 
- 
+
 
   private func addMatchToJoinedList(matchId : Key, userId : Key) {
     let joinedList = userJoinedMatchedStorage.get(userId);
@@ -5911,6 +5852,9 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     };
 
   };
+
+
+
   private func isUserJoinedTheMatch(contestId : Key, matchId : Key, userId : Key) : Result.Result<Text, Text> {
     var isJoined : Bool = false;
     var isWinner : Bool = false;
@@ -5946,8 +5890,37 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     return #ok("User has joined the contest");
 
   };
+ 
+  public query func getContestReward() : async ?AdminSetting {
+    let maybeRewardSetting = adminSettingStorage.get(Types.AdminSettings.contestWinnerReward);
+    return maybeRewardSetting;
+
+  };
 
 
+  private func getTimeWithOutHours(time : Int) : Int {
+    let tempTime = time / (24 * 60 * 60 * 1000);
+    return tempTime * (24 * 60 * 60 * 1000);
+  };
+  private func getDayNameByTime(timestampMs : Int) : Text {
+    let timestampS = timestampMs / 1000;
+    let daysSinceEpoch = (timestampS / 86400) + 4;
+    let dayOfWeek = daysSinceEpoch % 7;
+    let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    let day = days[Int.abs(dayOfWeek)];
+    return day;
+  };
+ 
+
+
+
+
+  public shared ({ caller }) func changePaymentMethod() : async () {
+    onlyAdmin(caller);
+    for ((key, contest) in contestStorage.entries()) {
+      let _ = contestStorage.replace(key, { contest with paymentMethod = "0" });
+    };
+  };
   system func preupgrade() {
     Debug.print("Starting pre-upgrade hook...");
     stable_users := Iter.toArray(userStorage.entries());
@@ -5964,6 +5937,8 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     stable_adminSettings := Iter.toArray(adminSettingStorage.entries());
     stable_contestTypes := Iter.toArray(contestTypeStorage.entries());
     stable_joined_matches := Iter.toArray(userJoinedMatchedStorage.entries());
+   
+
     Debug.print("pre-upgrade finished.");
   };
   system func postupgrade() {
@@ -5982,7 +5957,7 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     adminSettingStorage := Map.fromIter<Key, AdminSetting>(stable_adminSettings.vals(), stable_adminSettings.size(), Text.equal, Text.hash);
     contestTypeStorage := Map.fromIter<Key, ContestType>(stable_contestTypes.vals(), stable_contestTypes.size(), Text.equal, Text.hash);
     userJoinedMatchedStorage := Map.fromIter<Key, JoinedMatchesRecord>(stable_joined_matches.vals(), stable_joined_matches.size(), Text.equal, Text.hash);
-
+    
     var index = 0;
 
     for (id in initAdmins.vals()) {
@@ -6009,7 +5984,9 @@ type PlugPrincipalMap = Types.PlugPrincipalMap;
     stable_userStats := [];
     stable_adminSettings := [];
     stable_contestTypes := [];
+ 
     stable_joined_matches := [];
+
  
 
 

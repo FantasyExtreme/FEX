@@ -17,6 +17,36 @@
   @media (max-width: 575px) {
     height: 100vh;
   }
+
+  &.contact-header{
+      @media (max-width: 1200px) {
+        height: auto;
+        min-height: 600px;
+      }
+      @media (max-width: 991px) {
+        min-height: 500px;
+      }
+      @media (max-width: 767px) {
+        min-height: 400px;
+      }
+      @media (max-width: 575px) {
+        min-height: 320px;
+      }
+      .bg-layer {
+        background-size: cover;
+        background-image: url('../assets/images/slides/slide-1.jpg');
+        background-position: top center;
+        background-repeat: no-repeat;
+        @media (max-width: 1500px) {
+          background-position: center 20%;
+          background-size: cover;
+      }
+      @media (max-width: 1200px) {
+        background-position: center center;
+        background-size: contain;
+      }
+    }
+  }
   .carousel-inner,
   .carousel-item,
   .carousel {

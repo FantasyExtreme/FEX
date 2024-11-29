@@ -145,7 +145,7 @@ export default function Innerheader({
         <div className='bg-layer' />
         <div className='point-container'>
           <div className='point-inner-container'>
-            <div className='point-text-pnl'>
+            <div className={`point-text-pnl ${!create && "justify-content-center"}`}>
               {create ? (
                 <>
                   <div>
@@ -159,10 +159,10 @@ export default function Innerheader({
                 </>
               ) : (
                 <>
-                  <div>
+                  {/* <div>
                     <h5>Rank</h5>
                     <h6>{squadRank ?? '0'}</h6>
-                  </div>
+                  </div> */}
                   <div>
                     <h5>Total Points</h5>
                     <h6>{squadPoints ?? '0'}</h6>

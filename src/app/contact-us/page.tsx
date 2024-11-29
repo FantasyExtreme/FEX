@@ -95,12 +95,7 @@ export default function page() {
   };
   return (
     <>
-      <Container fluid className='header'>
-        <Carousel fade>
-          <Carousel.Item>
-            <div className='bg-layer' />
-          </Carousel.Item>
-        </Carousel>
+      <Container fluid className='header contact-header'>
         <div className='bg-layer' />
       </Container>
 
@@ -160,7 +155,7 @@ export default function page() {
                         />
                       </div>{' '}
                       <Row>
-                        <Col lg={12} xl={6}>
+                        <Col lg={6} xl={6} md={6}>
                           <Field name='email'>
                             {({ field, formProps }: any) => (
                               <Form.Group className='mb-2'>
@@ -184,7 +179,7 @@ export default function page() {
                             />
                           </div>
                         </Col>
-                        <Col lg={12} xl={6}>
+                        <Col lg={6} xl={6} md={6}>
                           <Field name='phone'>
                             {({ field, formProps }: any) => (
                               <Form.Group className='mb-2'>

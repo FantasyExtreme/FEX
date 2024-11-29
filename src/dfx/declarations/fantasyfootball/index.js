@@ -9,14 +9,14 @@ export { idlFactory } from './fantasyfootball.did.js';
  * process.env.CANISTER_ID_<CANISTER_NAME_UPPERCASE>
  * beginning in dfx 0.15.0
  */
+
+
 export const canisterId =
-  process.env.CANISTER_ID_FANTASYFOOTBALL ?? "mt6dc-yaaaa-aaaao-qetoa-cai";
-
-
-// export const canisterId =
-//   process.env.CANISTER_ID_FANTASYFOOTBALL || 'qiy45-eaaaa-aaaam-actra-cai';
+  process.env.CANISTER_ID_FANTASYFOOTBALL || 'gf4a7-g4aaa-aaaaa-qaarq-cai';
 
 export const createActor = (canisterId, options = {}) => {
+ 
+  
   const agent = options.agent || new HttpAgent({ ...options.agentOptions });
 
   if (options.agent && options.agentOptions) {

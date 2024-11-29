@@ -20,7 +20,13 @@ import {
 import { number, object, string } from 'yup';
 import { Principal } from '@dfinity/principal';
 import useAuth from '@/lib/auth';
-import { E8S, GAS_FEE, GAS_FEE_ICP } from '@/constant/fantasticonst';
+import {
+  CKBTC_GAS_FEE,
+  E8S,
+  GAS_FEE,
+  GAS_FEE_ICP,
+} from '@/constant/fantasticonst';
+import { makeICPLedgerCanister } from '@/dfx/service/actor-locator';
 import { toast } from 'react-toastify';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
@@ -29,17 +35,20 @@ import logger from '@/lib/logger';
 import JoinContest from './JoinContest';
 import { Match } from '@/types/fantasy';
 import {
+  getContest,
   getRawPlayerSquads,
+  getTimeZone,
   handleTransferError,
   isConnected,
 } from '../utils/fantasy';
-import { approveTokens, toE8S } from '@/lib/ledger';
+import { approveCKBTCTokens, approveTokens, toE8S } from '@/lib/ledger';
 import { TransferFromError } from '@dfinity/ledger-icp/dist/candid/ledger';
 import ConfirmTransaction from './ConfirmTransaction';
 import Link from 'next/link';
 import { TEAM_CREATION_ROUTE } from '@/constant/routes';
 import ConnectModal from './ConnectModal';
 import { useRouter } from 'next/navigation';
+import { PaymentTypes } from '@/constant/variables';
 // import { AccountIdentifier } from '@dfinity/ledger-icp';
 
 interface Props {
@@ -104,31 +113,42 @@ const JoinContestModal = ({
     }
   }
   async function addParticipant() {
-    // logger(contestId,"hdsagfhgsadjhgfsadfsadfasd");
-    // return;
-    if (!match?.id) return logger(match, 'no match id');
+    if (!match?.id || !contestId) return logger(match, 'no match id');
     setIsParticipating(true);
     try {
-      logger({ entry: entryFee, GAS_FEE }, 'apprinving');
-      if (entryFee !== 0) {
-        let approve = await approveTokens(
-          toE8S(entryFee) + GAS_FEE,
-          auth.identity,
-        );
+      let contest = await getContest(auth.actor, contestId);
+      logger({ entry: entryFee, GAS_FEE, contest }, 'apprinving');
+      if (entryFee && entryFee !== 0) {
+        let approve;
+        if (contest.paymentMethod == PaymentTypes.ICP) {
+          approve = await approveTokens(
+            contest.entryFee + GAS_FEE,
+            auth.identity,
+          );
+        } else if (contest.paymentMethod == PaymentTypes.CKBTC) {
+          approve = await approveCKBTCTokens(
+            contest.entryFee + CKBTC_GAS_FEE,
+            auth.identity,
+          );
+        }
         if (!approve) {
           return toast.error('Unexpected Error');
         }
       }
       if (!selectTeam.teamId || !contestId) return;
       const added: { err?: TransferFromError; ok?: string } =
-        await auth.actor.addParticipant(contestId, selectTeam.teamId);
+        await auth.actor.addParticipant(
+          contestId,
+          selectTeam.teamId,
+          getTimeZone(),
+        );
 
       if (added?.ok) {
         decreaseSlots();
         toast.success('Joined Successfully');
-        if (participants && participants + 1 >= teamsPerUser)
+        if (participants != null && participants + 1 >= teamsPerUser)
           setMaximumParticipated(true);
-        setParticipants((prev) => (prev ? ++prev : prev));
+        setParticipants((prev) => (prev != null ? ++prev : prev));
         // match && match.teamsJoined++;
 
         // let newSquads = playerSquads.filter(())
@@ -332,6 +352,7 @@ const JoinContestModal = ({
         </Modal.Body>
       </Modal>
       <ConfirmTransaction
+        contestId={contestId}
         entryFee={entryFee}
         show={showConfirm}
         onConfirm={addParticipant}

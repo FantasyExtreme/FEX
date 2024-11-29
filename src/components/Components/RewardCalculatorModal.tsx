@@ -1,13 +1,12 @@
 import React, { useCallback, useState, useEffect } from 'react';
 
-import { Button, Container, Form, Modal, Spinner } from 'react-bootstrap';
+import { Button, Col, Container, Form, Modal, Row, Spinner } from 'react-bootstrap';
 import { useAuthStore } from '@/store/useStore';
 import { ConnectPlugWalletSlice } from '@/types/store';
 import logger from '@/lib/logger';
 import {
   debounce,
   getContestTypes,
-  getIcpRate,
   getPrizePool,
   getRewardsTable,
 } from '../utils/fantasy';
@@ -33,9 +32,11 @@ function RewardCalculatorModal({
   show,
   handleClose,
   defaultContest,
+  icpRate
 }: {
   show: boolean;
   handleClose: () => void;
+  icpRate:number,
   defaultContest?: { name: string; entryFee: number; participants: number };
 }) {
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,6 @@ function RewardCalculatorModal({
   const [contestTypes, setContestTypes] = useState<null | RContestTypes>(null);
   const [rewardsMap, setRewardsMap] = useState<null | [bigint, bigint][]>(null);
   const [pageCount, setPageCount] = useState<number>(0);
-  const [usdRate, setUsdRate] = useState(0);
   const [offset, setOffset] = useState(0);
 
   const [selectedContest, setSelectedContest] = useState<null | RContestType>(
@@ -73,7 +73,7 @@ function RewardCalculatorModal({
    *  The prize pool amount in USD, rounded to two decimal places
    */
   const getPrizePoolInUSD = (pool: number) => {
-    return (pool * usdRate).toFixed(2);
+    return (pool * icpRate).toFixed(2);
   };
   /**
    * Get rewards data from Motoko
@@ -85,6 +85,7 @@ function RewardCalculatorModal({
       props?: GetProps,
       data?: { entryFee: number; totalParticipants: number },
     ) => {
+
       const currentPage = props?.page ?? 0;
       setOffset(currentPage);
       const search = props?.search ?? '';
@@ -198,38 +199,36 @@ function RewardCalculatorModal({
       }));
       return; 
     }
-    if (e.target.value > MAX_PARTICIPANTS)
+    if (value > MAX_PARTICIPANTS) {
       return toast.warning(
         "You can't check rewards for more than " +
-          MAX_PARTICIPANTS +
-          ' participants',
-      );
-    if (e.target.value < 1)
+          MAX_PARTICIPANTS + ' participants');
+    }
+    if (value < 1) {
       return toast.warning(
-        "You can't check rewards for less than 1 participants",
+        "You can't check rewards for less than 1 participant"
       );
+    }
     e.persist(); // Persist the event for debounce to work correctly with React synthetic events
     setCalculatorData((prev) => ({
       ...prev,
-      [e.target.name]: [e.target.value],
+      [e.target.name]: [value],
     }));
     handleCalculatorChange(e);
   }
+  
   async function setInitialData(contestTypes: RContestTypes) {
     let finder = defaultContest?.name ?? DefaultContestType;
     let totalParticipants =
       defaultContest?.participants ?? DefaultContestParticipants;
 
-    const _contest =
-      contestTypes.find((contest) => contest.name == finder) ?? null;
+    const _contest =contestTypes.find((contest) => contest.name.toLocaleLowerCase() == finder.toLocaleLowerCase()) ?? null;
     if (!_contest) {
       return;
     }
     // contestTypes.find((contest) => contest.name == DefaultContestType) ?? null;
-
     setSelectedContest(_contest);
     let entryFee = fromE8S(_contest?.entryFee ?? 0);
-    
     handleGetRewards(undefined, {
       entryFee: entryFee,
       totalParticipants,
@@ -241,7 +240,6 @@ function RewardCalculatorModal({
     );
 
     let prizePoolInUSD = getPrizePoolInUSD(pool);
-
     setCalculatorData((prev) => ({
       ...prev,
       totalParticipants,
@@ -286,12 +284,24 @@ function RewardCalculatorModal({
     handleGetRewards();
   }, [auth]);
   useEffect(() => {
-    (async () => {
-      const rate = await getIcpRate();
-      setUsdRate(rate);
-    })();
-  }, []);
-
+ 
+    if (show) {   // Reset calculator data to default values when modal opens
+      let pool = getPrizePool(
+      fromE8S(selectedContest?.entryFee),
+        userAuth.rewardPercentage,
+         defaultContest?.participants ?? DefaultContestParticipants,
+      );
+  
+      let prizePoolInUSD = getPrizePoolInUSD(pool);
+      setCalculatorData({
+        totalParticipants: defaultContest?.participants ?? DefaultContestParticipants,
+        entryFee: fromE8S(selectedContest?.entryFee),
+        prizePool: pool, 
+        prizePoolInUSD, 
+      });
+      handleGetRewards()
+    }
+  }, [show, defaultContest]);
   return (
     <Modal
       className='max-h-modal'
@@ -306,71 +316,83 @@ function RewardCalculatorModal({
             Rewards <span>Calculator</span>
           </h5>
           <div className='mt-4'>
-            <Form.Group className='my-2 mt-4'>
-              <div className='d-flex justify-content-between w-100'>
-                <Form.Label>{'Total Participants'}</Form.Label>
-              </div>
-              <Form.Control
-                type='number'
-                placeholder={'Total Participants'}
-                name='totalParticipants'
-                value={calculatorData.totalParticipants}
-                max={1_000_000}
-                min={0}
-                onChange={handleCalculatorChangeWrapper}
-              />
-            </Form.Group>
+            <Row>
+              <Col xl="12">
+                  <Form.Group className='my-2 mt-4'>
+                  <div className='d-flex justify-content-between w-100'>
+                    <Form.Label>{'Total Participants'}</Form.Label>
+                  </div>
+                  <Form.Control
+                    type='number'
+                    placeholder={'Total Participants'}
+                    name='totalParticipants'
+                    value={calculatorData.totalParticipants}
+                    max={1_000_000}
+                    min={0}
+                    onChange={handleCalculatorChangeWrapper}
+                  />
+                </Form.Group>
+              </Col>
+
+              <Col xl="6" lg="6" md="6" sm="6">
+                <Form.Group className='my-2 mt-4' style={{ flexGrow: 1 }}>
+                  <div className='d-flex justify-content-between grow w-100'>
+                    <Form.Label>{'Select Contest'}</Form.Label>
+                  </div>
+                  <Form.Select
+                  style={{height: '50px', maxWidth: 'unset'}}
+                    className='button-select w-100 disabled-field'
+                    aria-label='Default select example'
+                    disabled={defaultContest && defaultContest?.entryFee > 0}
+                    onChange={(e) => {
+                      // setIsSubstituteSelection(false);
+                      // setSelectedformation(e.target.value);
+                      // handleFormationSelect(e.target.value);
+                      // resetPlayers(true);
+                      selectContest(e.target.value);
+                    }}
+
+                    // style={{ zIndex: '100000000' }}
+                  >
+                    {contestTypes?.map((contest) => {
+                      return (
+                        <option
+                          key={contest.id}
+                          value={contest.id}
+                          selected={selectedContest?.id == contest.id}
+                        >
+                          {/* {`${formation.defender}-${formation.midfielder}-${formation.forward}`} */}
+                          {contest.name}
+                        </option>
+                      );
+                    })}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col xl="6" lg="6" md="6" sm="6">
+                <Form.Group className='my-2 mt-4'>
+                  <div className='d-flex justify-content-between w-100'>
+                    <Form.Label>{'Entry Fee'}</Form.Label>
+                  </div>
+                  <Form.Control
+                    type='text'
+                    // disabled={defaultContest && defaultContest?.entryFee > 0}
+                    disabled={true}
+                    placeholder={'Entry Fee'}
+                    className='disabled-field'
+                    name='entryFee'
+                    value={calculatorData.entryFee}
+                    onChange={handleCalculatorChange}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
 
             <div className='d-flex justify-content-between align-items-center'>
-              <Form.Group className='my-2 mt-4' style={{ flexGrow: 1 }}>
-                <div className='d-flex justify-content-between grow w-100'>
-                  <Form.Label>{'Select Contest'}</Form.Label>
-                </div>
-                <Form.Select
-                  className='button-select small disabled-field'
-                  aria-label='Default select example'
-                  disabled={defaultContest && defaultContest?.entryFee > 0}
-                  onChange={(e) => {
-                    // setIsSubstituteSelection(false);
-                    // setSelectedformation(e.target.value);
-                    // handleFormationSelect(e.target.value);
-                    // resetPlayers(true);
-                    selectContest(e.target.value);
-                  }}
-
-                  // style={{ zIndex: '100000000' }}
-                >
-                  {contestTypes?.map((contest) => {
-                    return (
-                      <option
-                        key={contest.id}
-                        value={contest.id}
-                        selected={selectedContest?.id == contest.id}
-                      >
-                        {/* {`${formation.defender}-${formation.midfielder}-${formation.forward}`} */}
-                        {contest.name}
-                      </option>
-                    );
-                  })}
-                </Form.Select>
-              </Form.Group>
+              
               {/* </div> */}
 
-              <Form.Group className='my-2 mt-4'>
-                <div className='d-flex justify-content-between w-100'>
-                  <Form.Label>{'Entry Fee'}</Form.Label>
-                </div>
-                <Form.Control
-                  type='text'
-                  // disabled={defaultContest && defaultContest?.entryFee > 0}
-                  disabled={true}
-                  placeholder={'Entry Fee'}
-                  className='disabled-field'
-                  name='entryFee'
-                  value={calculatorData.entryFee}
-                  onChange={handleCalculatorChange}
-                />
-              </Form.Group>
+              
             </div>
 
             <div className='divider' />

@@ -17,7 +17,7 @@ import Tippy from '@tippyjs/react';
 export default function UploadLeague() {
   const [leagueId, setLeagueId] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [airdropInfoLoading, setAirdropInfoLoading] = useState(false);
+  const [addinfContestLoading, setAddinfContestLoading] = useState(false);
 
 
   const { auth, userAuth } = useAuthStore((state) => ({
@@ -34,7 +34,7 @@ export default function UploadLeague() {
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: ``,
+      url: `${process.env.NEXT_PUBLIC_API_URL}uploadLeague?leagueId=${leagueId}`,
     };
 
     try {
@@ -48,7 +48,33 @@ export default function UploadLeague() {
     }
     setLoading(false);
   };
+  /**
+   * add Contest on matches of this league
+   * @returns 
+   */
+  const addContestOnMatchesOfLeague = async () => {
+  
+    setAddinfContestLoading(true);
+ 
+    try {
+      const response = await auth.actor.addDefaultContestsOnMatches();
+      if(response?.ok){
+        return toast.success(response?.ok);
 
+      }
+      if(response?.err){
+        return toast.error(response?.err);
+
+      }
+    } catch (error) {
+      logger(
+        { leagueId, error },
+        'Error fetching league details for leagueId:',
+      );
+      return null; // Return null in case of error
+    }
+    setAddinfContestLoading(false);
+  };
   /**
    * Handles the transfer process for the given league ID.
    *
@@ -76,14 +102,14 @@ export default function UploadLeague() {
       return null; // Return null in case of error
     }
   };
-
+ 
 
   useEffect(() => {
     if (isConnected(auth.state)) {
       if (!userAuth.userPerms?.admin) {
         navigation.replace('/');
       }else{
-      
+     
       }
     }
   }, [auth.state]);
@@ -94,8 +120,7 @@ export default function UploadLeague() {
         <Container fluid className='inner-page'>
           <Row>
             <Container>
-            
-            
+
             <div className='spacer-30'/>
               <Row>
                 <Col xl='12' lg='12' md='12'>
@@ -146,6 +171,37 @@ export default function UploadLeague() {
                     >
                       {loading ? <Spinner size='sm' /> : 'Save'}
                     </Button> */}
+                  </div>
+                </Col>
+                <Col xl='12' lg='12' md='12'></Col>
+              </Row>
+              <div className='spacer-30'/>
+
+              <Row>
+                <Col xl='12' lg='12' md='12'>
+                  <div className='gray-panel'>
+                    <h4 className='animeleft d-flex justify-content-between whitecolor Nasalization fw-normal'>
+                      <span>Create Default Contest On All upcomming Matches.</span>
+                      {/* <Button
+                        // onClick={handleShowModal}
+                        className='reg-btn mid text-capitalize'
+                      >
+                        Create Contest
+                      </Button> */}
+                    </h4>
+                    <div className='d-flex'>
+                     
+                      <Button
+                        disabled={loading}
+                        className='reg-btn ms-3'
+                        onClick={addContestOnMatchesOfLeague}
+                        id='updateLeague'
+                      >
+                        {addinfContestLoading ? <PulseLoader size={10} /> : 'Add'}
+                      </Button>
+                     
+                    </div>
+                   
                   </div>
                 </Col>
                 <Col xl='12' lg='12' md='12'></Col>

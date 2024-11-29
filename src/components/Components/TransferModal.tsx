@@ -105,7 +105,7 @@ function TransferModal({
                 let acc: any = AccountIdentifier.fromHex(values.destination);
                 logger(acc.toHex(), 'acccccc');
 
-                const ledgerActor = makeICPLedgerCanister({
+                const ledgerActor = makeLedgerCanister({
                   agentOptions: {
                     identity: auth.identity,
                   },

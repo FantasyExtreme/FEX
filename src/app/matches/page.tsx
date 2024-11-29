@@ -1,18 +1,13 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-
-import Link from 'next/link';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Container,
   Row,
   Col,
   Tabs,
   Tab,
-  Table,
-  Spinner,
   Button,
   Form,
-  FormGroup,
 } from 'react-bootstrap';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/useStore';
@@ -21,37 +16,26 @@ import { useRouter } from 'next/navigation';
 import {
   getMatches,
   getTournaments,
-  getUpcomingMatches,
 } from '@/components/utils/fantasy';
 import {
   LoadingState,
-  MATCH_STATUS_TYPE,
-  Match,
   MatchesCountType,
   MatchesType,
   TournamentType,
 } from '@/types/fantasy';
-import { MATCHES_ICON_SIZES } from '@/constant/fantasticonst';
 import {
   DEFAULT_MATCH_STATUS,
   MatchStatuses,
-  QURIES,
-  MATCHES_ITEMSPERPAGE,
+  QURIES
+  
 } from '@/constant/variables';
-import logger from '@/lib/logger';
-import BeatLoader from 'react-spinners/BeatLoader';
-import Loader from '@/components/Components/Loader';
+
 import MatchTable from '@/components/Components/MatchTable';
-import PaginatedList from '@/components/Components/Pagination';
 import CarouselSlider from '@/components/Components/CalenderSlider';
-import Calender_ from '@/components/Components/Calender';
 import MatchesPagination from '@/components/Components/MatchesPagination';
-import { MATCHES_ROUTE } from '@/constant/routes';
 import useSearchParamsHook from '@/components/utils/searchParamsHook';
 import calander from '@/assets/images/calender.png';
-import { date } from 'yup';
 import DatePicker from 'react-date-picker';
-import MyLiveRank from '@/components/Components/MyLiveRank';
 
 type ValuePiece = Date | null;
 
@@ -61,9 +45,9 @@ export default function Matches() {
   const searchParams = new URLSearchParams(urlparama);
   const [matchTab, setMatchTab] = useState<string>(DEFAULT_MATCH_STATUS);
   const [selectedTime, setSelectedTime] = useState<null | number>(null);
-  const [hasMounted, setHasMounted] = useState(true);
   const [tournamnets, setTournaments] = useState<TournamentType | null>(null);
   const [value, onChange] = useState<Value>(new Date());
+  const childRef = useRef<any>(null);
 
   // const [upcomingMatches, setUpcomingMatches] = useState<any[]>([]);
   const tournamentId = searchParams.get(QURIES.tournamentId);
@@ -112,11 +96,15 @@ export default function Matches() {
       { ...matchProps, status, page: 0 },
       setLoading,
       setPageCount,
-      selectedTime ? [selectedTime] : [],
+      [],
       Id ? Id : null,
     );
   }
-
+  const callChildMethod = () => {
+    if (childRef.current) {
+      childRef.current.updateActiveIndex(); // Call the child method
+    } 
+  };
   /**
    * Select the tab and get matches according to status
    * @param tab The status of match (which is being used as the keys of tabs)
@@ -124,6 +112,11 @@ export default function Matches() {
    */
   function changeTab(tab: string | null) {
     if (!tab) return;
+    // if (selectedTime !== prevSelectedTime) {
+      callChildMethod(); 
+      // setPrevSelectedTime(selectedTime);
+    // }
+    setSelectedTime(null);
     const params = new URLSearchParams(searchParams.toString());
     params.set(QURIES.matchTab, tab);
     window.history.pushState(null, '', `?${params.toString()}`);
@@ -193,10 +186,7 @@ export default function Matches() {
   }
 
   let getMatchOfSelectedDate = (time: number) => {
-    if (hasMounted) {
-      setHasMounted(false);
-      return;
-    }
+ 
     if (!auth.actor) return;
     setSelectedTime(time);
     getMatches(
@@ -224,6 +214,11 @@ export default function Matches() {
     });
   };
 
+  /**
+   * Fetches and sets the matches for the selected tournament.
+   *
+   * @param {string} tournamentId - The ID of the tournament to fetch matches for.
+   */
   function selectTournament(Id: string) {
     changeOffset(0);
     const currentUrl = new URL(window.location.href);
@@ -245,29 +240,7 @@ export default function Matches() {
       Id ? Id : null,
     );
   }
-   /**
-   * change reward able match status by match id
-   * @param {matchId, status}
-   */
-   let handleRewardableMatchUpdate = (matchId: string, status: boolean) => {
-    let filteredMatches: [string, Match][] | null = matches.upcoming
-      ? matches.upcoming.map(([tournament, matches]) => {
-          let updatedMatches = matches?.map((match:Match) => {
-            if (match.id === matchId) {
-              return { ...match, isRewardable: status }; // Update the isRewardable field
-            }
-            return match; // Return the original match if no changes
-          });
-          return [tournament, updatedMatches]; // Return the tuple [string, Match[]]
-        })
-      : null;
-  
-    setMatches((prev: MatchesType) => ({
-      ...prev,
-      upcoming: filteredMatches || prev.upcoming, // Ensure it’s either the filtered matches or the previous state
-    }));
-  };
-  
+
   const handleDateChange = (date: Value) => {
     if (Array.isArray(date)) {
       const [startDate, endDate] = date;
@@ -286,6 +259,7 @@ export default function Matches() {
     changeTab(tempTab)
   }, [tempTab]);
   useEffect(() => {
+    
     if (auth.actor) {
       let tempTab = searchParams.get(QURIES.matchTab);
       if (tempTab) setMatchTab(tempTab);
@@ -298,12 +272,12 @@ export default function Matches() {
         },
         setLoading,
         setPageCount,
-        [],
+         [],
         tournamentId ? tournamentId : null,
       );
       getTournaments(auth.actor, matchProps, setTournaments);
     }
-  }, [auth.actor, tournamentId]);
+  }, [auth.actor]);
 
   return (
     <>
@@ -333,7 +307,10 @@ export default function Matches() {
                         // }}
                         const selectedValue = e.target.value;
                         selectTournament(selectedValue);
-                      
+                     
+                        // router.push(
+                        //   `${MATCHES_ROUTE}?tournament=${selectedValue}`,
+                        // );
                       }}
                     >
                       <option value=''>Leagues</option>
@@ -377,6 +354,7 @@ export default function Matches() {
                     >
                       <CarouselSlider
                         getSelectedDate={getMatchOfSelectedDate}
+                        myuseRef={childRef}
                       />
                     </div>
 
@@ -391,7 +369,7 @@ export default function Matches() {
                           tab={matchTab}
                           groupMatches={matches?.upcoming}
                           admin={userAuth.userPerms?.admin}
-                          handleRewardableMatchUpdate={handleRewardableMatchUpdate}
+                 
                         />
                       </Tab>
                       <Tab eventKey={MatchStatuses.ongoing} title='In Progress'>
@@ -400,6 +378,7 @@ export default function Matches() {
                           tab={matchTab}
                           groupMatches={matches?.ongoing}
                           admin={userAuth.userPerms?.admin}
+                     
                         />
                       </Tab>
                       <Tab eventKey={MatchStatuses.finished} title='Completed'>
@@ -408,6 +387,7 @@ export default function Matches() {
                           tab={matchTab}
                           groupMatches={matches?.finished}
                           admin={userAuth.userPerms?.admin}
+                       
                         />
                       </Tab>
                     </Tabs>

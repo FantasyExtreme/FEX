@@ -248,17 +248,13 @@ const useAuth = () => {
             name: generateRandomName(),
             email: '',
           };
-
-
-
+     
           const resp = await actor.addUser(
             newUser
           );
-
           if (resp?.ok) {
-        
        
-          
+
             resp.ok[1] = fromNullable(resp?.ok?.[1]);
             let userPerms = getPerms(resp?.ok?.[1]?.role);
             const newReward = await actor.getRewardPercentage();

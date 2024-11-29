@@ -291,7 +291,7 @@ export default function fantasyplayer() {
                                       <LeaderBoardSvg />
                                     </span>
                                     <span>
-                                      {fromE8S(player?.rewardsWon ?? 0, true)}{' '}
+                                      {fromE8S(player?.totalEarning ?? 0, true)}{' '}
                                       ICP
                                     </span>
                                   </div>

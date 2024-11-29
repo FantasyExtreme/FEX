@@ -11,7 +11,7 @@ import calculatoricon from '@/assets/images/icons/calculator.png';
 import rankingicon from '@/assets/images/icons/rankingicon.png';
 import iconhome from '@/assets/images/icons/icon-home.png';
 import iconfootball from '@/assets/images/icons/icon-football.png';
-import iconuser from '@/assets/images/icons/usericon.png';
+import iconuser from '@/assets/images/icons/group.png';
 import {
   DASHBOARD_ROUTE,
   FANTASY_PLAYER_ROUTE,
@@ -26,11 +26,11 @@ import { useRouter } from 'next/navigation';
 export default function BottomNav({
   handleShowROI,
   location,
-  auth
+  auth,
 }: {
   handleShowROI: any;
   location: string;
-  auth:any
+  auth: any;
 }) {
   const [showConnect, setShowConnect] = useState(false);
 
@@ -44,31 +44,32 @@ export default function BottomNav({
   return (
     <>
       <ul className='Bottom-nav'>
-        <li className={`${location == MATCHES_ROUTE && 'active'}`}>
-          <Nav.Link as={Link} href={MATCHES_ROUTE}>
-            <Image src={iconfootball} alt='Icon Ball'  style={{ height: '35px', width: '34px' }} />
+        <li className={`${location == DASHBOARD_ROUTE && 'active'}`}>
+          <Nav.Link
+            as={Link}
+            href={DASHBOARD_ROUTE}
+            onClick={(e) => {
+              e.preventDefault();
+              if (isConnected(auth.state)) {
+                router.push(DASHBOARD_ROUTE);
+              } else {
+                handleShowConnect();
+              }
+            }}
+          >
+            <Image src={iconuser} alt='Icon USER' className='Icon-User' />
+            <span>Dashboard</span>
           </Nav.Link>
         </li>
-        <li className={`${location == DASHBOARD_ROUTE && 'active'}`}>
-          <Nav.Link as={Link} href={DASHBOARD_ROUTE} onClick={(e)=>{
-            e.preventDefault();
-            if(isConnected(auth.state)){
-              router.push(DASHBOARD_ROUTE)
-            }else{
-
-              handleShowConnect()
-            }
-          }}>
-            <Image
-              src={iconuser}
-              alt='Icon USER'
-              style={{ height: '35px', width: '43px' }}
-            />
+        <li className={`${location == MATCHES_ROUTE && 'active'}`}>
+          <Nav.Link as={Link} href={MATCHES_ROUTE}>
+            <Image src={iconfootball} alt='Icon Ball' className='Icon-Ball' />
+            <span>Matches</span>
           </Nav.Link>
         </li>
         <li className={`${location == '/' && 'active'}`}>
           <Nav.Link as={Link} href='/'>
-            <Image src={iconhome} alt='Icon Home' style={{ height: '35px', width: '35px' }}/>
+            <Image src={iconhome} alt='Icon Home' className='Icon-Home' />
           </Nav.Link>
         </li>
         <li>
@@ -80,7 +81,12 @@ export default function BottomNav({
               handleShowROI();
             }}
           >
-            <Image src={calculatoricon} alt='calculatoricon' style={{ height: '35px', width: '43px' }} />
+            <Image
+              src={calculatoricon}
+              alt='calculatoricon'
+              className='Cal-Icon'
+            />
+            <span>ROI Calculator</span>
           </Nav.Link>
         </li>
         <li className={`${location == FANTASY_PLAYER_ROUTE && 'active'}`}>
@@ -89,14 +95,18 @@ export default function BottomNav({
             href={FANTASY_PLAYER_ROUTE}
             active={location == FANTASY_PLAYER_ROUTE}
           >
-            <Image src={rankingicon} alt='rankingicon ' style={{ height: '35px', width: '34px' }} />
+            <Image src={rankingicon} alt='rankingicon ' className='Rank-Icon' />
+
+            <span>Rankings</span>
           </Nav.Link>
         </li>
       </ul>
       <ConnectModal
         show={showConnect}
         hideModal={handleHideConnect}
-        callBackfn={() => {  router.push(DASHBOARD_ROUTE)}}
+        callBackfn={() => {
+          router.push(DASHBOARD_ROUTE);
+        }}
       />
     </>
   );

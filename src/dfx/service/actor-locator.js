@@ -63,7 +63,13 @@ export function makeLedgerCanister(options) {
     options,
   );
 }
-
+export function makeICPLedgerCanister(options) {
+  return makeActor(
+    process.env.NEXT_PUBLIC_ICP_LEDGER_CANISTER_ID,
+    createIcpLedgerCanister,
+    options,
+  );
+}
 
 /**
  * Creates a CKBTCLedgerCanister actor.

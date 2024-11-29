@@ -139,7 +139,7 @@ export default function Footer() {
           <Container>
             <Col xl='12' lg='12' md='12'>
               <div className='flex-align-panel'>
-              <Link href={AMMAG_LINK}>
+                <Link href={AMMAG_LINK}>
                  <Image src={footerammaglogo} alt='Ammag' />
                 </Link>
                 <p>Copyright ©2024 Fantasy extreme All rights reserved.</p>

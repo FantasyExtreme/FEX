@@ -45,7 +45,7 @@ export default function RootLayout({
 
         <meta
           property='og:title'
-          content=' Decentralized Fantasy Sports Platform on ICP, Create team, Win & Earn'
+          content='Decentralized Fantasy Sports Platform on ICP, Create team, Win & Earn'
         />
         <meta property='og:type' content='website' />
         <meta property='og:url' content='https://fantasyextreme.org/' />
@@ -68,7 +68,7 @@ export default function RootLayout({
         <meta name='twitter:site' content='https://fantasyextreme.org/' />
         <meta
           name='twitter:title'
-          content=' Decentralized Fantasy Sports Platform on ICP, Create team, Win & Earn'
+          content='Decentralized Fantasy Sports Platform on ICP, Create team, Win & Earn'
         />
         <meta
           name='twitter:description'
