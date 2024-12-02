@@ -653,7 +653,7 @@ export default function SystemSettings() {
                 <Field name='settingName'>
                   {({ field, formProps }: any) => (
                     <Form.Group
-                      className='mb-2'
+                      className='mb-2 system-setting'
                       controlId='exampleForm.ControlInput1'
                     >
                       <Form.Label>Name</Form.Label>
@@ -664,6 +664,7 @@ export default function SystemSettings() {
                         onBlur={handleBlur}
                         onChange={handleChange}
                         onInput={handleChange}
+                        disabled={selectedSetting? true :false}
                         name='settingName'
                       />
                     </Form.Group>

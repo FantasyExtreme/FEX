@@ -1,15 +1,18 @@
 'use client';
-import React, { use, useEffect, useRef, useState } from 'react';
+import React, { use, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
 import { Container, Row, Col } from 'react-bootstrap';
 import logger from '@/lib/logger';
 import useSearchParamsHook from '@/components/utils/searchParamsHook';
 import { QURIES } from '@/constant/variables';
+let isProgrammaticMove=false;
 export default function CarouselSlider({
   getSelectedDate,
+  myuseRef
 }: {
   getSelectedDate: any;
+  myuseRef : any;
 }) {
   interface DateInfo {
     dates: string;
@@ -27,7 +30,6 @@ export default function CarouselSlider({
   const [tempTabId, setTempTabId] = useState<any>('');
   let tornumant = searchParams.get(QURIES.tournamentId);
   const [tornumanId, setTornumanId] = useState<any>('');
-
   const responsive = {
     desktop: {
       breakpoint: { max: 3000, min: 1024 },
@@ -99,10 +101,28 @@ export default function CarouselSlider({
       dateInMiliseconds:timeInMiliseconds,
     };
   }
-
+  function updateActiveIndex() {
+    const currentDefaultDate = new Date().setHours(0, 0, 0, 0);
+    if (slides && slides.length > 0) {
+      const defaultIndex = slides.findIndex(
+        (slide) => slide.dateInMiliseconds === currentDefaultDate
+      );
+      if (defaultIndex !== -1) {
+        isProgrammaticMove=true;
+        carouselRef?.current.goToSlide(defaultIndex + 5);
+        if (defaultIndex !== activeIndex) {
+          getSelectedDate(slides[defaultIndex].dateInMiliseconds);
+        }
+      }
+    }
+  }
+  useImperativeHandle(myuseRef, () => ({   // Expose the childMethod to parent
+    updateActiveIndex,
+  }));
   useEffect(() => {
     let timeoutId = setTimeout(() => {
       if (carouselRef?.current) {
+        isProgrammaticMove=true;
         carouselRef?.current.goToSlide(activeIndex + 5);
       }
     }, 2000);
@@ -121,6 +141,7 @@ export default function CarouselSlider({
   // }, [tornumant]);
   useEffect(() => {
     if (carouselRef?.current) {
+      isProgrammaticMove=true;
       carouselRef?.current.goToSlide(activeIndex + 5);
       // setActiveIndex(0);
     }
@@ -144,9 +165,17 @@ export default function CarouselSlider({
           // centerMode={true}
 
           afterChange={(previousSlide, { currentSlide }) => {
+           if(!isProgrammaticMove){
+
+             logger(currentSlide,"asjgdasdascurrentSlide");
+           
+            
             getSelectedDate(slides[currentSlide - 5].dateInMiliseconds);
             setCurrentDate(slides[currentSlide - 5].dates);
             setCurrentMonth(slides[currentSlide - 5].month);
+           }
+           isProgrammaticMove=false;
+
           }}
         >
           {slides.map((dateObj, index) => (

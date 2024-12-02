@@ -132,7 +132,7 @@ module Types {
   public type RTournamentMatch = TempTournamentMatch and {
     tournamentId : Key;
     tournamentName : Text;
-      isRewardable  : Bool;
+    isRewardable  : Bool;
   };
 
   public type RefinedMatch = {
@@ -389,19 +389,7 @@ module Types {
       rank : Nat;
     }];
   };
-  // The key for reward should be the uerId + contestId
-  public type Reward = {
-    contestId : Key;
-    userId : Key;
-    amount : Nat;
-    transactionId : ?Key;
-    creation_time : Int;
-    claim_time : ?Int;
-    isClaimed : Bool;
-  };
-  public type ReturnReward = Reward and {
-    id : Key;
-  };
+
   type Shots = {
     shots_total : Int;
     shots_on_goal : Int;
@@ -532,13 +520,19 @@ module Types {
     modification_date : Int;
     last_modified_by : Key;
   };
+
   public type ContestWithFirstPrize = Contest and {
   firstPrize : Nat;
 };
   public type MyObjects = User or Player or Team or Match or Tournament or PlayerSquad or Contest or Participant;
   public type Users = [(Key, User)];
+
   public type Teams = [(Key, Team)];
   public type Matches = [(Key, Match)];
+  //1st :matchId
+  //2nd :matchTime
+  //3nd :is matches between given teams
+
 
   public type RMatches = [RMatch];
   public type RTournamentMatches = [RTournamentMatch];
@@ -557,14 +551,12 @@ module Types {
   public type DetailedMatchContests = [DetailedMatchContest];
   public type RMatchContest = [MatchContest];
   public type Participants = [(Key, Participant)];
-  public type Rewards = [(Key, Reward)];
   public type PlayersStats = [(Key, PlayerStats)];
   public type AdminSettings = [(Key, AdminSetting)];
   public type Seasons = [(Key, Season)];
   public type ContestTypes = [(Key, ContestType)];
   public type RContestTypes = [RContestType];
-  public type PaymentMethods = [(LedgerId,PaymentMethod)]; 
-  public type PlugPrincipalMap = [(Key, Key)];
+  public type PaymentMethods = [(LedgerId,PaymentMethod)];
 
   public func generateNewRemoteObjectId() : Key {
     return Int.toText(Time.now());
@@ -636,15 +628,7 @@ module Types {
     totalEarning : Nat;
 
   };
-  public type UserNftRecord= {
-    nftCount : Nat;
-    userId : Key;
-    isClaimed : Bool;
-    claimedDate : ?Int;
-    winningDate : Int;
 
-
-  };
     public type JoinedMatchesRecord= {
     joinedMatches : List.List<Text>;
     totalMatches : Int;
@@ -676,6 +660,8 @@ module Types {
   };
 
   public type Timestamp = Nat64;
+
+  //------  re
 
   //1. Type that describes the Request arguments for an HTTPS outcall
   //See: /docs/current/references/ic-interface-spec#ic-http_request
@@ -740,7 +726,7 @@ module Types {
   // public let LEDGER_CANISTER_ID = "a4h2j-nqaaa-aaaam-ac3oq-cai";
   // public let TRANSACTION_CANISTER_ID = "wuw65-wiaaa-aaaam-ac7jq-cai";
 
-  public let Default_Contest = {
+  public let Default_Contest_free = {
     name = "Free";
     slots = 1000;
     entryFee = 0;
@@ -751,17 +737,46 @@ module Types {
     rewardDistribution : [ContestRewardDistribution] = [];
     rules = "No entry fee,
              Max limit for teams per user is 3";
-    paymentMethod = "ryjl3-tyaaa-aaaaa-aaaba-cai";
+    paymentMethod = "0";
   };
+   public let Default_Contest_Gold = {
+    name = "Gold";
+    slots = 1000;
+    entryFee = 500_000_000;
+    teamsPerUser = 1000;
+    minCap = 100;
+    maxCap = 0;
+    providerId = "0";
+    rewardDistribution : [ContestRewardDistribution] = [];
+    rules = "No entry 5 ICP,
+             not team limit to join";
+    paymentMethod = "0";
+  };
+    public let Default_Contest_Bronze = {
+    name = "Bronze";
+    slots = 1000;
+    entryFee = 100_000_000;
+    teamsPerUser = 1000;
+    minCap = 100;
+    maxCap = 0;
+    providerId = "0";
+    rewardDistribution : [ContestRewardDistribution] = [];
+    rules = "No entry 1 ICP,
+             not team limit to join";
+    paymentMethod = "0";
+  };
+  public let Default_Contests=[Default_Contest_Gold,Default_Contest_Bronze,Default_Contest_free];
   public let GAS_FEE = 10_000;
+  public let CKBTC_GAS_FEE = 10;
   public let MASTER_WALLET = "jfwt3-ckdh5-mv6s4-skjlw-cnh6l-qfpvs-v6wia-l2yap-z5diw-xskgi-uqe";
   public let ADMIN_WALLET = "23ojo-5fduj-boqrl-jokfi-glfug-ekijl-z6vyp-lbhju-hmiew-7ur3v-3qe";
   public let MAX_PLAYER_PER_SQUAD = 15;
   public let AdminSettings = {
     budget = "budget";
     platformPercentage = "platformPercentage";
+    contestWinnerReward = "contestWinnerReward";
     rewardableUsersPercentage = "rewardableUsersPercentage";
-
+ 
 
   };
   /// 0 - direct distribution all the users will be rewarded
@@ -776,12 +791,43 @@ module Types {
    september15=1726340400000;
    november15 = 1731610800000;
   };
+
+        // let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  private let GameWeek={
+otherLeague=["Tuesday", "Wednesday"];
+selectedLeagues=["Friday", "Saturday","Sunday","Monday"];
+
+
+  };
   public let MatchStatuses = {
     finished = "Match Finished";
     postponed = "Match Postponed";
   };
+  //origional
+public let SelectedLeagues=[
+  "Premier League","La Liga","Super League"
+];
+// original
+public let SelectedLeaguForPlatinumNft="UEFA Champions League";
 
-  public let NEXT_PUBLIC_API_URL = "https://wrapper.fantasyextreme.org/v1/service/";
+
+// original
+public let SelectedTeams=["Liverpool","Manchester City","Arsenal","Chelsea",
+  "Real Madrid","Barcelona","Atlético de Madrid","Shanghai Port","Shanghai Shenhua"
+];
+
+
+
+  public type Refferal = {
+    refferedBy : Key;
+    creation_time : Int;
+    refferedUserId : Key;
+
+  };
+  public type Refferals = [(Key, Refferal)];
+
+
+  
   public let ICP_LEDGER_CANISTER_ID = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 
 };

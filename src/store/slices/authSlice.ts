@@ -13,6 +13,7 @@ const authSlice = (
     identity: null,
     agent: null,
   },
+  icpRate:0,
   userAuth: {
     name: '',
     role: '',
@@ -26,7 +27,11 @@ const authSlice = (
       ...state,
       auth: input,
     })),
-
+    setICPRate: (input: number): void =>
+      set((state) => ({
+        ...state,
+        icpRate: input,
+      })),
   setUserAuth: (input: any): void =>
     set((state) => ({
       ...state,

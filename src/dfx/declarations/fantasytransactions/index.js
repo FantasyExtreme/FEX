@@ -12,11 +12,14 @@ export { idlFactory } from './fantasytransactions.did.js';
 
 const alphaCanisterId = process.env.CANISTER_ID_FANTASYTRANSACTIONS_PD;
 const stagginCanisterId = process.env.CANISTER_ID_FANTASYTRANSACTIONS;
+const demoCanisterId = process.env.CANISTER_ID_FANTASYTRANSACTIONS_DM;
 let tempCanisterId = stagginCanisterId;
 if (process.env.NEXT_PUBLIC_ENVIRONMENT_TYPE == 'alpha') {
   tempCanisterId = alphaCanisterId;
 } else if (process.env.NEXT_PUBLIC_ENVIRONMENT_TYPE == 'stagging') {
   tempCanisterId = stagginCanisterId;
+} else if (process.env.NEXT_PUBLIC_ENVIRONMENT_TYPE == 'demo') {
+  tempCanisterId = demoCanisterId;
 }
 export const canisterId = tempCanisterId;
 // export const canisterId =

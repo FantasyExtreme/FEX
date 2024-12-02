@@ -118,11 +118,12 @@ export default function useCkBtcLedger() {
 
   const init = useCallback(async () => {
     if (isInitialized) return;
-    logger(auth.agent, 'ckbtc initing');
+    logger(auth.agent, 'ckbtc initing',);
+    logger(process.env.NEXT_PUBLIC_CANISTER_ID_CKBTC_LEDGER, 'ckck')
     try {
       const ledgerCanister = IcrcLedgerCanister.create({
         agent: auth.agent,
-        canisterId: Principal.fromText(process.env.CANISTER_ID_CKBTC_LEDGER!),
+        canisterId: Principal.fromText(process.env.NEXT_PUBLIC_CANISTER_ID_CKBTC_LEDGER!),
       });
       logger(ledgerCanister, 'ckbtc');
       setLedgerCanister(ledgerCanister);

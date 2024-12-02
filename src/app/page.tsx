@@ -15,7 +15,7 @@ import bronzeicon from '@/assets/images/icons/icon-bronze.png';
 import goldicon from '@/assets/images/icons/icon-gold.png';
 import coinicon from '@/assets/images/icons/coin-icon.png';
 import tethericon from '@/assets/images/icons/tether-icon.png';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { getTeam } from '@/components/utils/fantasy';
 import logger from '@/lib/logger';
 import BarLoader from 'react-spinners/BarLoader';
@@ -29,27 +29,32 @@ import VideoLink from '@/components/Components/VideoLink';
 import BillionInfo from '@/components/Components/BillionInfo';
 import HowItWorksList from '@/components/Components/HowItWorksList';
 import HowItWorksSlider from '@/components/Components/HowItWorksSlider';
+import useSearchParamsHook from '@/components/utils/searchParamsHook';
 
 export default function HomePage() {
   const { auth } = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
   }));
+  const urlparama = useSearchParamsHook();
+  const searchParams = new URLSearchParams(urlparama);
+  const communityId = searchParams.get(QURIES.communityId);
 
   // Scroll ANimation  MatchResult
   const [isVisible, setIsVisible] = useState(false);
-  let searchParams=useSearchParams()
-  const communityId = searchParams.get(QURIES.communityId);
 
   useEffect(() => {
     const handleScroll = () => {
-      const element: any = document.getElementById('MatchResult');
-      const rect = element.getBoundingClientRect();
-      const isVisible = rect.top < window.innerHeight && rect.bottom >= 0;
-      if (isVisible) {
-        setIsVisible(true);
+      const element = document.getElementById('MatchResult');
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        const isVisible = rect.top < window.innerHeight && rect.bottom >= 0;
+        if (isVisible) {
+          setIsVisible(true);
+        }
       }
     };
     window.addEventListener('scroll', handleScroll);
+    handleScroll();
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
@@ -60,14 +65,17 @@ export default function HomePage() {
   const [isVisible1, setIsVisible1] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
-      const element: any = document.getElementById('howtoplaypnl');
-      const rect = element.getBoundingClientRect();
-      const isVisible1 = rect.top < window.innerHeight && rect.bottom >= 0;
-      if (isVisible1) {
-        setIsVisible1(true);
+      const element = document.getElementById('howtoplaypnl');
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        const isVisible1 = rect.top < window.innerHeight && rect.bottom >= 0;
+        if (isVisible1) {
+          setIsVisible1(true);
+        }
       }
     };
     window.addEventListener('scroll', handleScroll);
+    handleScroll();
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
@@ -78,76 +86,93 @@ export default function HomePage() {
   const [isVisible2, setIsVisible2] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
-      const element: any = document.getElementById('winnermp');
-      const rect = element.getBoundingClientRect();
-      const isVisible2 = rect.top < window.innerHeight && rect.bottom >= 0;
-      if (isVisible2) {
-        setIsVisible2(true);
+      const element = document.getElementById('winnermp');
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        const isVisible2 = rect.top < window.innerHeight && rect.bottom >= 0;
+        if (isVisible2) {
+          setIsVisible2(true);
+        }
       }
     };
     window.addEventListener('scroll', handleScroll);
+    handleScroll();
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  });
+  }, []);
   // Scroll ANimation  winnermp
 
   // Scroll ANimation  History
   const [isVisible3, setIsVisible3] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
-      const element: any = document.getElementById('History');
-      const rect = element.getBoundingClientRect();
-      const isVisible3 = rect.top < window.innerHeight && rect.bottom >= 0;
-      if (isVisible3) {
-        setIsVisible3(true);
+      const element = document.getElementById('History');
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        const isVisible3 = rect.top < window.innerHeight && rect.bottom >= 0;
+        if (isVisible3) {
+          setIsVisible3(true);
+        }
       }
     };
     window.addEventListener('scroll', handleScroll);
+    handleScroll();
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  });
+  }, []);
   // Scroll ANimation  History
 
   // Scroll ANimation  Fantasy
   const [isVisible4, setIsVisible4] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
-      const element: any = document.getElementById('Fantasy');
-      const rect = element.getBoundingClientRect();
-      const isVisible4 = rect.top < window.innerHeight && rect.bottom >= 0;
-      if (isVisible4) {
-        setIsVisible4(true);
+      const element = document.getElementById('Fantasy');
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        const isVisible4 = rect.top < window.innerHeight && rect.bottom >= 0;
+        if (isVisible4) {
+          setIsVisible4(true);
+        }
       }
     };
     window.addEventListener('scroll', handleScroll);
+    handleScroll();
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  });
+  }, []);
   const [isVisible5, setIsVisible5] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
-      const element: any = document.getElementById('Demo');
-      const rect = element.getBoundingClientRect();
-      const isVisible5 = rect.top < window.innerHeight && rect.bottom >= 0;
-      if (isVisible5) {
-        setIsVisible5(true);
+      const element = document.getElementById('Demo');
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        const isVisible5 = rect.top < window.innerHeight && rect.bottom >= 0;
+        if (isVisible5) {
+          setIsVisible5(true);
+        }
       }
     };
     window.addEventListener('scroll', handleScroll);
+    handleScroll();
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  });
+  }, []);
+  // useEffect(() => {
+  //  if(refferalId){
+  //   localStorage.setItem("refferalId",refferalId)
+
+  //  }
+  // }, [refferalId]);
   useEffect(() => {
     if(communityId){
      localStorage.setItem("communityId",communityId)
  
     }
    }, [communityId]);
-
   // Scroll ANimation  Fantasy
   return (
     <>

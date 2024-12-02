@@ -20,7 +20,12 @@ import {
 import { number, object, string } from 'yup';
 import { Principal } from '@dfinity/principal';
 import useAuth from '@/lib/auth';
-import { E8S, GAS_FEE, GAS_FEE_ICP } from '@/constant/fantasticonst';
+import {
+  CKBTC_GAS_FEE,
+  E8S,
+  GAS_FEE,
+  GAS_FEE_ICP,
+} from '@/constant/fantasticonst';
 import { makeICPLedgerCanister } from '@/dfx/service/actor-locator';
 import { toast } from 'react-toastify';
 import { useAuthStore } from '@/store/useStore';
@@ -30,19 +35,21 @@ import logger from '@/lib/logger';
 import JoinContest from './JoinContest';
 import { Contest, Match } from '@/types/fantasy';
 import {
+  getContest,
   getContests,
   getRawPlayerSquads,
+  getTimeZone,
   handleTransferError,
   isConnected,
 } from '../utils/fantasy';
-import { approveTokens, toE8S } from '@/lib/ledger';
+import { approveCKBTCTokens, approveTokens, toE8S } from '@/lib/ledger';
 import { TransferFromError } from '@dfinity/ledger-icp/dist/candid/ledger';
 import ConfirmTransaction from './ConfirmTransaction';
 import Link from 'next/link';
 import { TEAM_CREATION_ROUTE, TEAMS_ROUTE } from '@/constant/routes';
 import ConnectModal from './ConnectModal';
 import { useRouter } from 'next/navigation';
-import { QueryParamType, QURIES } from '@/constant/variables';
+import { PaymentTypes, QueryParamType, QURIES } from '@/constant/variables';
 // import { AccountIdentifier } from '@dfinity/ledger-icp';
 
 interface Props {
@@ -52,6 +59,8 @@ interface Props {
   show: boolean;
   handleClose: () => void;
   router: any;
+
+  getTeamsfn?: any;
 }
 interface SelectedContest {
   contestName: string | null;
@@ -65,6 +74,7 @@ const JoinDropDownContestModal = ({
   rankingModle,
   handleClose,
   router,
+  getTeamsfn,
 }: Props) => {
   const [playerSquads, setPlayerSquads] = useState<any>([]);
   const { auth, userAuth } = useAuthStore((state) => ({
@@ -101,29 +111,40 @@ const JoinDropDownContestModal = ({
     }
   }, [auth, matchId]);
   async function addParticipant() {
-    // logger(contestId,"hdsagfhgsadjhgfsadfsadfasd");
     // return;
     if (!matchId) return logger(matchId, 'no match id');
     setIsParticipating(true);
+
     try {
       let { entryFee, contestId } = selectContest;
-      logger({ entry: entryFee, GAS_FEE }, 'apprinving');
+      if (!contestId) return;
+      let contest = await getContest(auth.actor, contestId);
+      logger({ entry: entryFee, GAS_FEE, contest }, 'apprinving');
       if (entryFee && entryFee !== 0) {
-        let approve = await approveTokens(
-          toE8S(entryFee) + GAS_FEE,
-          auth.identity,
-        );
+        let approve;
+        if (contest.paymentMethod == PaymentTypes.ICP) {
+          approve = await approveTokens(
+            contest.entryFee + GAS_FEE,
+            auth.identity,
+          );
+        } else if (contest.paymentMethod == PaymentTypes.CKBTC) {
+          approve = await approveCKBTCTokens(
+            contest.entryFee + CKBTC_GAS_FEE,
+            auth.identity,
+          );
+        }
         if (!approve) {
           return toast.error('Unexpected Error');
         }
       }
       if (!teamId || !contestId) return;
       const added: { err?: TransferFromError; ok?: string } =
-        await auth.actor.addParticipant(contestId, teamId);
+        await auth.actor.addParticipant(contestId, teamId, getTimeZone());
 
       if (added?.ok) {
         toast.success('Joined Successfully');
-
+        updateBalance();
+        if (getTeamsfn) getTeamsfn();
         updateBalance();
         handleHideConfirm();
         handleClose();
@@ -236,6 +257,7 @@ const JoinDropDownContestModal = ({
       </Modal>
       {selectContest.contestId && (
         <ConfirmTransaction
+          contestId={selectContest.contestId}
           entryFee={selectContest.entryFee ?? 0}
           show={showConfirm}
           onConfirm={addParticipant}

@@ -43,7 +43,7 @@ function TransferCKBTCModal({
   handleCloseTokenModal: () => void;
 }) {
   const [isTransfering, setIsTransfering] = React.useState(false);
-  const { transfer: ckbtcTransfer } = useCkBtcLedger();
+  const { transfer: ckbtcTransfer, getBalance: getCkbtcBalance } = useCkBtcLedger();
   const { auth, userAuth } = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
     userAuth: (state as ConnectPlugWalletSlice).userAuth,
@@ -195,8 +195,8 @@ function TransferCKBTCModal({
                             'amount',
                             userAuth.ckBalance
                               ? (
-                                  userAuth.ckBalance - CKBTC_GAS_FEE_INTEGER
-                                ).toFixed(8)
+                                userAuth.ckBalance - CKBTC_GAS_FEE_INTEGER
+                              ).toFixed(8)
                               : 0,
                           );
                         }}

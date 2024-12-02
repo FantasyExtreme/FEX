@@ -45,7 +45,7 @@ function ContestInfoModal({
   const navigation = useRouter();
   const [offset, setOffset] = useState(0);
   const [searchString, setSearchString] = useState('');
-  const [rewardsMap, setRewardsMap] = useState<null | [bigint, bigint][]>(null);
+  const [rewardsMap, setRewardsMap] = useState<null | [bigint, bigint][]>([]);
   const [pageCount, setPageCount] = useState<number>(0);
 
   const [calculatorData, setCalculatorData] = useState({

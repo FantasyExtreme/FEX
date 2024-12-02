@@ -22,7 +22,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Spinner, Table } from 'react-bootstrap';
 import ConnectModal from './ConnectModal';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import authMethods from '@/lib/auth';
 import { isConnected, sliceText } from '../utils/fantasy';
 import { useRouter } from 'next/navigation';
@@ -37,13 +37,12 @@ export default function MatchTable({
   loading,
   tab,
   admin,
-  handleRewardableMatchUpdate
+
 }: {
   groupMatches: null | [string, Match][];
   loading: boolean;
   admin?: boolean;
   tab: string;
-  handleRewardableMatchUpdate?:any
 }) {
   const { auth, userAuth, setUserAuth } = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
@@ -52,13 +51,6 @@ export default function MatchTable({
   }));
   const [path, setPath] = useState<string | null>(null);
   const [showConnect, setShowConnect] = useState(false);
-  //this loading will be used when we will disabled all match reward able button when any of them is being rewarded
-  const [rewardLoading, setRewardLoading] = useState<boolean>(false);
-  const [makingRewardLoading, setMakingRewardLoading] = useState<Record<string, boolean>>(
-    [].reduce((acc, id) => ({ ...acc, [id]: false }), {})
-  );
-  
-  
 
   let router = useRouter();
 
@@ -67,6 +59,9 @@ export default function MatchTable({
       `${MATCHES_ROUTE + MATCHES_CONTESTS_ROUTE}?matchId=${id}&type=${QueryParamType.simple}`,
     );
   };
+
+  
+
   function handleShowConnect() {
     setShowConnect(true);
   }
@@ -74,55 +69,12 @@ export default function MatchTable({
     setShowConnect(false);
   }
   /**
- * use to handle loading of match
- * @param {matchId}
-   */ 
-const toggleLoading = (id: string) => {
-  setMakingRewardLoading(prevState => ({
-    ...prevState,
-    [id]: !prevState[id], 
-  }));
-};
-
-  /**
    * clickRef use as a callback route user connection modal should route after connection
    */
   let clickRef = () => {
     if (path) {
       router.push(path);
     }
-  };
-  
-  /**
-   * handleReward use to make a match rewardable
-   * @param id 
-   * @param rewardable 
-   * @param index 
-   * @returns 
-   */
-  const handleReward = async (id: string,rewardable:boolean) => {
-    try {
-      let matchId=id.trim()
-      if(!matchId || matchId=="") return toast.error("Match id not found.")
-        toggleLoading(id)
-      setRewardLoading(true)
-      const resp = await auth.actor.toggleRewardableMatch(matchId,rewardable);
-      if(resp.ok){
-        toast.success(resp.ok);
-        if(handleRewardableMatchUpdate) handleRewardableMatchUpdate(matchId,rewardable?false:true);
-
-      }else if(resp.err){
-        toast.error(resp.err);
-      }
-      toggleLoading(id)
-    } catch (error) {
-      toggleLoading(id)
-
-    }finally{
-      setRewardLoading(false)
-
-    }
-
   };
 
   return (
@@ -204,22 +156,6 @@ const toggleLoading = (id: string) => {
                                 Create Team
                               </Link>
                             )}
-                                 {admin && tab == MatchStatuses.upcoming && (
-    <Link
-    href={"#"}                              
-    onClick={(e)=>{
-      e.preventDefault();
-      if(rewardLoading) return
-      if(!makingRewardLoading[match.id]) {
-        handleReward(match.id,match.isRewardable);
-      }
-    }}
-      className={`reg-btn text-white reg-custom-btn empty text-capitalize ${rewardLoading && "cursernone"} `}
-    >
-     {makingRewardLoading[match.id] ? <BeatLoader color='white' size={3} />: match.isRewardable ? "Remove Reward":
-     "Add Reward"}
-    </Link>
-  )}
                             {admin && (
                               <Link
                                 href={`${ADMIN_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
@@ -228,7 +164,7 @@ const toggleLoading = (id: string) => {
                                 Create Contest
                               </Link>
                             )}
-
+         
                             <Link
                               href={`${MATCHES_ROUTE + MATCHES_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
                               className=' reg-btn text-white reg-custom-btn empty text-capitalize  '
@@ -262,25 +198,25 @@ const toggleLoading = (id: string) => {
                               <span className='d-flex flex-column'>
                                 <span className='w-80 text-center fs-6 color fw-bold'>{`${match?.homeScore}-${match?.awayScore}`}</span>
                                 <span className='w-80 text-center verses'>vs 
-                                  {match?.isRewardable &&
-                                <Tippy content={'Winner will get reward.'}>
+                                 {match?.isRewardable &&
+                               <Tippy content={'5$ Dollar Reward'}>
                                  <span>
                                   
                                  <br/> <Dollericon/></span>
                               </Tippy>
-                              }
+                              } 
                               </span>
                               </span>
                             ) : (
                               <span className='w-80 text-center verses'>vs 
-                              {match?.isRewardable &&
-                                <Tippy content={'Winner will get reward.'}>
+                            {match?.isRewardable &&
+                                <Tippy content={'5$ Dollar Reward'}>
                                  <span>
                                   
                                  <br/> <Dollericon/></span>
                               </Tippy>
                               }
-                              </span>
+                              </span>  
                             )}
 
                             <span className='w-half text-left d-flex align-items-center justify-content-start'>
@@ -326,7 +262,15 @@ const toggleLoading = (id: string) => {
       </div>
 
       {/* Mobile View Match Posts */}
-      { (!groupMatches || groupMatches.length ==0)?    <p className='text-center text-white  hide-on-web'>Match Not Found</p> : groupMatches?.map((matches: any, index: number) => (
+      {loading ? (
+      <div className='d-flex justify-content-center hide-on-web'>
+       <Spinner className='hide-on-web mb-5' animation='border' />
+       </div>
+        ) : (!groupMatches || groupMatches.length === 0) ? (
+       <p className='text-center text-white hide-on-web'>Match Not Found</p>
+       ) : (
+       groupMatches?.map((matches: any, index: number) => (
+
         <React.Fragment key={`mobile-group-${index}`}>
           <h5 className='color Nasalization hide-on-web'>
             <span> {matches[1][0]?.tournamentName}</span>
@@ -352,13 +296,13 @@ const toggleLoading = (id: string) => {
                     className='color verses'
                     onClick={() => handleNavigateToContest(match.id)}
                   >
-                    {match?.isRewardable &&
-                                <Tippy content={'Winner will get reward.'}>
+                     {match?.isRewardable &&
+                             <Tippy content={'5$ Dollar Reward'}>
                                  <span>
                                   
                                  <br/> <Dollericon/></span>
                               </Tippy>
-                              }
+                              } 
                               <br/>
                               <br/>
                     {match?.date} <br/>   {match?.time}
@@ -408,23 +352,7 @@ const toggleLoading = (id: string) => {
                     Create Team
                   </Link>
                 )}
-
-  {admin && tab == MatchStatuses.upcoming &&(
-    <Link
-    href={"#"}
-    onClick={(e)=>{
-      e.preventDefault();
-      if(rewardLoading) return
-      if(!makingRewardLoading[match.id]) {
-        handleReward(match.id,match.isRewardable);
-      }
-    }}
-      className={` reg-btn text-white reg-custom-btn empty text-capitalize  ${rewardLoading && "cursernone"}`}
-    >
-     {makingRewardLoading[match.id] ? <BeatLoader color='white' size={3} />: match.isRewardable ? "Remove Reward":
-     "Add Reward"}
-    </Link>
-  )}
+            
                 {admin && (
                   <Link
                     href={`${ADMIN_CONTESTS_ROUTE}?matchId=${match.id}&type=${QueryParamType.simple}`}
@@ -444,7 +372,8 @@ const toggleLoading = (id: string) => {
             </div>
           ))}
         </React.Fragment>
-      ))}
+      ))
+    )}
 
       <ConnectModal
         show={showConnect}

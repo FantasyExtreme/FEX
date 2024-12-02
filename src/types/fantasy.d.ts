@@ -25,6 +25,7 @@ interface Player {
   number: number;
   photo: string;
 }
+
 interface GroupedPlayers {
   [role: string]: Player[];
 }
@@ -118,7 +119,6 @@ interface Match {
   status?: string;
   isPostpond?: boolean;
   isRewardable:boolean;
-
 }
 interface matchWithGroupedId extends Match {
   groupId: string;
@@ -171,6 +171,7 @@ interface Contest {
   teamsPerUser: number;
   isDistributed?: boolean;
   rules: string;
+  paymentMethod?: string;
   firstPrize?: number;
 }
 interface GroupedContest {
@@ -369,18 +370,14 @@ interface Stats {
   other: Other;
 }
 type LoginType = 0 | 1;
-
-interface CommunityContestPagination {
-  total:number ;
-  offset:number ;
-}
-
-
-CommunityContest
 interface CommunityContest {
   communityId: string;
   name: string;
   contestId: string;
   usersJoinedThisContest:number ;
   joined_at:number ;
+}
+interface CommunityContestPagination {
+  total:number ;
+  offset:number ;
 }

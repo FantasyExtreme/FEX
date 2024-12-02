@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://fantasy-football.com
+Host: https://snxxs-viaaa-aaaam-acuba-cai.icp0.io
 
 # Sitemaps
-Sitemap: https://fantasy-football.com/sitemap.xml
+Sitemap: https://snxxs-viaaa-aaaam-acuba-cai.icp0.io/sitemap.xml

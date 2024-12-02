@@ -115,28 +115,15 @@ export function groupPlayersByRole(
 
   return playersByRole;
 }
-
 /**
- * Copy User refferal link
- *  - auth
+ *
+ * @returns offset in miliseconds
  */
-export async function copyCommunityLink(id: string) {
-  if (!id) return;
-  window.navigator.clipboard.writeText(
-    window.location.host + '?communityId=' + id,
-  );
-  toast.success('Community Link  copied to clipboard', { autoClose: 750 });
-}
-
-
-/**
- * use to gettimezone
- * @returns miliseconds of time zone
- */
-function getTimeZone() {
+export function getTimeZone() {
   const date = new Date();
-const timezoneOffset = date.getTimezoneOffset()*60*1000; 
-  return Math.abs(timezoneOffset);
+  const timezoneOffset = date.getTimezoneOffset() * 60 * 1_000;
+  if (timezoneOffset != 0) return timezoneOffset * -1;
+  else return timezoneOffset;
 }
 interface TeamId {
   id: string;
@@ -275,8 +262,7 @@ export async function getUpcomingMatches(
   props: GetProps,
   time: number[] | [],
 ) {
-  logger(props, 'getting didddd');
-  const resp = await actor.getMatches(props, time);
+  const resp = await actor.getMatches(props, time, getTimeZone());
   const matches = resp?.matches;
   const matchesWithTeams = await Promise.all(
     matches?.map(async (match: any) => {
@@ -369,15 +355,14 @@ export async function getUpcomingMatches(
 
 /**
  * check it match on friday
- * @param bigintMilliseconds 
- * @returns 
+ * @param bigintMilliseconds
+ * @returns
  */
-function isFriday(bigintMilliseconds:BigInt) {
+function isFriday(bigintMilliseconds: BigInt) {
   // Convert BigInt to Number for the Date constructor
   const date = new Date(Number(bigintMilliseconds));
   return date.getDay() === 5; // 5 represents Friday
 }
-
 
 export async function getMatches(
   actor: any,
@@ -403,8 +388,15 @@ export async function getMatches(
       break;
   }
   let id = toNullable(tournamentId);
-  const resp = await actor.getMatchesWithTournamentId(props, time,getTimeZone(), id);
-const matches = resp?.matches;
+
+  const resp = await actor.getMatchesWithTournamentId(
+    props,
+    time,
+    getTimeZone(),
+    id,
+  );
+
+  const matches = resp?.matches;
   let totalMatches = Number(resp?.total) ?? 0;
   const matchesWithTeams = await Promise.all(
     matches?.map(async (match: any) => {
@@ -413,8 +405,8 @@ const matches = resp?.matches;
       if (!homeTeam || !awayTeam) {
         return null;
       }
-      let isOnFriday=isFriday(match.time);
       const newDate = utcToLocal(match.time, 'MMM  D, YY');
+
       // moment
       //   .unix(Number(match?.time))
       //   .format('mm-dd-yyyy');
@@ -435,8 +427,8 @@ const matches = resp?.matches;
         awayScore: Number(match?.awayScore),
         status: match.status,
         isPostpond,
-        groupId: match.tournamentId + newDate+newTime,
-        isRewardable: match.isRewardable
+        groupId: match.tournamentId + newDate + newTime,
+        isRewardable: match.isRewardable,
       };
     }),
   );
@@ -584,7 +576,7 @@ export async function getContests({
         ...contest[1],
         id: contest[0],
         rewardDistribution: newRD,
-        prizePool: prizePool.toFixed(2),
+        prizePool: prizePool.toFixed(4),
         slotsLeft,
         firstPrize: fromE8S(contest[1].firstPrize),
         rewardableUserPercentage,
@@ -661,7 +653,6 @@ export async function getFilterdContests(
     } else {
       response = await actor.getFilterdContests(props);
     }
-    logger(response,"responseresponse")
     var totalMatches = Number(response?.total) ?? 0;
 
     const _contests = response?.contests
@@ -765,10 +756,7 @@ export async function getFilterdContests(
           }));
         break;
     }
-    logger(response,"responseresponse")
   } catch (error) {
-    logger(error,"responseresponse")
-
     switch (props.status) {
       case MatchStatuses.upcoming:
         if (setLoadingState)
@@ -791,7 +779,7 @@ export async function getFilterdContests(
 export async function getContest(
   actor: any,
   id: string,
-  set: React.Dispatch<React.SetStateAction<any>>,
+  set?: React.Dispatch<React.SetStateAction<any>>,
 ) {
   const _contest: any = fromNullable(await actor.getContest(id));
   const newRD = _contest?.rewardDistribution?.map(
@@ -814,7 +802,8 @@ export async function getContest(
     rewardDistribution: newRD,
   };
   logger({ _contest, contest }, 'looogogogogo');
-  set(contest);
+  if (set) set(contest);
+  return contest;
 }
 /**
  * Get get contest and match with contest id
@@ -853,7 +842,7 @@ export async function getContestWithMatch(
       slotsUsed: Number(_contest?.slotsUsed),
       minCap: Number(_contest?.minCap),
       teamsPerUser: Number(_contest?.teamsPerUser),
-      entryFee: Number(_contest?.entryFee),
+      entryFee: fromE8S(_contest?.entryFee),
       rewardDistribution: newRD,
     };
     if (match) {
@@ -1036,9 +1025,9 @@ export async function copyPrincipal(auth: any) {
  * use this func to make the text copy able.
  * @param {auth}  - pricipale is require to copy it.
  */
-export async function copyId(id: any,smg:string) {
+export async function copyId(id: any, msg: string) {
   window.navigator.clipboard.writeText(id);
-  toast.success(`${smg} copied to clipboard`, { autoClose: 750 });
+  toast.success(`${msg} copied to clipboard`, { autoClose: 750 });
 }
 /**
  * Copy User Account to clipboard
@@ -1064,6 +1053,17 @@ export async function copyRefferalLink(identity: Identity) {
     window.location.host + '?refferalId=' + identity.getPrincipal().toString(),
   );
   toast.success('Refferal link copied to clipboard', { autoClose: 750 });
+}
+/**
+ * Copy User refferal link
+ *  - auth
+ */
+export async function copyCommunityLink(id: string) {
+  if (!id) return;
+  window.navigator.clipboard.writeText(
+    window.location.host + '?communityId=' + id,
+  );
+  toast.success('Community Link  copied to clipboard', { autoClose: 750 });
 }
 /**
  * Retrieves filtered player squads based on match and status criteria.
@@ -1545,100 +1545,117 @@ export async function getUserTransactions({
     contestId,
     limit,
   };
-  const resp = await fantasyTransactionActor.getMyTransactions(props);
-  if (resp) {
-    let tempTransactions = resp?.transaction;
-    let total = Number(resp?.total ?? 0);
-    let contestids: any = [];
-    const newArra = await Promise.all(
-      tempTransactions.map(async (tempTrans: any) => {
-        let trans = tempTrans[1];
-        let id = tempTrans[0];
+  try {
+    const resp = await fantasyTransactionActor.getMyTransactions(props);
+    if (resp) {
+      let tempTransactions = resp?.transaction;
+      let total = Number(resp?.total ?? 0);
+      let contestids: any = [];
+      const newArra = await Promise.all(
+        tempTransactions.map(async (tempTrans: any) => {
+          let trans = tempTrans[1];
+          let id = tempTrans[0];
 
-        let amount = Number(trans?.amount);
-        let tmepDate = BigInt(Number(trans?.created_at_time ?? 0));
+          let amount = Number(trans?.amount);
+          let tmepDate = BigInt(Number(trans?.created_at_time ?? 0));
 
-        let date = utcToLocal(tmepDate, 'DD-MM-YYYY');
-        let time = utcToLocal(tmepDate, 'hh:mm A');
-        let transaction_type = Object.keys(trans?.transaction_type)[0] ?? '';
-        contestids.push(trans?.contestId);
-        return {
-          amount,
-          id,
-          date,
-          time,
-          transaction_type,
-          contestId: trans?.contestId,
-          title: trans?.title,
-        };
-      }),
-    );
-    let contestNamesList = await actor.getContestNames(contestids);
-    if (contestNamesList) {
-      type KeyValuePair = [string, string];
-
-      contestNamesList = contestNamesList.reduce(
-        (acc: Record<string, string>, [key, value]: KeyValuePair) => {
-          acc[key] = value;
-          return acc;
-        },
-        {},
+          let date = utcToLocal(tmepDate, 'DD-MM-YYYY');
+          let time = utcToLocal(tmepDate, 'hh:mm A');
+          let transaction_type = Object.keys(trans?.transaction_type)[0] ?? '';
+          contestids.push(trans?.contestId);
+          return {
+            amount,
+            id,
+            date,
+            time,
+            transaction_type,
+            contestId: trans?.contestId,
+            title: trans?.title,
+          };
+        }),
       );
-    }
-    let transactions = newArra.map((trans: any) => {
+      let contestNamesList = await actor.getContestNames(contestids);
+      let contestMap = await actor.getContestsByIds(contestids);
+      logger(contestMap, 'contest map');
+      if (contestMap) {
+        contestMap = new Map(contestMap.map((c: Contest) => [c?.id, c]));
+      }
+      logger(contestMap, 'contest map v2');
+
+      if (contestNamesList) {
+        type KeyValuePair = [string, string];
+
+        contestNamesList = contestNamesList.reduce(
+          (acc: Record<string, string>, [key, value]: KeyValuePair) => {
+            acc[key] = value;
+            return acc;
+          },
+          {},
+        );
+      }
+      let transactions = newArra.map((trans: any) => {
+        return {
+          ...trans,
+          contestName: contestMap.get(trans?.contestId)?.name,
+          paymentMethod: contestMap.get(trans?.contestId)?.paymentMethod,
+        };
+      });
+      logger(transactions, 'transactions map v2');
+
       return {
-        ...trans,
-        contestName: contestNamesList[trans?.contestId],
+        total,
+        transactions: transactions,
       };
-    });
-    return {
-      total,
-      transactions: transactions,
-    };
-  } else {
-    return {
-      total: 0,
-      transactions: [],
-    };
+    } else {
+      return {
+        total: 0,
+        transactions: [],
+      };
+    }
+  } catch (error) {
+    logger(error, 'error during transactions ');
   }
 }
 /**
  * use to get joined teams in contest
  * @param actor - The actor object used to fetch  top fantasy players.
-* @param {GetProps} props -  pagination props
+ * @param {GetProps} props -  pagination props
  */
 export async function getJoinedTeamsOfUser({
   actor,
   props,
 }: {
   actor: any;
-  props: GetProps,
+  props: GetProps;
 }) {
-try {
-  
+  try {
+    const resp = await actor.getJoinedTeams(props);
 
-  const resp = await actor.getJoinedTeams(props);
-
-  if (resp) {
-    let results = resp?.result;
-    let total = Number(resp?.total ?? 0);
-   let tempResult=results.map((item:any)=>({...item,rank:Number(item.rank),homeScore:Number(item.homeScore),awayScore:Number(item.awayScore)}))
-    return {
-      total,
-      results:tempResult,
-    };
-  } else {
+    if (resp) {
+      let results = resp?.result;
+      let total = Number(resp?.total ?? 0);
+      let tempResult = results.map((item: any) => ({
+        ...item,
+        rank: Number(item.rank),
+        homeScore: Number(item.homeScore),
+        awayScore: Number(item.awayScore),
+      }));
+      return {
+        total,
+        results: tempResult,
+      };
+    } else {
+      return {
+        total: 0,
+        results: [],
+      };
+    }
+  } catch (error) {
     return {
       total: 0,
       results: [],
     };
   }
-} catch (error) {
-  return {
-    total: 0,
-    results: [],
-  };
-}
 }
 /**
  * Calls the backend function getBudget() and sets the state with the text value.
@@ -1744,7 +1761,7 @@ export function sliceText(text: any, start: number, maxlength: number) {
  * @returns sliced text
  */
 export function sliceTextFromStartAndEnd(text: any, maxlength: number) {
-  return  `${text?.slice(0, maxlength)}...${text?.slice(text.length-maxlength, text.length)}`
+  return `${text?.slice(0, maxlength)}...${text?.slice(text.length - maxlength, text.length)}`;
 }
 /**
  * Formats an email address by shortening the local part to the first three characters followed by ellipsis.
@@ -1810,60 +1827,61 @@ export async function getDashboardMatches(
   setMatchesCount: React.Dispatch<React.SetStateAction<number>> | null,
 ) {
   try {
-    
+    setLoadingState(true);
+    const resp = await actor.getDetailedMatchesContests(props);
+    const matches = resp?.matches;
+    let totalMatches = Number(resp?.total) ?? 0;
+    const matchesWithTeams = await Promise.all(
+      matches?.map(async (match: any) => {
+        const homeTeam = await getTeam(match?.homeTeam, actor);
+        const awayTeam = await getTeam(match?.awayTeam, actor);
+        if (!homeTeam || !awayTeam) {
+          return null;
+        }
+        const newDate = utcToLocal(match.time, 'DD-MM-YYYY');
+        const newTime = utcToLocal(match?.time, 'hh:mm A');
+        let status = getMatchStatus({
+          time: match?.time,
+          status: match?.status,
+        });
+        let totalTeamsPerUser = 0;
+        match?.contests.map((cont: any) => {
+          totalTeamsPerUser += Number(cont.teamsPerUser);
+        });
 
-  setLoadingState(true);
-  const resp = await actor.getDetailedMatchesContests(props);
-  const matches = resp?.matches;
-  let totalMatches = Number(resp?.total) ?? 0;
-  const matchesWithTeams = await Promise.all(
-    matches?.map(async (match: any) => {
-      const homeTeam = await getTeam(match?.homeTeam, actor);
-      const awayTeam = await getTeam(match?.awayTeam, actor);
-      if (!homeTeam || !awayTeam) {
-        return null;
+        return {
+          ...match,
+          id: match.id,
+          homeTeam: homeTeam,
+          awayTeam: awayTeam,
+          location: match?.location,
+          teamsCreated: Number(match.teamsCreated),
+          teamsJoined: Number(match.teamsJoined),
+          status: status,
+          date: newDate,
+          time: newTime,
+          matchTime: Number(match?.time),
+          teamsPerUser: totalTeamsPerUser,
+          homeScore: Number(match?.homeScore),
+          awayScore: Number(match?.awayScore),
+          entryFee: fromE8S(match?.entryFee),
+        };
+      }),
+    );
+    const filteredMatches = matchesWithTeams.filter((match: any) => {
+      if (match != null) {
+        return true;
+      } else {
+        return false;
       }
-      const newDate = utcToLocal(match.time, 'DD-MM-YYYY');
-      const newTime = utcToLocal(match?.time, 'hh:mm A');
-      let status = getMatchStatus({ time: match?.time, status: match?.status });
-      let totalTeamsPerUser = 0;
-      match?.contests.map((cont: any) => {
-        totalTeamsPerUser += Number(cont.teamsPerUser);
-      });
-
-      return {
-        ...match,
-        id: match.id,
-        homeTeam: homeTeam,
-        awayTeam: awayTeam,
-        location: match?.location,
-        teamsCreated: Number(match.teamsCreated),
-        teamsJoined: Number(match.teamsJoined),
-        status: status,
-        date: newDate,
-        time: newTime,
-        matchTime: Number(match?.time),
-        teamsPerUser: totalTeamsPerUser,
-        homeScore: Number(match?.homeScore),
-        awayScore: Number(match?.awayScore),
-        entryFee: fromE8S(match?.entryFee),
-      };
-    }),
-  );
-  const filteredMatches = matchesWithTeams.filter((match: any) => {
-    if (match != null) {
-      return true;
-    } else {
-      return false;
-    }
-  });
-  if (setMatchesCount) setMatchesCount(totalMatches);
-  setMatches(filteredMatches);
-  setLoadingState(false);
-} catch (error) {
-  setMatches(null);
-  setLoadingState(false);
-}
+    });
+    if (setMatchesCount) setMatchesCount(totalMatches);
+    setMatches(filteredMatches);
+    setLoadingState(false);
+  } catch (error) {
+    setMatches(null);
+    setLoadingState(false);
+  }
 }
 /**
  * Retrieves the key from the MatchStatuses enum based on the given status.
@@ -1944,7 +1962,7 @@ export function getMatchStatus({ status, time }: any): string {
 //     }
 
 //     const added: { err?: TransferFromError; ok?: string } =
-//       await actor.addParticipant(id, selectedSquad);
+//       await actor.addParticipant(id, selectedSquad,getTimeZone());
 
 //     if (added?.ok) {
 //       toast.success('Joined Successfully');
@@ -2117,6 +2135,8 @@ export function getPrizePool(
 export async function getIcpRate() {
   try {
     // Make the API call
+    logger('requet', 'ersadfasdfasdrorerror');
+
     const response = await axios.get(API_ROUTE_GET_USD_RATE);
 
     // Access the USD rate from the response data
@@ -2124,21 +2144,11 @@ export async function getIcpRate() {
 
     // Log the rate
     return rate.toFixed(2);
-    logger(rate, 'errorerror');
   } catch (error) {
     // Log the error
     logger(error, 'errorerror');
     return 0;
   }
-}
-export async function getPrizePoolInUSD(icp: number) {
-  let rate;
-  try {
-    rate = await getIcpRate();
-  } catch (error) {
-    rate = 0;
-  }
-  return (rate * icp).toFixed(4);
 }
 
 // debounce.ts
@@ -2205,3 +2215,37 @@ export function shouldShowROI(name: string): boolean {
       return false;
   }
 }
+
+
+export const joinDiscordChannel = async (code: string,userId:string): Promise<boolean> => {
+  try {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}joindiscord`;
+      const res = await axios.post(url, { code,userId });
+      logger(res, "asdasdasdasdasdas");
+
+      if(res?.status==200){
+
+        return true;
+      }else{
+        return false; 
+      }
+   
+  } catch (error) {
+      logger(error, "asdasdasdasdasdas");
+      return false; 
+  }
+};
+
+const generateAuthUrl = () => {
+  const codeChallenge = 'your-code-challenge'; // Generate a code challenge
+  const authUrl = `https://twitter.com/i/oauth2/authorize?` +
+    `response_type=code&` +
+    `client_id=${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}&` +
+    `redirect_uri=${encodeURIComponent(process.env.NEXT_PUBLIC_REDIRECT_URL ?? "")}&` +
+    `scope=follows.write tweet.read users.read&` +
+    `state=${process.env.NEXT_PUBLIC_STATE}&` +
+    `code_challenge=${codeChallenge}&` +
+    `code_challenge_method=s256`;
+
+  return authUrl;
+};

@@ -1,4 +1,5 @@
 import {
+  CKBTC_GAS_FEE,
   Directions,
   GAS_FEE,
   MATCHES_ICON_SIZES,
@@ -21,18 +22,20 @@ import React, { useEffect, useState } from 'react';
 import Arrow from '../Icons/Arrow';
 import { Button, Spinner, Table } from 'react-bootstrap';
 import {
+  getContest,
   getContests,
   getFilterdContests,
   getKeyFromMatchStatus,
   getRawPlayerSquads,
   getTeamStatus,
+  getTimeZone,
   handleTransferError,
   isConnected,
   isInPast,
   sliceText,
 } from '../utils/fantasy';
 import logger from '@/lib/logger';
-import { approveTokens, toE8S } from '@/lib/ledger';
+import { approveCKBTCTokens, approveTokens, toE8S } from '@/lib/ledger';
 import { Identity } from '@dfinity/agent';
 import { toast } from 'react-toastify';
 import { TransferFromError } from '@dfinity/ledger-icp/dist/candid/ledger';
@@ -42,6 +45,7 @@ import {
   MATCHES_ITEMSPERPAGE,
   MatchStatusNames,
   MatchStatuses,
+  PaymentTypes,
   QURIES,
 } from '@/constant/variables';
 import BeatLoader from 'react-spinners/BeatLoader';
@@ -144,25 +148,31 @@ function MatchWithTeamsMobile({
     setIsParticipating(true);
 
     try {
-      logger({ entry: match.entryFee, GAS_FEE, identity }, 'apprinving');
-      if (match.entryFee !== 0) {
-        let approve = await approveTokens(
-          toE8S(match.entryFee) + GAS_FEE,
-          identity,
-        );
+      let contest = await getContest(auth.actor, match.id);
+      logger({ entry: match.entryFee, GAS_FEE, contest }, 'apprinving');
+      if (match.entryFee && match.entryFee !== 0) {
+        let approve;
+        if (contest.paymentMethod == PaymentTypes.ICP) {
+          approve = await approveTokens(contest.entryFee + GAS_FEE, identity);
+        } else if (contest.paymentMethod == PaymentTypes.CKBTC) {
+          approve = await approveCKBTCTokens(
+            contest.entryFee + CKBTC_GAS_FEE,
+            identity,
+          );
+        }
         if (!approve) {
           return toast.error('Unexpected Error');
         }
       }
 
       const added: { err?: TransferFromError; ok?: string } =
-        await actor.addParticipant(match.id, selectedSquad);
+        await actor.addParticipant(match.id, selectedSquad, getTimeZone());
 
       if (added?.ok) {
         toast.success('Joined Successfully');
-        if (participants && participants + 1 >= match.teamsPerUser)
+        if (participants != null && participants + 1 >= match.teamsPerUser)
           setMaximumParticipated(true);
-        setParticipants((prev) => (prev ? prev++ : prev));
+        setParticipants((prev) => (prev != null ? prev++ : prev));
         match.teamsJoined++;
 
         // let newSquads = playerSquads.filter(())
@@ -219,6 +229,24 @@ function MatchWithTeamsMobile({
   function handleHideContestModel() {
     setShowContestModel(false);
   }
+  /**
+   * use to get user teams
+   * @parms null
+   */
+  let getTeamsfn = () => {
+    let contestId = null;
+    getRawPlayerSquads(
+      match.id,
+      actor,
+      match.teamsPerUser,
+      setSquads,
+      setParticipants,
+      setMaximumParticipated,
+      contestId,
+    )
+      .then(() => setLoading(false))
+      .catch(() => setLoading(false));
+  };
   /**
    * clickRef use as a callback route user connection modal should route after connection
    */
@@ -409,6 +437,7 @@ function MatchWithTeamsMobile({
         </div>
       </div>
       <ConfirmTransaction
+        contestId={match.id}
         entryFee={match.entryFee}
         show={showConfirm}
         onConfirm={addParticipant}
@@ -427,6 +456,7 @@ function MatchWithTeamsMobile({
         teamId={selectedTeam.teamId}
         rankingModle={selectedTeam.rankingModle}
         router={router}
+        getTeamsfn={getTeamsfn}
       />
     </>
   );

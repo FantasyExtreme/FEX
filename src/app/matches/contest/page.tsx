@@ -38,7 +38,6 @@ import {
   getFilterdContests,
   isConnected,
   isInPast,
-  getIcpRate,
 } from '@/components/utils/fantasy';
 
 import {
@@ -78,13 +77,14 @@ export default function Contests() {
   const router = useRouter();
   const [matchTab, setMatchTab] = useState<string>(DEFAULT_MATCH_STATUS);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [icpRate, setIcpRate] = useState(0);
   const [showConnect, setShowConnect] = useState(false);
   const [path, setPath] = useState<string | null>(null);
 
-  const { auth, userAuth } = useAuthStore((state) => ({
+  const { auth, userAuth ,icpRate} = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
     userAuth: (state as ConnectPlugWalletSlice).userAuth,
+    icpRate: (state as ConnectPlugWalletSlice).icpRate,
+
   }));
   const matchProps = {
     status: DEFAULT_MATCH_STATUS,
@@ -239,13 +239,8 @@ export default function Contests() {
       setMatch,
     });
   }, [auth, matchId]);
-  let getLatestIcpRate = async () => {
-    let rate = await getIcpRate();
-    setIcpRate(rate);
-  };
-  useEffect(() => {
-    getLatestIcpRate();
-  }, []);
+ 
+ 
   return (
     <>
       <Container fluid className='inner-page'>

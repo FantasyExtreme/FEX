@@ -1,11 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 
-import Link from 'next/link';
-import Image from 'next/image';
-import NavBar from '@/components/Components/NavBar';
-import Footer from '@/components/Components/Footer';
-import NFTpic from '@/assets/images/NFTImage.png';
+
 import { ConnectPlugWalletSlice } from '@/types/store';
 import { useAuthStore } from '@/store/useStore';
 import {
@@ -53,17 +49,11 @@ import GiftSvg from '@/components/Icons/GiftSvg';
 import CupSvg from '@/components/Icons/CupSvg';
 import { fromE8S, getCKBTCBalance } from '@/lib/ledger';
 import { useRouter } from 'next/navigation';
-import Tippy from '@tippyjs/react';
-import { TransferFromError } from '@dfinity/ledger-icp/dist/candid/ledger';
-import useAuth from '@/lib/auth';
-import RingLoader from 'react-spinners/RingLoader';
-import BeatLoader from 'react-spinners/BeatLoader';
-import TransferModal from '@/components/Components/TransferModal';
-import useCkBtcLedger from '@/dfx/hooks/useCkBtcLedger';
+
 import CKBTC from '@/components/Icons/CKBTC';
 import { END_DATE, START_DATE } from '@/constant/fantasticonst';
 import MyLiveRank from '@/components/Components/MyLiveRank';
-import PlugIntegration from '@/components/Components/PlugwalletIntigrate';
+
 export default function Dashboard() {
   const { auth, userAuth, setUserAuth, principal } = useAuthStore((state) => ({
     auth: (state as ConnectPlugWalletSlice).auth,
@@ -71,13 +61,8 @@ export default function Dashboard() {
     setUserAuth: (state as ConnectPlugWalletSlice).setUserAuth,
     principal: (state as ConnectPlugWalletSlice).principal,
   }));
-  const { updateBalance } = useAuth();
   const [showModal, setShowModal] = useState(false);
-  const [isclaiming, setIsclaiming] = useState(false);
-  const [ckBTCBalance, setCkBTCBalance] = useState<number | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [matchJoiningPersentage, setMatchJoiningPersentage] =
-    useState<number>(0);
 
   const [userPrincipal, setuserPrincipal] = useState('');
 
@@ -109,24 +94,7 @@ export default function Dashboard() {
       .min(MIN_NAME_CHARACTERS, 'Name can not be less than 3 characters'),
     email: string().trim().matches(EMAIL_VALIDATION, 'Invalid Email'),
   });
-  async function claimTokens() {
-    try {
-      setIsclaiming(true);
-      const claimed: { Err?: TransferFromError; Ok?: string } =
-        await auth.actor.testingClaimTokens();
-      if (claimed?.Ok) {
-        await updateBalance();
-        toast.success('Claimed Tokens');
-      } else if (claimed?.Err) {
-        toast.error(handleTransferError(claimed?.Err));
-      }
-      logger(claimed);
-    } catch (error) {
-      toast.error('Unexpected Error');
-      logger(error);
-    }
-    setIsclaiming(false);
-  }
+
   /**
    * updateProfile use to update user profile
    * @param values
@@ -164,51 +132,16 @@ export default function Dashboard() {
   }
 
 
-  /**
-   * formatNumber use to fix the number if decimal to 2 decimal point
-   * @param num
-   * @returns
-   */
-  function formatNumber(num: number) {
-    // Check if the number is an integer
-    if (Number.isInteger(num)) {
-      return num;
-    } else {
-      return num.toFixed(2);
-    }
-  }
-  async function getMatchesParticipants(userPincipal: string) {
-    try {
-      const resp = await auth.actor.getJoinedMatches(userPincipal);
-      if (resp) {
-        let { matchesCount, joinedMatches } = resp;
-        if (Number(matchesCount) == 0) return;
-        let persentage = formatNumber(
-          (Number(joinedMatches) * 100) / Number(matchesCount),
-        );
-
-        setMatchJoiningPersentage(Number(persentage));
-      }
-    } catch (error) {
-      logger(error, 'joined contest');
-    }
-  }
-  /**
-   * use to check is it staging or production project
-   * @returns boolean
-   */
-  function isProductionEnv() {
-    return process.env.NEXT_PUBLIC_ENVIRONMENT_TYPE == 'alpha' ? true : false;
-  }
 
   useEffect(() => {
     if (auth.identity) {
       let userPincipal = auth?.identity?.getPrincipal().toString();
       setuserPrincipal(userPincipal);
       getUserAssets(auth.actor, userPincipal, setUserAssets);
+   
+    
 
-      getMatchesParticipants(userPincipal);
-      // getWinningContest(userPincipal); //!! if you uncomment this it will show nfts
+      // getWinningContest(userPincipal);// !!use to get user nfts which user has won
     } else {
       setuserPrincipal('');
     }
@@ -216,6 +149,7 @@ export default function Dashboard() {
       router.replace('/');
     }
   }, [auth]);
+
   return (
     <>
       <Container fluid className='profile-header'>
@@ -249,7 +183,7 @@ export default function Dashboard() {
                     </h5>
                   </div>
                   <div className={`right-pnl `}>
-                    <div className='text-pnl w-100'>
+                    <div className='text-pnl'>
                       <h4 className='Nasalization text-uppercase whitecolor'>
                         Your <span>Stats</span>
                       </h4>
@@ -283,38 +217,38 @@ export default function Dashboard() {
                         </li>
                       </ul>
                     </div>
-              
+                 
 
                     <div className='nft-details-container'>
-                     
-                      <div className='dashboard-btn-cntnr'>
-                        <div>
                    
+                      <div className='dashboard-btn-cntnr'>
+                        <div className='d-flex'>
+                       
+                       
+                          <h6 className='ml-2'>
+                            <CKBTC />
+                            {userAuth?.ckBalance ?? "  0"}
+                          </h6>
                           <h6 className='ml-2'>
                             <img
                               src='https://fantasy-extreme-assets.s3.us-east-005.backblazeb2.com/Compressed/infinte.png'
                               alt='Infinte Logo'
                             />
-                            {userAuth.balance ?? 0}
+                            {userAuth.balance}
                           </h6>
-                          {/* <h6 className='gap-1 ml-2'>
-                          <CKBTC />
-                          {ckBTCBalance}
-                        </h6> */}
-                   
-                        </div>
-              
+                          
+                        </div>                      
                       </div>
                     </div>
                   </div>
                 </div>
               </Col>
             </Row>
-
+           
           </Container>
         </Row>
       </Container>
-
+    
       {/* My Live Rank Panel */}
       <Container fluid>
         <Row>

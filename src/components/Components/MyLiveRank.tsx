@@ -65,11 +65,11 @@ export default function MyLiveRank() {
             <Spinner />
           </p>
         ) : !userJoinedTeams || userJoinedTeams.length == 0 ? (
-          <p className='text-white text-center w-100'>No live rankings available</p>
+          <p className='text-white text-center w-100'>No Live Rankings Available</p>
         ) : (
           userJoinedTeams.map((item) => {
             return (
-              <div className={`myliverank-post ${item?.contestName}`}>
+              <div className={`myliverank-post ${(item?.contestName?? "").toLocaleLowerCase()}`}>
                 <div className='my-live-rank-head'>
                   <span>{item?.contestName}</span>
                   <h3>{item?.leagueName}</h3>

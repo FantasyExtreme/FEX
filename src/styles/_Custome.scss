@@ -141,8 +141,12 @@ svg {
       width: unset;
       &.reg-btn.mid{
         min-width: calc(33.33333% - 10px);
+        max-width: calc(33.33333% - 10px);
         margin: 0 5px !important;
         border-radius: 5px;
+        font-size: 11px;
+        padding-left: 0;
+        padding-right: 0;
       }
     }
   }
@@ -822,6 +826,19 @@ input {
     }
     &:last-child {
       margin-right: 0;
+    }
+  }
+}
+.mobile-view-pagination{
+  @media(max-width:767px){
+    .pagination{
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      .page-item{
+        display: inline-flex;
+        margin-bottom: 20px;
+        margin-left: 0;margin-right: 15px;
+      }
     }
   }
 }
@@ -1701,6 +1718,10 @@ body {
   }
   @media (max-width: 575px) {
     height: auto !important;
+    h5 {
+      margin-bottom: 5px;
+      margin-top: 5px;
+    }
   }
   .molde-div {
     display: flex !important;
@@ -1722,21 +1743,24 @@ body {
     color: white;
 
     @media (max-width: 767px) {
-      width: calc(50% - 15px);
       font-size: 14px;
     }
     @media (max-width: 575px) {
       display: inline-flex;
       text-align: center;
-      width: 100%;
-      font-size: 12px;
-      padding: 0 10px;
+      // width: 100%;
+      font-size: 10px;
+      padding: 0 5px;
     }
   }
   .rank {
     margin-top: 20px;
     font-weight: 700 !important;
     font-size: 35px;
+    @media (max-width: 575px) {
+      font-size: 14px;
+      margin:0 !important;
+    }
   }
 }
 .w_rank {
@@ -1927,6 +1951,7 @@ span.underlined {
     max-height: 75vh !important;
     overflow: auto;
     border-radius: 48px;
+    padding: 30px 10px;
     border: 2px solid rgba(255, 255, 255, 0.25);
     background: rgba(0, 0, 0, 0);
 
@@ -1943,7 +1968,7 @@ span.underlined {
 .rank-rewards {
   border-radius: 20px;
   background: #2d2d2d;
-  padding: 35px;
+  padding: 20px 15px;
   ul.rank-list {
     list-style: none;
     li {
@@ -2052,93 +2077,70 @@ display: none;
     height: 15px;
   }
 }
+@media (max-width: 992px) {
+  .table td {
+.small{
+  font-size: 12px !important;
+}
+  }
+
+}
+@media (max-width: 1500px) {
+  .table td {
+    .small{
+      font-size: 14px !important;
+    }
+      }
+}
+
 .modal.show .modal-dialog{
   margin-top: 100px;
 }
-
-.copytbn{
+.copybtn{
   height: 25px;
     width: 15px;
     margin-left: 5px;
 
 }
-
 .plug-wallet-container{
 
-  i{
-    font-size: 25px;
+i{
+  font-size: 25px;
+}
+.plugwalletmap{
+  display: flex;
+  align-items: center;
+  input{
+    height: 45px;
+    background: #2E2E2E;
+    width: 100%;
+    border-radius: 2rem;
+    color: white;
+   border: 2px solid #FFFFFF1A;
+   padding-left: 8px;
   }
-  .plugwalletmap{
-    display: flex;
-    align-items: center;
-    input{
-      height: 45px;
-      background: #2E2E2E;
-      width: 100%;
-      border-radius: 2rem;
-      color: white;
-     border: 2px solid #FFFFFF1A;
-     padding-left: 8px;
-    }
-    button{
-      font-size: 14px;
-      min-height: 45px;
-      @media (max-width: 991px) {
-      width: 100%;
-      margin-top: 10px;
-      }
-    }
-  
-  }
-  }
-  input.system-setting{
-    &:disabled{
-      color: black !important;
-      cursor: not-allowed;
+  button{
+    font-size: 14px;
+    min-height: 45px;
+    @media (max-width: 991px) {
+    width: 100%;
+    margin-top: 10px;
     }
   }
-  .cursernone{
+
+}
+}
+input.system-setting{
+  &:disabled{
+    color: black !important;
     cursor: not-allowed;
   }
+}
+.cursernone{
+  cursor: not-allowed;
+}
 
   #nfid-embed{
-    top:60px !important;
- }
-
- // manage communities
-.comuntiesTableAction{
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  // justify-content: space-between;
-  .viewContestbtn{
-    margin-left: 8px;
-    text-decoration: underline;
-  }
-  
+   top:60px !important;
 }
 
-.manage-communities{
-  .Hide{
-    display: none;
-
-  }
-
-  .communityContest_innertable{
-    width: 90%;
-    margin-left: 50px;
-  }
-  
-}
-
-.communityBox{
-  display: flex;
-  align-items: center;
-  .delCummunityId{
-    position: relative;
-    right: 25px;
-    cursor: pointer;
-    color: rgb(174 34 34);
-    font-size: 18px;
-  }
-}

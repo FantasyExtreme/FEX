@@ -1,5 +1,9 @@
 import { MATCH_STATUS_TYPE } from '@/types/fantasy';
 import { E8S } from './fantasticonst';
+import oldFEXIcon from '@/assets/images/icons/coin-icon.png';
+import newFEXIcon from '@/assets/images/icons/fex-icon.png';
+import icpIcon from '@/assets/images/icons/tether-icon.png';
+import ckbtcIcon from '@/assets/images/icons/ckbtc-icon.png';
 
 export enum EnvironmentEnum {
   dev = 'local',
@@ -76,6 +80,8 @@ export const PlayersMaxCount = {
 export const DEFAULT_MATCH_STATUS: MATCH_STATUS_TYPE = MatchStatuses.upcoming;
 export const MATCHES_ITEMSPERPAGE = 10;
 export const REWARDS_PER_PAGE = 10;
+export const COMMUNITIES_PER_PAGE = 10;
+export const COMMUNITYCONTEST_PER_PAGE = 10;
 
 export const MATCHES_ITEMS_LIMIT = 1;
 export const TRANSACTIONS_ITEMSPERPAGE = 10;
@@ -91,8 +97,7 @@ export enum QURIES {
   tournamentId = 'tournament',
   contestId = 'contestId',
   refferalId = 'refferalId',
-  communityId = "communityId"
-
+  communityId = 'communityId',
 }
 export const JoinContestText = {
   upcoming: 'Join',
@@ -111,7 +116,7 @@ export const DefaultContest = {
     { from: 3, to: 3, amount: 10 },
     { from: 4, to: 20, amount: 30 },
   ],
-  paymentMethod : "ryjl3-tyaaa-aaaaa-aaaba-cai",
+  paymentMethod: '0',
   minCap: 1,
   maxCap: 0,
   providerId: '0',
@@ -120,8 +125,6 @@ export const DefaultContest = {
           Entry Fee = ${100}
 `,
 };
-export const COMMUNITIES_PER_PAGE = 10;
-export const COMMUNITYCONTEST_PER_PAGE = 10;
 export const DefaultTeam = {
   matchId: null,
   cap: '',
@@ -202,3 +205,28 @@ export const carouselDefaultSettings = {
   slidesToSlide: 2,
   swipeable: true,
 };
+export enum NFtsTypes {
+  bronze = 'bronze',
+  silver = 'silver',
+  gold = 'gold',
+  platinum = 'platinum',
+}
+export const PaymentTypes = {
+  ICP: '0',
+  CKBTC: '1',
+};
+export const PaymentsArray = [
+  {
+    id: PaymentTypes.ICP,
+    name: 'ICP',
+    fexIcon: newFEXIcon,
+    tetherIcon: icpIcon,
+  },
+  {
+    id: PaymentTypes.CKBTC,
+    name: 'CKBTC',
+    fexIcon: newFEXIcon,
+    tetherIcon: ckbtcIcon,
+  },
+];
+export const ContestPayment = new Map(PaymentsArray.map((p) => [p.id, p]));

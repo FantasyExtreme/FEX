@@ -1053,13 +1053,13 @@ export default function PlayerSelection() {
                 <Col xl='12' lg='12' md='12'>
                   <div className='gray-panel creatTeam'>
                     <Row>
-                    <Col xl='12' lg='12'>
-                    <div className='flex-div-sm align-items-center'>
+                      <Col xl='12' lg='12'>
+                      <div className='flex-div-sm align-items-center'>
                         <h4 className='animeleft tablet-view-none whitecolor Nasalization fw-normal'>
                           {isSubstituteSelection ? 'Substitute ' : 'Player'}{' '}
                           <span>Selection</span>
                         </h4>
-                    
+                      
                         <div className='flexooo jus-end animeright'>
                           <Form.Select
                             className='button-select select-select Z_ind'

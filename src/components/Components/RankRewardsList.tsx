@@ -36,7 +36,7 @@ export default function RankRewardsList({
           {loading ? (
             <CenteredSpinner minHeight={260} />
           ) : rewardsMap?.length == 0 ? (
-            <p className='my-2 text-center'>Rank Not Found</p>
+            <p className='m-4 text-center'>Rank Not Found</p>
           ) : (
             rewardsMap?.map(([rank, amount]: [number, number]) => {
               return (
@@ -48,6 +48,7 @@ export default function RankRewardsList({
             })
           )}
         </ul>
+        <div className='mobile-view-pagination'>
         <PaginatedList
           itemsPerPage={limit}
           count={pageCount}
@@ -55,6 +56,7 @@ export default function RankRewardsList({
           pageChange={pageClicked}
           first={false}
         />
+        </div>
       </Form.Group>
     </div>
   );
